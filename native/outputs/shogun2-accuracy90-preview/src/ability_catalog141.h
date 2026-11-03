@@ -1,50 +1,35 @@
 #pragma once
-// Retail enum-name table + decoded unit_special_abilities; presentation only.
-namespace ability141 {
-struct Art {unsigned id;const wchar_t *key,*label,*icon;};
-inline const Art catalog[]={
-{22,L"blinding_grenade",L"Blinding Grenades",L"ui/ability_icons/data__blinding_grenade_icon.png"},
-{23,L"flaming_arrows_ability",L"Flaming Arrows",L"ui/ability_icons/data__flaming_arrows_ability_icon.png"},
-{24,L"flaming_arrows_long_range_ability",L"Flaming Arrows",L"ui/ability_icons/data__flaming_arrows_long_range_ability_icon.png"},
-{25,L"flaming_arrows_extreme_range_ability",L"Flaming Arrows",L"ui/ability_icons/data__flaming_arrows_extreme_range_ability_icon.png"},
-{26,L"whistling_arrows_ability",L"Whistling Arrows",L"ui/ability_icons/data__whistling_arrows_ability_icon.png"},
-{27,L"whistling_arrows_long_range_ability",L"Whistling Arrows",L"ui/ability_icons/data__whistling_arrows_long_range_ability_icon.png"},
-{28,L"whistling_arrows_extreme_range_ability",L"Whistling Arrows",L"ui/ability_icons/data__whistling_arrows_extreme_range_ability_icon.png"},
-{29,L"active_hiding",L"Stealth",L"ui/ability_icons/data__active_hiding_icon.png"},
-{30,L"artillery_accuracy_boost",L"Targeted Fire",L"native-ability141-30"},
-{31,L"artillery_rof_boost",L"Barrage",L"native-ability141-31"},
-{32,L"banzai",L"Banzai",L"ui/ability_icons/data__banzai_icon.png"},
-{34,L"range_effect",L"Increased Range",L"ui/ability_icons/data__range_effect_icon.png"},
-{35,L"inspire_unit",L"Inspire",L"ui/ability_icons/data__inspire_unit_icon.png"},
-{36,L"rally",L"Rally",L"ui/ability_icons/data__rally_icon.png"},
-{37,L"rally_position",L"Regroup Position",L"ui/ability_icons/data__rally_position_icon.png"},
-{38,L"anti_rally",L"Anti-rally",L"ui/ability_icons/data__anti_rally_icon.png"},
-{39,L"rapid_advance",L"Rapid Advance",L"ui/ability_icons/data__rapid_advance_icon.png"},
-{40,L"rapid_volley",L"Rapid Volley",L"ui/ability_icons/data__rapid_volley_icon.png"},
-{41,L"second_wind",L"Second Wind",L"ui/ability_icons/data__second_wind_icon.png"},
-{44,L"stand_firm",L"Hold Firm",L"ui/ability_icons/data__stand_firm_icon.png"},
-{45,L"warcry",L"Warcry",L"ui/ability_icons/data__warcry_icon.png"},
-{43,L"we_stand_and_fight",L"Stand and Fight!",L"ui/ability_icons/data__we_stand_and_fight_icon.png"},
-{46,L"faster_rowing",L"Faster rowing",L"ui/ability_icons/data__faster_rowing_icon.png"},
-{47,L"battle_speed_naval",L"Battle speed",L"ui/ability_icons/data__battle_speed_naval_icon.png"},
-{48,L"banzai_naval",L"Banzai",L"ui/ability_icons/data__banzai_naval_icon.png"},
-{49,L"warcry_naval",L"Warcry",L"ui/ability_icons/data__warcry_naval_icon.png"},
-{50,L"flaming_arrows_naval",L"Flaming Arrows",L"ui/ability_icons/data__flaming_arrows_naval_icon.png"},
-{53,L"encourage_fleet",L"Encourage Fleet",L"ui/ability_icons/data__encourage_fleet_icon.png"},
-{51,L"whistling_arrows_naval",L"Whistling Arrows",L"ui/ability_icons/data__whistling_arrows_naval_icon.png"},
-{52,L"rally_naval",L"Rally",L"ui/ability_icons/data__rally_naval_icon.png"},
-{54,L"faster_reload_naval",L"Fast Reload",L"ui/ability_icons/data__faster_reload_naval_icon.png"},
-{55,L"ram_naval",L"Ramming",L"ui/ability_icons/data__ram_naval_icon.png"},
-{56,L"overcharge_engine",L"Overheat Engine",L"ui/ability_icons/data__overcharge_engine_icon.png"},
-{58,L"kill_zone",L"Kill Zone",L"ui/ability_icons/data__kill_zone_icon.png"},
-{59,L"ganbatte",L"Ganbatte",L"ui/ability_icons/data__ganbatte_icon.png"},
-{60,L"heroic_assault",L"Heroic Assault.",L"ui/ability_icons/data__heroic_assault_icon.png"},
-{61,L"suppression_fire",L"Suppression Fire",L"ui/ability_icons/data__suppression_fire_icon.png"},
-{62,L"tower_flaming_arrows",L"Fire Arrows",L"ui/ability_icons/data__tower_flaming_arrows_icon.png"},
-{63,L"tower_rapid_volley",L"Rapid Volley",L"ui/ability_icons/data__tower_rapid_volley_icon.png"},
-{64,L"tower_suppression_fire",L"Suppression Fire",L"ui/ability_icons/data__tower_suppression_fire_icon.png"},
-{65,L"tower_faster_firing",L"Faster Firing",L"ui/ability_icons/data__tower_faster_firing_icon.png"},
-{68,L"shrapnel_shot",L"Shrapnel Shot ",L"ui/ability_icons/data__shrapnel_shot_icon.png"},
-};
-inline const Art* art(unsigned id){for(const auto& a:catalog)if(a.id==id)return &a;return nullptr;}
+#include "ability_protocol141.h"
+#include "ability_catalog141.h"
+struct AbilityRequest141 {unsigned lease{},steps{};bool use{};};
+static SRWLOCK ability_input_lock141=SRWLOCK_INIT;
+static AbilityRequest141 ability_request141;
+static unsigned ability_previous141;
+static __declspec(thread) unsigned ability_target_query143;
+static HANDLE ability_map141;static ability141::Status* ability_shared141;
+static unsigned ability_lease141,ability_selected141=~0u,ability_error141;
+static uint64_t ability_next141,ability_pending_until141;
+static void ability_reset141(){
+ AcquireSRWLockExclusive(&ability_input_lock141);ability_request141={};ReleaseSRWLockExclusive(&ability_input_lock141);
+ ability_lease141=0;ability_selected141=~0u;ability_next141=ability_pending_until141=0;ability_error141=0;
 }
+static void ability_sample141(bool focus){
+ unsigned held=(GetAsyncKeyState('G')&0x8000?1u:0u)|(GetAsyncKeyState('F')&0x8000?2u:0u);
+ unsigned edges=held&~ability_previous141;ability_previous141=held;
+ bool active=focus&&state&&state->mode==POSSESSED&&!state->release&&!state->stop&&!dead_view();
+ AcquireSRWLockExclusive(&ability_input_lock141);
+ if(active){if(ability_request141.lease!=state->lease_generation)ability_request141={state->lease_generation};
+  if(edges&1)ability_request141.steps=std::min(ability_request141.steps+1,64u);
+  if(edges&2)ability_request141.use=true;
+ }else ability_request141={};
+ ReleaseSRWLockExclusive(&ability_input_lock141);
+}
+static void ability_initialize141(){
+ wchar_t name[96];ability141::mapping(name,GetCurrentProcessId());
+ ability_map141=CreateFileMappingW(INVALID_HANDLE_VALUE,nullptr,PAGE_READWRITE,0,sizeof(ability141::Status),name);
+ require(ability_map141&&GetLastError()!=ERROR_ALREADY_EXISTS,"Ability mapping already loaded");
+ ability_shared141=static_cast<ability141::Status*>(MapViewOfFile(ability_map141,FILE_MAP_ALL_ACCESS,0,0,sizeof(ability141::Status)));
+ require(ability_shared141!=nullptr,"Ability mapping failed");memset(ability_shared141,0,sizeof(*ability_shared141));
+ ability_shared141->magic=ability141::Magic;ability_shared141->version=141;ability_shared141->size=sizeof(*ability_shared141);ability_shared141->pid=GetCurrentProcessId();
+}
+static void ability_process141(uintptr_t camera);
