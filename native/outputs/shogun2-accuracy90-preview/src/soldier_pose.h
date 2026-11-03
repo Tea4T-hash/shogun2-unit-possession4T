@@ -79,7 +79,7 @@ static void capture_model_eye(uintptr_t holder,uintptr_t result){
         const bool dying=dead_view()||(linked==id.actor&&field<unsigned char>(linked,0xf0)==0);
         if(!binding)return;auto asset=field<uintptr_t>(binding,0x1c);if(!asset)return;
         if(dying){
-            if(!death_pose_calibrated||death_pose_lease!=possession_lease.generation||holder!=death_pose_holder||binding!=death_pose_binding||asset!=death_pose_asset||death_elapsed()>=15000)return;
+            if(!death_pose_calibrated||death_pose_lease!=possession_lease.generation||holder!=death_pose_holder||binding!=death_pose_binding||asset!=death_pose_asset||death_elapsed()>=4500)return;
             if(linked&&linked!=id.actor)return;
         }else if(linked!=id.actor)return;
         // A surviving link must still identify the same actor. A cleared link
