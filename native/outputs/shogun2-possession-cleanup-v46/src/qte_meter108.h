@@ -2,22 +2,31 @@
 // Included inside hud80 after Assets/panel/text/mouse_image, for both the real
 // QTE runtime and full HUD previews. No gameplay/timeline state is modified.
 // Result flash: after a click the bar fills with the colour landed on, spreading out from the
-// click point, shows "Attacked"/"Guarded" in bold white, and disappears 1.5 s after the click.
-inline constexpr ULONGLONG ResultShowMs=1500,ResultFillMs=250;
+// click point, shows the result in bold white, and disappears 3 s after the click.
+// Names: green = Perfect Strike / Perfect Guard, orange = Resisted, purple = Countered,
+// red = Critical Fail. Wrong button in green = Perfect Fail (green fill, no one dies).
+inline constexpr ULONGLONG ResultShowMs=3000,ResultFillMs=250;
 inline Color result_colour(const qte::Snapshot& s){
     switch(s.result){
-        case qte::Result::Success:return Color(255,139,153,56);   // green
-        case qte::Result::Purple: return Color(255,128,72,160);   // purple
-        case qte::Result::Orange: return Color(255,214,128,40);   // orange
-        case qte::Result::Blue:   return Color(255,58,104,170);   // blue
-        case qte::Result::Timeout:return Color(255,96,88,76);     // no click: grey
-        default:                  return Color(255,151,48,37);    // red or wrong button
+        case qte::Result::Success:
+        case qte::Result::PerfectFail:return Color(255,139,153,56);   // green
+        case qte::Result::Purple: return Color(255,128,72,160);       // purple
+        case qte::Result::Orange: return Color(255,214,128,40);       // orange
+        case qte::Result::Timeout:return qte::attacking(s.action)?Color(255,96,88,76):Color(255,151,48,37); // grey / red
+        default:                  return Color(255,151,48,37);        // red: Critical Fail or wrong button
     }
 }
 inline const wchar_t* result_word(const qte::Snapshot& s){
-    if(s.result==qte::Result::Timeout)return L"No click";
-    if(s.result==qte::Result::WrongButton)return L"Wrong button";
-    return qte::attacking(s.action)?L"Attacked":L"Guarded";
+    const bool attack=qte::attacking(s.action);
+    switch(s.result){
+        case qte::Result::Success:    return attack?L"Perfect Strike":L"Perfect Guard";
+        case qte::Result::PerfectFail:return L"Perfect Fail";
+        case qte::Result::Orange:     return attack?L"Attack Resisted":L"Guard Resisted";
+        case qte::Result::Purple:     return L"Attack Countered";
+        case qte::Result::WrongButton:return L"Wrong Button";
+        case qte::Result::Timeout:    return attack?L"Attack Missed":L"Guard Critical Fail";
+        default:                      return attack?L"Attack Critical Fail":L"Guard Critical Fail";
+    }
 }
 inline void qte_meter(Graphics& g,const Assets& a,float x,float y,const qte::Snapshot& s){
     if(!s.active)return;
@@ -29,6 +38,13 @@ inline void qte_meter(Graphics& g,const Assets& a,float x,float y,const qte::Sna
         if(result_serial!=s.serial){result_serial=s.serial;result_start=now;}
         result_age=now-result_start;if(result_age>=ResultShowMs)return;}
     panel(g,a,RectF(x-150,y-32,300,64));
+    const bool guard=!qte::attacking(s.action);
+    if(guard){
+        // Guard: red-tinted panel and a thick pulsing red frame, so it is obvious it is time to defend.
+        const float pulse=.5f+.5f*std::sin(float(GetTickCount64()%1000ULL)*6.2831853f/1000.f);
+        SolidBrush tint(Color(BYTE(70+50*pulse),190,20,20));g.FillRectangle(&tint,RectF(x-150,y-32,300,64));
+        Pen frame(Color(BYTE(170+85*pulse),230,30,30),4.f);g.DrawRectangle(&frame,RectF(x-152,y-34,304,68));
+    }
     constexpr float span=hudlayout108::qte_span,height=20.f;
     const float left=x-span*.5f,top=y-10.f;
     // Hourglass bar: full height at the ends, pinched in the middle, smooth curves.
@@ -40,17 +56,17 @@ inline void qte_meter(Graphics& g,const Assets& a,float x,float y,const qte::Sna
     track.AddBezier(PointF(left+span,top+height),PointF(left+span*.75f,top+height),PointF(mid+span*.15f,top+height-pinch),PointF(mid,top+height-pinch));
     track.AddBezier(PointF(mid,top+height-pinch),PointF(mid-span*.15f,top+height-pinch),PointF(left+span*.25f,top+height),PointF(left,top+height));
     track.CloseFigure();
-    SolidBrush red(Color(255,151,48,37)),blue(Color(255,58,104,170)),orange(Color(255,214,128,40)),
+    SolidBrush red(Color(255,151,48,37)),orange(Color(255,214,128,40)),
         purple(Color(255,128,72,160)),green(Color(255,139,153,56));
     auto clipped=g.Save();g.SetClip(&track,CombineModeIntersect);
     const uint32_t sweep=qte::sweep_index(s);
-    float run_start=0;qte::Zone run=qte::zone_at(0.f,s.serial,sweep);
+    float run_start=0;qte::Zone run=qte::zone_at(0.f,s.serial,sweep,!guard);
     const int columns=int(span);
     for(int i=1;i<=columns;++i){
         const float x=float(i)/float(columns);
-        const qte::Zone z=i<columns?qte::zone_at(x,s.serial,sweep):qte::Zone(255);
+        const qte::Zone z=i<columns?qte::zone_at(x,s.serial,sweep,!guard):qte::Zone(255);
         if(z==run)continue;
-        SolidBrush* brush=run==qte::Zone::Green?&green:run==qte::Zone::Purple?&purple:run==qte::Zone::Orange?&orange:run==qte::Zone::Blue?&blue:&red;
+        SolidBrush* brush=run==qte::Zone::Green?&green:run==qte::Zone::Purple?&purple:run==qte::Zone::Orange?&orange:&red;
         g.FillRectangle(brush,RectF(left+run_start*span,top,(x-run_start)*span,height));
         run_start=x;run=z;
     }
