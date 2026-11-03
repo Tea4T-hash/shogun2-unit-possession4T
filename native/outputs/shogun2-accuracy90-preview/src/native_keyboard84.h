@@ -33,11 +33,13 @@ static bool __cdecl keyboard_poll84(){
         for(unsigned i=0;i<8;++i)if(masked98&(1u<<i))current[scans98[i]]=previous[scans98[i]]=0;
     }
     if(valid){bool down154=(current[0x32]&0x80)!=0,owned154=keyboard_fps84();
-        if(owned154&&down154&&!mount_key_held154&&!charge_input_locked146())InterlockedExchange(&mount_request154,LONG(state->lease_generation));
+        // Mount/dismount is requested through E (interact201); M stays hidden from the game while possessed.
         if(owned154||mount_key_held154)current[0x32]=previous[0x32]=0;
         mount_key_held154=down154&&(owned154||mount_key_held154);
     }
     view_key152(current,previous,keyboard_fps84(),valid);
+    // F1-F4 give unit orders while possessed; hide them from the game.
+    if(valid&&keyboard_fps84()){const unsigned orders157[]={0x3B,0x3C,0x3D,0x3E};for(unsigned a:orders157)current[a]=previous[a]=0;}
     command_keyboard_filter100.apply(current,previous,keyboard_fps84(),valid);
     InterlockedExchange(&keyboard_held84,LONG(keyboard_filter84.held));
     InterlockedExchange(&keyboard_last_mask84,LONG(blocked));
@@ -48,7 +50,7 @@ static bool __cdecl keyboard_poll84(){
 }
 static bool keyboard_window_owned84(unsigned key){
     if(key=='M'&&(keyboard_fps84()||mount_key_held154))return true;
-    if(key=='P'&&(keyboard_fps84()||view_held152()))return true;
+    if((key=='P'||key=='V')&&(keyboard_fps84()||view_held152()))return true;
     if(command100::key_bit(key)&&(keyboard_fps84()||(command_keyboard_filter100.held&command100::key_bit(key))))return true;
     return keyboard84::window_bit(key)&&(keyboard_fps84()||(unsigned(keyboard_held84)&keyboard84::window_bit(key)));
 }
