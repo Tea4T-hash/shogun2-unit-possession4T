@@ -59,7 +59,7 @@ inline bool valid(const Payload& value){
 }
 inline bool presentation(const Payload& value,double now,Snapshot& output,double* simulation=nullptr){
     if(!valid(value)||!value.prompt.active||!std::isfinite(now)||now<value.published_wall||
-       now-value.published_wall>(value.prompt.result==Result::Canceled?1.15:.5))return false;
+       now-value.published_wall>(value.prompt.result==Result::Canceled?1.15:value.prompt.result==Result::Pending?.5:1.55))return false; // results stay 1.5 s
     const auto& anchor=value.anchor;
     // The publication anchors elapsed to the exact interval already judged by
     // the native coordinator. Display and click projection use this SAME rule.
