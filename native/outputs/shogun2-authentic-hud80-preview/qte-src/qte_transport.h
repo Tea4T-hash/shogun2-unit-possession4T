@@ -43,10 +43,10 @@ inline bool valid(const Payload& value){
     if(!value.pid||!std::isfinite(value.published_wall)||value.published_wall<0||value.enabled>1||value.occupied>1)return false;
     if(!s.active)return true;
     return value.enabled&&value.occupied&&value.lease&&s.serial&&s.opponent_unit&&
-        (attacking(s.action)||s.action==Action::Defend)&&uint32_t(s.result)<=uint32_t(Result::Blue)&&
+        (attacking(s.action)||s.action==Action::Defend)&&uint32_t(s.result)<=uint32_t(Result::PerfectFail)&&
         std::isfinite(s.response_elapsed)&&s.response_elapsed>=0&&s.response_elapsed<=MaximumResponseSeconds95&&s.response_elapsed<=response_deadline(s)+1e-6&&
-        (s.result!=Result::Pending||s.response_elapsed<ResponseWindowSeconds91||s.elapsed<2.*s.duration)&&
-        (s.result!=Result::Timeout||(s.response_elapsed+1e-6>=ResponseWindowSeconds91&&s.elapsed+1e-5>=2.*s.duration))&&
+        (s.result!=Result::Pending||s.response_elapsed<response_window(s.action)||s.elapsed<2.*s.duration)&&
+        (s.result!=Result::Timeout||(s.response_elapsed+1e-6>=response_window(s.action)&&s.elapsed+1e-5>=2.*s.duration))&&
         std::isfinite(s.elapsed)&&s.elapsed>=0&&std::isfinite(s.duration)&&s.duration>=.30f&&s.duration<=2.21f&&
         std::isfinite(s.ideal)&&s.ideal>0&&s.ideal<s.duration&&
         std::isfinite(s.tolerance)&&s.tolerance>0&&s.tolerance<s.duration*.5f&&
@@ -59,7 +59,7 @@ inline bool valid(const Payload& value){
 }
 inline bool presentation(const Payload& value,double now,Snapshot& output,double* simulation=nullptr){
     if(!valid(value)||!value.prompt.active||!std::isfinite(now)||now<value.published_wall||
-       now-value.published_wall>(value.prompt.result==Result::Canceled?1.15:value.prompt.result==Result::Pending?.5:1.55))return false; // results stay 1.5 s
+       now-value.published_wall>(value.prompt.result==Result::Canceled?1.15:value.prompt.result==Result::Pending?.5:3.05))return false; // results stay 3 s
     const auto& anchor=value.anchor;
     // The publication anchors elapsed to the exact interval already judged by
     // the native coordinator. Display and click projection use this SAME rule.
