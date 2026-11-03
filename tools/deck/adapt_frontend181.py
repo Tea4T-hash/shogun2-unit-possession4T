@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parents[2]
 EXPORTS=('prepare','supported','poll','stop','active','focused','ready','bindings','failed','glyphs','glyph_failed',
  'cancel','heartbeat','error','up','down','left','right','focus','attach','detach','campaign_prepare','pause','next','previous',
  'home','arts','finance','diplomacy','clan','end_turn','quick_save','move_speed','encyclopedia',
- 'pan_left','pan_right','pan_up','pan_down','turn_left','turn_right','viewport','context','camera','legend184','ui_viewport185','panel188','back188')
+ 'pan_left','pan_right','pan_up','pan_down','turn_left','turn_right','viewport','context','camera','legend184','ui_viewport185','panel188','back188','menu_fit209')
 def injection(snapshot,context):
     source=(snapshot/'native/deck/frontend181.lua').read_text();nav=(snapshot/'native/deck/navigation181.lua').read_text()
     assert ']==]'not in source+nav

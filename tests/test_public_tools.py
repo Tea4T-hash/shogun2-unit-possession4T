@@ -63,6 +63,7 @@ class ResourceBoundaryTests(unittest.TestCase):
         self.assertIn('docs/releases/v' + (ROOT / 'VERSION').read_text().strip() + '.md', paths)
         self.assertNotIn('docs/development/Test157.md', paths)
         self.assertNotIn('docs/releases/v0.31.md', paths)
+        self.assertIn('docs/development/CampaignSetup209.md', paths)
         self.assertNotIn('tools/github_release.py', paths)
 
     def test_source_selection_uses_requested_root_version(self):

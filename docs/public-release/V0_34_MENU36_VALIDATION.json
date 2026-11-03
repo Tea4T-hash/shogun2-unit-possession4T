@@ -1,0 +1,53 @@
+{
+  "version": "0.34",
+  "revision": "menu-parent-36",
+  "source_publication_only": true,
+  "previous_public_source": "86d4b5dd115b59efa8ece7d184ca7c97d77b6efb",
+  "pack_sha256": "79e8e7ffbad5f1474a3188d6eac91a456d6d0148bba91e453f5c862f5071e11f",
+  "pack_bytes": 4272214,
+  "native_sha256": "3e81d86ab8be93fbe1b13ef1d2e58c9b002f097b952b5d165fa236b6fea8e778",
+  "components": {
+    "possession-v46.dll": "153beb11e8dd9293f47d53dd9f9421abf40fc7b15f805d29173fa9cfbcbdfbf0",
+    "possession-hud.exe": "9b77deebb3dbd64888b05e5129e484cc33921faabd7ee1b7db76cffc73a87fc1",
+    "qte-playable-v79.dll": "7bb87e66e12887d126356fd375d2140c92ea0c1b940a6a307d56090d793c3d4b",
+    "prepare-local-assets159.exe": "0f2d91a2c9357a21a1cfa5c00be317fa30c39ad9975a1f87846d783bc0c3ea63"
+  },
+  "gameplay_components_byte_identical_revision34_and35": true,
+  "component_verification": {
+    "complete_dependency_files": 242,
+    "dependencies_exact": true,
+    "inherited_adapter_checks": 100,
+    "inherited_QTE_checks": 50,
+    "inherited_HUD_checks": 8,
+    "fresh_component_checks": false
+  },
+  "fresh_checks": {
+    "frontend_float_Lua": 93,
+    "native_parent_clip_stock_and_reviewed_Bugfix": 16,
+    "existing_native_panel_cases": 44,
+    "native_public_pack_reader": 7,
+    "compiled_campaign_handoff": 8,
+    "Python": 52
+  },
+  "previous_revision35_failure": {
+    "owner_reported": true,
+    "loaded_pack_and_bridge_verified": true,
+    "cause": "Outer root1638x1024; native campaign clipping parent1310x819; footer begins at parent bottom"
+  },
+  "owner_acceptance": {
+    "date": "2026-11-02",
+    "message": "perf. update the github and we are done",
+    "accepted": true,
+    "scope": "Reported Deck campaign setup Start Game footer",
+    "formal_revision36_loaded_hash_gate": false,
+    "all_campaigns_or_long_session_proven": false
+  },
+  "PC_staging_and_exact_rollback_verified": true,
+  "Deck_direct_transfer_by_this_revision": false,
+  "game_assets_included": false,
+  "recorder_debugger_included": false,
+  "installer": null,
+  "Workshop_uploaded_by_this_publication": false,
+  "previous_validation": "V0_34_VALIDATION.json",
+  "enemy_acquisition_result": "Revision34 owner trial still ignored lone player; unresolved and unchanged"
+}

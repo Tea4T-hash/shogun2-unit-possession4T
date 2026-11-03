@@ -128,6 +128,7 @@ def selected(root=ROOT):
                     'docs/development/Gameplay203.md',
                     'docs/development/Locomotion204.md',
                     'docs/development/Cavalry206.md',
+                    'docs/development/CampaignSetup209.md',
                     'docs/development/AutomaticDevice192.md',
                     'docs/development/QoL193.md',
                     'docs/development/CursorAndBindings194.md',

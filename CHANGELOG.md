@@ -9,6 +9,7 @@ this source push does not upload Steam or create a binary release.
 One Unit Possession mod for PC and Steam Deck. The mod now detects your device and loads the appropriate controls and UI. Existing subscribers use this same Workshop item.
 
 ### Steam Deck
+- Fixed the clipped Start Game footer in Steam Deck campaign setup by fitting the native campaign screen as well as its outer canvas. Owner accepted the correction.
 - Separate, automatic control schemes for menus, campaign, Battle RTS and possession, labelled in Steam as “Unit Possession Layout.”
 - Thumbstick camera controls, smooth campaign and battle zoom, faster campaign panning with L3, and a visible right-trackpad cursor in campaign menus.
 - Y enters/leaves possession. Hold L3 to run; hold R3 to switch first/third person. RT selects in menus, campaign and battles.

@@ -55,6 +55,7 @@ local function run(mode,campaign)
             local key=name:match('^s2up_menu_(.+)181$')
             if not key then return real end
             lookups[key]=true
+            if key=='menu_fit209'then return function(value)assert(value=='off'or(type(value)=='string'and value:match('^%d+,%d+$')));return true end end
             if key=='panel188'then return function(value)assert(value=='open'or value=='map'or value=='unknown');return true end end
             if key=='back188'then return function(value)assert(value==true);went_back=went_back+1;return true end end
             if key=='context'then return function(tag)assert(type(tag)=='string');return real(tag)end end

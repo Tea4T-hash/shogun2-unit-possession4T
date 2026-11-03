@@ -27,3 +27,6 @@ evidence that it ran.
 The full notebooks are kept in the [repository history directory](https://github.com/logsam58/shogun2-unit-possession/tree/main/docs/development)
 and omitted from the curated source ZIP. Do not execute historical install,
 deployment, capture or publication commands as part of routine development.
+
+The Deck campaign setup footer correction and its captured clipping regression
+are documented in [CampaignSetup209.md](CampaignSetup209.md).

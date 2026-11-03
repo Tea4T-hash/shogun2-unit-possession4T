@@ -414,6 +414,17 @@ static bool panel_state188(const std::string& value){
   AcquireSRWLockExclusive(&lock);camera_x=camera_y=camera_turn=camera_zoom=0;camera_tick=0;ReleaseSRWLockExclusive(&lock);
  }return true;
 }
+static bool menu_fit209(const std::string& text){
+ if(campaign_mode||GetCurrentThreadId()!=ui_owner181||root_token.compare(0,5,"menu:")!=0)return false;
+ deck185::UiSize required{};
+ if(text!="off"){
+  auto comma=text.find(',');if(comma==text.npos||!comma||comma+1>=text.size()||text.size()>11)return false;
+  unsigned values[2]{};unsigned part=0;
+  for(char c:text){if(c==','){if(part++)return false;continue;}if(c<'0'||c>'9')return false;values[part]=values[part]*10+unsigned(c-'0');if(values[part]>8192)return false;}
+  required={values[0],values[1]};
+ }
+ return deck185::fit_frontend209(required);
+}
 static bool back188(){return campaign_mode&&GetCurrentThreadId()==ui_owner181&&campaign_keys185.put(deck183::Back,GetTickCount64(),button_epoch183);}
 static bool context_state(void* lua){
 #ifdef S2UP165_LUA_FIXTURE
@@ -441,6 +452,7 @@ MENU181(supported,device192::enabled())
 MENU181(context,menu181::context_state(lua))
 MENU181(camera,!menu181::campaign_panel188&&menu181::camera_apply181())
 MENU181(panel188,menu181::panel_state188(menu181::argument(lua)))
+MENU181(menu_fit209,menu181::menu_fit209(menu181::argument(lua)))
 MENU181(back188,menu181::back188())
 MENU181(stop,menu181::stop())
 MENU181(poll,menu181::poll())

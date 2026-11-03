@@ -55,6 +55,7 @@ local function run(mode)
             local key=name:match('^s2up_menu_(.+)181$')
             if not key then return real end
             lookups[key]=true
+            if key=='menu_fit209'then return function(value)assert(value=='off'or(type(value)=='string'and value:match('^%d+,%d+$')));return true end end
             if key=='context'then return function(tag)assert(type(tag)=='string');return real(tag)end end
             if key=='viewport'and(mode=='native-viewport'or mode=='invalid-geometry')then
                 local seed=assert(package.loadlib(path,'s2up_viewport_valid_fixture181'))

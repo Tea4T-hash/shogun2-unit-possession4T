@@ -54,6 +54,55 @@ int wmain(int argc,wchar_t** argv){assert(argc==3);SetErrorMode(SEM_FAILCRITICAL
      ++cases;
     }
    }
+   // New campaign setup is a full-screen child, not a PanelManager modal.
+   // Original owned Japan/Boshin layouts are1280x1024; footer ends at1024.
+   set191(root,0x9c,0);set191(root,0xa0,0); // previous modal fixture children have left scope
+   unsigned frontend_cases=0;
+   for(auto res:{std::pair<unsigned,unsigned>{1280,800},{1280,720},{1920,1080},{2560,1440}}){
+    width185=res.first;height185=res.second;deck185::panel_extent191_set(0,0);
+    auto normal=deck185::active_ui185();root_state.w=float(normal.width);root_state.h=float(normal.height);
+    if(res.first==1280)assert(normal.height<1024); // reproduced clipping before correction
+    const auto font=root_state.font;assert(deck185::fit_frontend209({1280,1024}));
+    auto fit=deck185::active_ui185();assert(fit.width>=1280&&fit.height>=1024);
+    // Actual authored Start Game bottom edges: Japan968, Boshin1015.
+    for(float bottom:{968.f,1015.f})assert(bottom<=fit.height);
+    auto calls=state_calls191;for(unsigned n=0;n<60;++n)assert(deck185::fit_frontend209({1280,1024}));assert(state_calls191==calls);
+    assert(root_state.font==font&&!root.bytes[0xed]&&!root.bytes[0xee]);
+    auto saved=InterlockedCompareExchange64(&deck185::panel_extent191,0,0);assert(!deck185::fit_frontend209({0,1024})&&!deck185::fit_frontend209({8193,1024})&&InterlockedCompareExchange64(&deck185::panel_extent191,0,0)==saved);
+    assert(deck185::fit_frontend209({}));auto restored=deck185::active_ui185();assert(restored.width==normal.width&&restored.height==normal.height);++frontend_cases;
+   }
+   assert(frontend_cases==4);std::cout<<"PASS menu209: 4 native frontend campaign fitting cases; footer bounds, stable scale and map restoration.\n";
+   // Captured revision35: root already1638x1024, but the adopted campaign
+   // screen is1310x819 at164,102. Its visible Start footer starts exactly at
+   // the ancestor's bottom and is clipped. Reproduce the COMPLETE hierarchy.
+   unsigned parent_cases210=0;
+   for(auto res:{std::pair<unsigned,unsigned>{1280,800},{1280,720},{1920,1080},{2560,1440}})for(bool japan:{true,false}){
+    width185=res.first;height185=res.second;deck185::panel_extent191_set(0,0);auto normal=deck185::active_ui185();root_state.w=float(normal.width);root_state.h=float(normal.height);
+    Node191 screen,main,footer,button;State191 ss,ms,fs,bs;Node191* nodes[]{&screen,&main,&footer,&button};State191* states[]{&ss,&ms,&fs,&bs};uintptr_t state_ptrs[4]{};
+    for(unsigned i=0;i<4;++i){state_ptrs[i]=reinterpret_cast<uintptr_t>(states[i]);states[i]->table=reinterpret_cast<uintptr_t>(states_vtable);set191(*nodes[i],0,base+0x1704cdc);set191(*nodes[i],0xb8,state_ptrs[i]);set191(*nodes[i],0xb0,1);set191(*nodes[i],0xb4,reinterpret_cast<uintptr_t>(&state_ptrs[i]));nodes[i]->bytes[0xf5]=1;}
+    auto sp=reinterpret_cast<uintptr_t>(&screen),mp=reinterpret_cast<uintptr_t>(&main),fp=reinterpret_cast<uintptr_t>(&footer),bp=reinterpret_cast<uintptr_t>(&button);
+    set191(screen,0x94,root_p);set191(main,0x94,sp);set191(footer,0x94,japan?mp:sp);set191(button,0x94,fp);
+    set191(root,0x9c,1);set191(root,0xa0,reinterpret_cast<uintptr_t>(&sp));set191(screen,0x9c,1);uintptr_t child=japan?mp:fp;set191(screen,0xa0,reinterpret_cast<uintptr_t>(&child));
+    set191(main,0x9c,1);set191(main,0xa0,reinterpret_cast<uintptr_t>(&fp));set191(footer,0x9c,1);set191(footer,0xa0,reinterpret_cast<uintptr_t>(&bp));
+    ss.w=float(normal.width);ss.h=float(normal.height);ms.w=1104;ms.h=912;fs.w=379;fs.h=56;bs.w=234;bs.h=38;
+    screen.bytes[0xed]=screen.bytes[0xee]=1;set191(screen,0xfc,5);set191(main,0xfc,5);xy191(screen,0,0);xy191(main,(ss.w-ms.w)/2,(ss.h-ms.h)/2);xy191(footer,japan?363.f:450.f,japan?865.f:968.f);xy191(button,72,9);
+    assert(deck185::fit_frontend209({1280,1024}));auto fit=deck185::active_ui185();
+    using Position210=float*(__thiscall*)(void*,float*);auto position210=reinterpret_cast<Position210>(base+0xf955b0);
+    float screen_xy[2]{},footer_xy[2]{},button_xy[2]{};position210(&screen,screen_xy);position210(&footer,footer_xy);
+    if(res.first==1280)assert(footer_xy[1]+fs.h>screen_xy[1]+ss.h); // old viewport-only fix fails
+    // Same original routines as UIComponent:Resize(false,false) and MoveTo.
+    auto resize210=reinterpret_cast<deck185::Resize187>(base+0xf98900);
+    auto move210=reinterpret_cast<void(__thiscall*)(void*,const float*)>(base+0xf920a0);
+    resize210(&screen,float(fit.width),float(fit.height),false,false);const float origin[2]{};move210(&screen,origin);
+    position210(&screen,screen_xy);position210(&footer,footer_xy);position210(&button,button_xy);
+    assert(ss.w==fit.width&&ss.h==fit.height&&screen_xy[0]==0&&screen_xy[1]==0);
+    assert(ms.w==1104&&ms.h==912&&fs.w==379&&fs.h==56&&bs.w==234&&bs.h==38);
+    assert(footer_xy[0]>=0&&footer_xy[1]>=0&&footer_xy[0]+fs.w<=ss.w&&footer_xy[1]+fs.h<=ss.h);
+    assert(button_xy[0]>=footer_xy[0]&&button_xy[1]>=footer_xy[1]&&button_xy[0]+bs.w<=footer_xy[0]+fs.w&&button_xy[1]+bs.h<=footer_xy[1]+fs.h);
+    assert(ss.font==0x12345678&&ms.font==0x12345678&&fs.font==0x12345678&&bs.font==0x12345678&&screen.bytes[0xed]==1&&screen.bytes[0xee]==1);
+    set191(root,0x9c,0);set191(root,0xa0,0);assert(deck185::fit_frontend209({}));++parent_cases210;
+   }
+   assert(parent_cases210==8);std::cout<<"PASS menu210: 8 native campaign parent clipping cases; actual Resize/MoveTo/docking, footer and button bounds, unchanged content sizes.\n";
    // Invalid or replaced ownership fails before geometry or policy writes.
    Node191 foreign;uintptr_t at=reinterpret_cast<uintptr_t>(&foreign),entries=reinterpret_cast<uintptr_t>(&at);unsigned count=1;memcpy(manager+0x30,&count,4);memcpy(manager+0x34,&entries,4);memset(manager+0x3c,0,4);
    auto before=InterlockedCompareExchange64(&deck185::panel_extent191,0,0);assert(!deck185::sync_panels191(true)&&InterlockedCompareExchange64(&deck185::panel_extent191,0,0)==before);++cases;

@@ -1864,7 +1864,7 @@
     },
     {
       "path": "native/deck/frontend181.h",
-      "line": 438,
+      "line": 449,
       "tags": [
         "abi"
       ],
@@ -1872,7 +1872,7 @@
     },
     {
       "path": "native/deck/frontend181.h",
-      "line": 488,
+      "line": 500,
       "tags": [
         "abi"
       ],
@@ -1880,32 +1880,7 @@
     },
     {
       "path": "native/deck/frontend181.h",
-      "line": 490,
-      "tags": [
-        "abi"
-      ],
-      "rvas": []
-    },
-    {
-      "path": "native/deck/frontend181.h",
-      "line": 496,
-      "tags": [
-        "abi",
-        "synchronization"
-      ],
-      "rvas": []
-    },
-    {
-      "path": "native/deck/frontend181.h",
-      "line": 503,
-      "tags": [
-        "abi"
-      ],
-      "rvas": []
-    },
-    {
-      "path": "native/deck/frontend181.h",
-      "line": 504,
+      "line": 502,
       "tags": [
         "abi"
       ],
@@ -1915,6 +1890,15 @@
       "path": "native/deck/frontend181.h",
       "line": 508,
       "tags": [
+        "abi",
+        "synchronization"
+      ],
+      "rvas": []
+    },
+    {
+      "path": "native/deck/frontend181.h",
+      "line": 515,
+      "tags": [
         "abi"
       ],
       "rvas": []
@@ -1923,13 +1907,21 @@
       "path": "native/deck/frontend181.h",
       "line": 516,
       "tags": [
-        "synchronization"
+        "abi"
       ],
       "rvas": []
     },
     {
       "path": "native/deck/frontend181.h",
-      "line": 518,
+      "line": 520,
+      "tags": [
+        "abi"
+      ],
+      "rvas": []
+    },
+    {
+      "path": "native/deck/frontend181.h",
+      "line": 528,
       "tags": [
         "synchronization"
       ],
@@ -1937,7 +1929,15 @@
     },
     {
       "path": "native/deck/frontend181.h",
-      "line": 522,
+      "line": 530,
+      "tags": [
+        "synchronization"
+      ],
+      "rvas": []
+    },
+    {
+      "path": "native/deck/frontend181.h",
+      "line": 534,
       "tags": [
         "abi"
       ],
@@ -2380,7 +2380,7 @@
     },
     {
       "path": "native/deck/native_ui185.h",
-      "line": 122,
+      "line": 125,
       "tags": [
         "native_offset"
       ],
@@ -2390,7 +2390,17 @@
     },
     {
       "path": "native/deck/native_ui185.h",
-      "line": 135,
+      "line": 133,
+      "tags": [
+        "native_offset"
+      ],
+      "rvas": [
+        "0x1bbe364"
+      ]
+    },
+    {
+      "path": "native/deck/native_ui185.h",
+      "line": 146,
       "tags": [
         "abi",
         "native_offset"
@@ -2401,7 +2411,7 @@
     },
     {
       "path": "native/deck/native_ui185.h",
-      "line": 139,
+      "line": 150,
       "tags": [
         "abi",
         "native_offset"
@@ -2412,7 +2422,7 @@
     },
     {
       "path": "native/deck/native_ui185.h",
-      "line": 144,
+      "line": 155,
       "tags": [
         "abi"
       ],
@@ -2420,7 +2430,7 @@
     },
     {
       "path": "native/deck/native_ui185.h",
-      "line": 152,
+      "line": 163,
       "tags": [
         "native_offset"
       ],
@@ -2432,7 +2442,7 @@
     },
     {
       "path": "native/deck/native_ui185.h",
-      "line": 155,
+      "line": 166,
       "tags": [
         "hook"
       ],
@@ -2440,7 +2450,7 @@
     },
     {
       "path": "native/deck/native_ui185.h",
-      "line": 164,
+      "line": 175,
       "tags": [
         "hook"
       ],
@@ -2448,7 +2458,7 @@
     },
     {
       "path": "native/deck/native_ui185.h",
-      "line": 170,
+      "line": 181,
       "tags": [
         "native_offset"
       ],
@@ -2458,7 +2468,7 @@
     },
     {
       "path": "native/deck/native_ui185.h",
-      "line": 174,
+      "line": 185,
       "tags": [
         "native_offset"
       ],

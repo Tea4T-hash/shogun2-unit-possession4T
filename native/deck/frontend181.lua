@@ -198,6 +198,39 @@ local function campaign_buttons183()
     -- stock button's current geometry; no panel creation or script call here.
 
 end
+local menu_extent209
+local function campaign_setup_fit209()
+    if campaign or not quiet_menu or type(api.menu_fit209)~="function"then return end
+    local value="off";local screen
+    for _,id in ipairs({"grand_campaign_japan","grand_campaign_boshin"})do
+        local address=ui(root,"Find",id)
+        if address then
+            local c=native("UIComponent",function()return UIComponent(address)end)
+            if ui(c,"Id")==id and ui(c,"Visible")==true then
+                local w,h=ui(c,"Width"),ui(c,"Height")
+                if dimensions(w,h)and w<=8192 and h<=8192 then
+                    -- Both owned layouts use the same1280x1024 authored minimum.
+                    -- Do not feed our already-expanded viewport back as a new minimum.
+                    value="1280,1024";screen=c;break
+                end
+            end
+        end
+    end
+    if value~=menu_extent209 then
+        if not api.menu_fit209(value)then return end
+        menu_extent209=value
+    end
+    if not screen or type(api.ui_viewport185)~="function"then return end
+    local ok,w,h=pcall(api.ui_viewport185,true)
+    if not ok or not dimensions(w,h)or w<1280 or h<1024 or w>8192 or h>8192 then return end
+    -- Revision35 changed the outer viewport but left this native screen at
+    -- 1310x819. Its clipping rectangle cut off the entire Start Game footer.
+    -- Resize this resizable fullscreen container too, without scaling children
+    -- or images. Original docking places its fixed-size main panel and footer.
+    if ui(screen,"Width")~=w or ui(screen,"Height")~=h then ui(screen,"Resize",w,h,false,false)end
+    local rx,ry=ui(root,"Position");local x,y=ui(screen,"Position")
+    if finite(rx)and finite(ry)and finite(x)and finite(y)and(x~=rx or y~=ry)then ui(screen,"MoveTo",rx,ry)end
+end
 local function tick()
     if not M.live then return end
     api.heartbeat(true)
@@ -219,6 +252,7 @@ local function tick()
     -- Input is acquired/normalized by the native worker, not by a UI draw
     -- callback. Missing artwork or labels cannot turn off cursor/selection.
     if fresh and api.focused(true)then
+        campaign_setup_fit209()
         if campaign and type(api.panel188)=="function"then
             -- Original native OpenPanels returns the manager's modal-open bool.
             -- Observe only: the stock input phase owns all panel opens/closes.

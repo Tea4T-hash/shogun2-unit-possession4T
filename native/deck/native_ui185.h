@@ -117,6 +117,17 @@ inline bool root_size191(uintptr_t root,UiSize size){
  reinterpret_cast<Resize187>(native_ui185.base+0xf98900)(reinterpret_cast<void*>(root),float(size.width),float(size.height),false,false);
  float after[2]{};return read_ui191(state+0x28,after,sizeof after)&&after[0]==float(size.width)&&after[1]==float(size.height);
 }
+// Full-screen frontend campaign layouts are not PanelManager modals. Use their
+// authored extent to reduce only the extra Deck enlargement, with one shared
+// projection/inverse-input viewport. Children/fonts/click regions stay native.
+inline bool fit_frontend209(UiSize required){
+ if(!native_ui185.ready||((required.width||required.height)&&(!ui_size_valid(required)||required.width>8192||required.height>8192)))return false;
+ uintptr_t root{};if(!ui_pointer185(native_ui185.base+0x1bbe364,root)||!root)return false;
+ auto previous=InterlockedCompareExchange64(&panel_extent191,0,0);
+ panel_extent191_set(required.width,required.height);auto size=active_ui185();
+ if(!ui_size_valid(size)||!root_size191(root,size)){InterlockedExchange64(&panel_extent191,previous);return false;}
+ return true;
+}
 inline bool sync_panels191(bool modal){
  if(!native_ui185.ready)return false;
  uintptr_t root{};if(!ui_pointer185(native_ui185.base+0x1bbe364,root)||!root)return false;

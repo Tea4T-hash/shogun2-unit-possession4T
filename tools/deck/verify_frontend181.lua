@@ -32,6 +32,9 @@ local function fixture(opt)
    for _,a in ipairs(self.children)do local c=nodes[a];c.x=c.x*w/self.w;c.y=c.y*h/self.h end
   end
   self.w=w;self.h=h
+  if opt.native_frontend_layout210 then
+   for _,address in ipairs(self.children)do local c=nodes[address];if c.dock210==5 then c.x=(w-c.w)/2;c.y=(h-c.h)/2 end end
+  end
  end
  function methods:MoveTo(x,y)self.x=x;self.y=y end
  function methods:SetImageMetrics()self.metrics=true end
@@ -67,6 +70,14 @@ local function fixture(opt)
  end
 
  local api={prepare=function()return false end}
+ if opt.menu_fit209 then
+  api.menu_fit209=function(value)
+   flags.menu_extent209=value;flags.menu_fit_calls209=(flags.menu_fit_calls209 or 0)+1
+   flags.logical_width210=value=='off'and 1310 or 1638;flags.logical_height210=value=='off'and 819 or 1024
+   root.w=flags.logical_width210;root.h=flags.logical_height210;return true
+  end
+  api.ui_viewport185=function()return flags.logical_width210 or 1310,flags.logical_height210 or 819 end
+ end
  if opt.bindings183 then
   for _,name in ipairs({'home','arts','finance','diplomacy','clan','end_turn','quick_save','move_speed','encyclopedia'})do local key=name;api[key]=function(v)assert(v==true);local value=flags[key];flags[key]=false;return value end end
   api.click183=function(value)flags.click=value;flags.click_count=(flags.click_count or 0)+1;return true end
@@ -402,5 +413,54 @@ test('modal observation remains read-only across1000 frames',function()
  local f=fixture({campaign=true,native_camera=true,forbid_frame_geometry=true});f.flags.panel_open=true
  f.m.group.SetVisible=function()error('frame visibility mutation')end
  for n=1,1000 do f.pulse()end;assert(f.flags.panel_state=='open'and not f.flags.native_camera_calls and not f.flags.last_error)
+end)
+test('Japan campaign setup uses its whole authored screen extent',function()
+ local f=fixture({native_camera=true,menu_fit209=true});local screen=f.node('grand_campaign_japan',f.root.address);screen.visible=true;screen.w=1024;screen.h=819
+ local footer=f.node('start_button_bg',screen.address);footer.y=921;footer.w=379;footer.h=56
+ f.pulse();assert(f.flags.menu_extent209=='1280,1024'and not f.flags.last_error)
+ assert(screen.w==1638 and screen.h==1024 and footer.y==921 and footer.h==56 and not footer.resize_calls)
+ for n=1,60 do f.pulse()end;assert(f.flags.menu_fit_calls209==1)
+end)
+test('Boshin campaign footer fits and normal menu scale returns on exit',function()
+ local f=fixture({native_camera=true,menu_fit209=true});local screen=f.node('grand_campaign_boshin',f.root.address);screen.visible=true;screen.w=1280;screen.h=1024
+ f.pulse();assert(f.flags.menu_extent209=='1280,1024')
+ screen.visible=false;f.pulse();assert(f.flags.menu_extent209=='off'and f.flags.menu_fit_calls209==2 and not f.flags.last_error)
+end)
+test('campaign map and invalid frontend extents cannot change menu scaling',function()
+ local f=fixture({native_camera=true,campaign=true,menu_fit209=true});local screen=f.node('grand_campaign_japan',f.root.address);screen.visible=true;screen.w=1280;screen.h=1024
+ f.pulse();assert(not f.flags.menu_extent209 and not f.flags.last_error)
+ local g=fixture({native_camera=true,menu_fit209=true});local bad=g.node('grand_campaign_japan',g.root.address);bad.visible=true;bad.w=9000;bad.h=1024
+ g.pulse();assert(g.flags.menu_extent209=='off'and not g.flags.last_error)
+end)
+test('captured Japan parent clipping is repaired without shrinking its contents',function()
+ local f=fixture({native_camera=true,menu_fit209=true,native_frontend_layout210=true})
+ local screen=f.node('grand_campaign_japan',f.root.address);screen.visible=true;screen.w=1310;screen.h=819;screen.x=164;screen.y=102
+ local main=f.node('main_panel',screen.address);main.w=1104;main.h=912;main.x=103;main.y=-46;main.dock210=5
+ local footer=f.node('start_button_bg',main.address);footer.x=363;footer.y=865;footer.w=379;footer.h=56
+ local button=f.node('button_forward',footer.address);button.x=72;button.y=9;button.w=234;button.h=38;button.interactive=true
+ assert(main.y+footer.y>=screen.h) -- live failure: ancestor clips the complete footer
+ f.pulse();assert(not f.flags.last_error and screen.w==1638 and screen.h==1024 and screen.x==0 and screen.y==0)
+ assert(main.w==1104 and main.h==912 and main.x==267 and main.y==56 and not main.resize_calls and not footer.resize_calls)
+ assert(main.y+footer.y+footer.h<=screen.h and button.interactive)
+ assert(main.y+footer.y+button.y+button.h<=screen.h)
+ local calls=screen.resize_calls;for n=1,60 do f.pulse()end;assert(screen.resize_calls==calls and f.flags.menu_fit_calls209==1)
+end)
+
+test('Boshin footer and native forward button remain inside every ancestor',function()
+ local f=fixture({native_camera=true,menu_fit209=true,native_frontend_layout210=true})
+ local screen=f.node('grand_campaign_boshin',f.root.address);screen.visible=true;screen.w=1310;screen.h=819;screen.x=164;screen.y=102
+ local footer=f.node('start_button_bg',screen.address);footer.x=450;footer.y=968;footer.w=379;footer.h=56
+ local button=f.node('button_forward',footer.address);button.x=72;button.y=9;button.w=234;button.h=38;button.interactive=true
+ f.pulse();assert(not f.flags.last_error and screen.x==0 and screen.y==0 and footer.y+footer.h<=screen.h)
+ assert(button.y+button.h<=footer.h and button.interactive and not footer.resize_calls and not button.resize_calls)
+ screen.visible=false;f.pulse();assert(f.flags.menu_extent209=='off'and f.root.h==819)
+end)
+
+test('campaign container reflow recovers from late native adoption with cached extent',function()
+ local f=fixture({native_camera=true,menu_fit209=true});local screen=f.node('grand_campaign_japan',f.root.address);screen.visible=true;screen.w=1310;screen.h=819
+ f.pulse();assert(screen.w==1638 and screen.h==1024)
+ screen.w=1310;screen.h=819;screen.x=164;screen.y=102
+ f.pulse();assert(screen.w==1638 and screen.h==1024 and screen.x==0 and screen.y==0 and f.flags.menu_fit_calls209==1)
+ local calls=screen.resize_calls;screen.visible=false;f.pulse();assert(screen.resize_calls==calls and f.root.h==819 and not f.flags.last_error)
 end)
 print('PASS '..passed..' frontend181 float-Lua UI policy checks; actual native UI and Deck unverified')

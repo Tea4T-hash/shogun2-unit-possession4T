@@ -25,7 +25,7 @@ Take control of a soldier in **Total War: SHOGUN 2**, fight in first or third pe
 
 Use the existing [Steam Workshop item](https://steamcommunity.com/sharedfiles/filedetails/?id=3825625050). The combined build uses that same item; a separate Deck subscription is unnecessary.
 
-**Maintained source: v0.34, PC and Steam Deck.** Public `main` contains the combined implementation through revision34. The latest tagged GitHub download remains [v0.33](https://github.com/logsam58/shogun2-unit-possession/releases/tag/v0.33), which predates Deck integration. No new binary release or Steam upload is performed by this source update. [Current source/build identity](docs/current-release.json) records the distinction.
+**Maintained source: v0.34, PC and Steam Deck.** Public `main` contains the combined implementation through revision36, including the accepted Steam Deck campaign Start Game footer correction. The latest tagged GitHub download remains [v0.33](https://github.com/logsam58/shogun2-unit-possession/releases/tag/v0.33), which predates Deck integration. No new binary release or Steam upload is performed by this source update. [Current source/build identity](docs/current-release.json) records the distinction.
 
 No installer is provided. Fonts, artwork and audio are prepared from your own installed game.
 

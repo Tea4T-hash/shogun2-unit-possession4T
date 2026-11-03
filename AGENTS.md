@@ -20,3 +20,7 @@ claim it fixed. Charge, climbing, camera and infantry/cavalry animation acceptan
 are separate, scoped results. The latest source includes those targeting attempts.
 Do not resume targeting development or live testing just because source is published.
 No subagents unless the owner explicitly requests them.
+
+Revision36 corrects the Deck campaign setup clipping parent; the owner accepted
+the Start Game footer fix. Preserve PC device bypass and the normal native
+button/content geometry. This acceptance does not resolve enemy acquisition.
