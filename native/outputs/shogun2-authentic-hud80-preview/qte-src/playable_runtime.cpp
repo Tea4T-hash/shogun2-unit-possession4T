@@ -383,7 +383,8 @@ static uint32_t retarget_port(void*,uint32_t address,const NativeVerdict& desire
     completed.prompt.active=true;completed.occupied=1;transport::publish(completion_publication,completed);
     observation::animation_snapshot(reader(),address,playback.before_variant);
     uint32_t prior=replay_parent;bool prior_retarget=retargeting;replay_parent=address;retargeting=true;uint32_t answer=1,stage=0;
-    __try{answer=retarget::rebuild(address,desired,plans,retarget_ports,stage);
+    // Role-swapped results (Perfect Guard, Countered) use the same role-flexible rebuild as routing.
+    __try{answer=retarget::rebuild(address,desired,plans,retarget_ports,stage,true);
         if((answer&0xff)==0&&!seal_authorization(address,key.generation,desired)){answer=reject_melee();retire_authorization(address,key.generation);}
         if((answer&0xff)==0){commitment.phase=melee60::Aligning;publish_commitment();}else clear_commitment();
         sample_playback(address);
@@ -758,7 +759,7 @@ static DWORD WINAPI render_worker(void*){
             bool show=transport::read(publication,data)&&transport::presentation(data,now,shown);
             if(!show){transport::Payload done;
                 if(transport::read(completion_publication,done)&&done.prompt.serial>=data.prompt.serial&&
-                   now-done.published_wall<(done.prompt.result==Result::Canceled?1.1:1.5)){show=transport::presentation(done,now,shown);if(show)data=done;}
+                   now-done.published_wall<(done.prompt.result==Result::Canceled?1.1:3.0)){show=transport::presentation(done,now,shown);if(show)data=done;}
             }
             bool click_freeze105=false;
             if(show&&shown.result==Result::Pending&&!shown.paused){transport::Payload frozen;
@@ -914,7 +915,7 @@ static DWORD WINAPI worker(void*){void* targets[10]{};bool hooked=false;HANDLE r
             previous_left=left;previous_right=right;previous_focus=focus;
             transport::Payload completed;Snapshot feedback;const double now=wall();
             bool feedback_visible=!show&&transport::read(completion_publication,completed)&&
-                now-completed.published_wall<(completed.prompt.result==Result::Canceled?1.1:1.5)&&transport::presentation(completed,now,feedback);
+                now-completed.published_wall<(completed.prompt.result==Result::Canceled?1.1:3.0)&&transport::presentation(completed,now,feedback);
             if(log_file.enabled()&&(GetTickCount64()>=next_log||logged_serial!=last_serial||logged_acquisitions!=acquisitions||logged_resolutions!=resolutions||logged_playback!=recorded_playback.revision||logged_phase!=recorded_phase)){
                 const auto registry94=lifetimes.metrics94();
                 ScoreMetrics metrics;const bool metrics_valid=read_score_metrics(metrics);
