@@ -1,8 +1,33 @@
 #pragma once
 // Included inside hud80 after Assets/panel/text/mouse_image, for both the real
 // QTE runtime and full HUD previews. No gameplay/timeline state is modified.
+// Result flash: after a click the bar fills with the colour landed on, spreading out from the
+// click point, shows "Attacked"/"Guarded" in bold white, and disappears 1.5 s after the click.
+inline constexpr ULONGLONG ResultShowMs=1500,ResultFillMs=250;
+inline Color result_colour(const qte::Snapshot& s){
+    switch(s.result){
+        case qte::Result::Success:return Color(255,139,153,56);   // green
+        case qte::Result::Purple: return Color(255,128,72,160);   // purple
+        case qte::Result::Orange: return Color(255,214,128,40);   // orange
+        case qte::Result::Blue:   return Color(255,58,104,170);   // blue
+        case qte::Result::Timeout:return Color(255,96,88,76);     // no click: grey
+        default:                  return Color(255,151,48,37);    // red or wrong button
+    }
+}
+inline const wchar_t* result_word(const qte::Snapshot& s){
+    if(s.result==qte::Result::Timeout)return L"No click";
+    if(s.result==qte::Result::WrongButton)return L"Wrong button";
+    return qte::attacking(s.action)?L"Attacked":L"Guarded";
+}
 inline void qte_meter(Graphics& g,const Assets& a,float x,float y,const qte::Snapshot& s){
     if(!s.active)return;
+    // Time since this exchange was first seen resolved (kept per prompt serial, per process).
+    static uint64_t result_serial=0;static ULONGLONG result_start=0;
+    const bool resolved=s.result!=qte::Result::Pending&&s.result!=qte::Result::Canceled;
+    ULONGLONG result_age=0;
+    if(resolved){const ULONGLONG now=GetTickCount64();
+        if(result_serial!=s.serial){result_serial=s.serial;result_start=now;}
+        result_age=now-result_start;if(result_age>=ResultShowMs)return;}
     panel(g,a,RectF(x-150,y-32,300,64));
     constexpr float span=hudlayout108::qte_span,height=20.f;
     const float left=x-span*.5f,top=y-10.f;
@@ -29,9 +54,27 @@ inline void qte_meter(Graphics& g,const Assets& a,float x,float y,const qte::Sna
         g.FillRectangle(brush,RectF(left+run_start*span,top,(x-run_start)*span,height));
         run_start=x;run=z;
     }
+    if(resolved){
+        // Fill outwards from the click point; ease-out over 0.25 s, then hold.
+        const float click=std::clamp(qte::reticle_position(s),0.f,1.f);
+        float t=std::min(1.f,float(result_age)/float(ResultFillMs));t=1.f-(1.f-t)*(1.f-t);
+        const float reach=t*std::max(click,1.f-click)*span;
+        SolidBrush fill(result_colour(s));
+        g.FillRectangle(&fill,RectF(left+click*span-reach,top,reach*2.f,height));
+    }
     g.Restore(clipped);
     Pen rim(Color(255,85,67,40),1.2f),light(Color(255,221,208,163),1.f);
     g.DrawPath(&rim,&track);g.DrawLine(&light,left+3,top+1,left+span-3,top+1);
+    if(resolved){
+        // Bold white word inside the bar.
+        FontFamily family(L"Arial");Font bold(&family,14.f,FontStyleBold,UnitPixel);
+        StringFormat centred;centred.SetAlignment(StringAlignmentCenter);centred.SetLineAlignment(StringAlignmentCenter);
+        SolidBrush outline(Color(200,20,16,12)),white(Color(255,255,255,255));
+        const RectF box(left,top,span,height);
+        g.DrawString(result_word(s),-1,&bold,RectF(box.X+1,box.Y+1,box.Width,box.Height),&centred,&outline);
+        g.DrawString(result_word(s),-1,&bold,box,&centred,&white);
+        return;
+    }
     const float marker=left+qte::reticle_position(s)*span;
     Pen shadow(Color(255,40,31,20),5),pointer(Color(255,255,248,224),2);
     g.DrawLine(&shadow,marker,top-5,marker,top+height+5);g.DrawLine(&pointer,marker,top-5,marker,top+height+5);
