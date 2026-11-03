@@ -96,4 +96,3 @@ pack.write_bytes(struct.pack('<4s5IQ', b'PFH3', 3, 0, 0, len(entries), len(index
 (OUT / 'package/fingerprints.json').write_text(json.dumps({'pack': digest(pack), 'bridge': digest(dll),
     'components': {n: digest(BIN / n) for n in NAMES}}, indent=2))
 print(open(OUT / 'package/fingerprints.json').read())
-
