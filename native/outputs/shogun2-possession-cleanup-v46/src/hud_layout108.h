@@ -8,7 +8,7 @@ inline float scale(float width,float height){
     if(width>=1280&&height>=720)s=std::max(.85f,s);
     return s*.85f*1.15f;
 }
-inline float qte_anchor_y(float height){return height*.3125f;} // 25% closer to the centre crosshair (was .25)
+inline float qte_anchor_y(float height){return height*.33125f;} // closer to the centre crosshair (was .25, then .3125)
 struct Layout {
     float zoom,width,height,bottom;
     Rect soldier,commands,context;
