@@ -758,7 +758,7 @@ static DWORD WINAPI render_worker(void*){
             bool show=transport::read(publication,data)&&transport::presentation(data,now,shown);
             if(!show){transport::Payload done;
                 if(transport::read(completion_publication,done)&&done.prompt.serial>=data.prompt.serial&&
-                   now-done.published_wall<(done.prompt.result==Result::Canceled?1.1:.45)){show=transport::presentation(done,now,shown);if(show)data=done;}
+                   now-done.published_wall<(done.prompt.result==Result::Canceled?1.1:1.5)){show=transport::presentation(done,now,shown);if(show)data=done;}
             }
             bool click_freeze105=false;
             if(show&&shown.result==Result::Pending&&!shown.paused){transport::Payload frozen;
@@ -914,7 +914,7 @@ static DWORD WINAPI worker(void*){void* targets[10]{};bool hooked=false;HANDLE r
             previous_left=left;previous_right=right;previous_focus=focus;
             transport::Payload completed;Snapshot feedback;const double now=wall();
             bool feedback_visible=!show&&transport::read(completion_publication,completed)&&
-                now-completed.published_wall<(completed.prompt.result==Result::Canceled?1.1:.45)&&transport::presentation(completed,now,feedback);
+                now-completed.published_wall<(completed.prompt.result==Result::Canceled?1.1:1.5)&&transport::presentation(completed,now,feedback);
             if(log_file.enabled()&&(GetTickCount64()>=next_log||logged_serial!=last_serial||logged_acquisitions!=acquisitions||logged_resolutions!=resolutions||logged_playback!=recorded_playback.revision||logged_phase!=recorded_phase)){
                 const auto registry94=lifetimes.metrics94();
                 ScoreMetrics metrics;const bool metrics_valid=read_score_metrics(metrics);
