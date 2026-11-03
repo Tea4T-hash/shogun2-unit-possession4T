@@ -6,11 +6,30 @@ inline void qte_meter(Graphics& g,const Assets& a,float x,float y,const qte::Sna
     panel(g,a,RectF(x-150,y-32,300,64));
     constexpr float span=hudlayout108::qte_span,height=20.f;
     const float left=x-span*.5f,top=y-10.f;
-    GraphicsPath track;round_rect(track,RectF(left,top,span,height),2.5f);
-    SolidBrush failure(Color(255,151,48,37)),success(Color(255,139,153,56));
-    g.FillPath(&failure,&track);
+    // Hourglass bar: full height at the ends, pinched in the middle, smooth curves.
+    const float pinch=5.f,mid=left+span*.5f;
+    GraphicsPath track;
+    track.AddBezier(PointF(left,top),PointF(left+span*.25f,top),PointF(mid-span*.15f,top+pinch),PointF(mid,top+pinch));
+    track.AddBezier(PointF(mid,top+pinch),PointF(mid+span*.15f,top+pinch),PointF(left+span*.75f,top),PointF(left+span,top));
+    track.AddLine(PointF(left+span,top),PointF(left+span,top+height));
+    track.AddBezier(PointF(left+span,top+height),PointF(left+span*.75f,top+height),PointF(mid+span*.15f,top+height-pinch),PointF(mid,top+height-pinch));
+    track.AddBezier(PointF(mid,top+height-pinch),PointF(mid-span*.15f,top+height-pinch),PointF(left+span*.25f,top+height),PointF(left,top+height));
+    track.CloseFigure();
+    SolidBrush red(Color(255,151,48,37)),blue(Color(255,58,104,170)),orange(Color(255,214,128,40)),
+        purple(Color(255,128,72,160)),green(Color(255,139,153,56));
     auto clipped=g.Save();g.SetClip(&track,CombineModeIntersect);
-    g.FillRectangle(&success,RectF(left+qte::zone_left(s)*span,top,s.zone_width*span,height));g.Restore(clipped);
+    const uint32_t sweep=qte::sweep_index(s);
+    float run_start=0;qte::Zone run=qte::zone_at(0.f,s.serial,sweep);
+    const int columns=int(span);
+    for(int i=1;i<=columns;++i){
+        const float x=float(i)/float(columns);
+        const qte::Zone z=i<columns?qte::zone_at(x,s.serial,sweep):qte::Zone(255);
+        if(z==run)continue;
+        SolidBrush* brush=run==qte::Zone::Green?&green:run==qte::Zone::Purple?&purple:run==qte::Zone::Orange?&orange:run==qte::Zone::Blue?&blue:&red;
+        g.FillRectangle(brush,RectF(left+run_start*span,top,(x-run_start)*span,height));
+        run_start=x;run=z;
+    }
+    g.Restore(clipped);
     Pen rim(Color(255,85,67,40),1.2f),light(Color(255,221,208,163),1.f);
     g.DrawPath(&rim,&track);g.DrawLine(&light,left+3,top+1,left+span-3,top+1);
     const float marker=left+qte::reticle_position(s)*span;
