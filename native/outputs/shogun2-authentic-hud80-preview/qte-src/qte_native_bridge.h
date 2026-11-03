@@ -219,7 +219,8 @@ public:
                 if(strict_&&gate_.snapshot().result==Result::Canceled){gate_.removed(witness,generation);return 1;}
                 Verdict verdict;
                 if(!gate_.begin_replay(key_,true,verdict))return 1;
-                auto result=native_;result.outcome=verdict.outcome;
+                auto result=native_;result.outcome=verdict.outcome&0xff;
+                if(verdict.outcome&ReverseRoles)std::swap(result.attacker_address,result.defender_address);
                 uint32_t returned;
                 if(prepared_mode_){
                     if(!replay_.arm(input_,result)){++replay_errors_;return 1;}
@@ -265,11 +266,12 @@ public:
             if(progress==SelectionProgress::Attempted){++replay_errors_;return 1;}
             return forward_or_reject(witness,owner.verified_melee);
         }
-        if(strict_)selected.outcome=0; // Initial registration is always a surviving exchange; QTE alone authorizes a casualty.
+        // Normal rolls: keep the game's own kill (5); any special outcome becomes a surviving exchange.
+        if(strict_&&selected.outcome!=5)selected.outcome=0;
         // Committed native charges are forwarded before this QTE-only path.
         // A pose alone must never reorient the stock attacker or force a kill.
-        const bool attacks=selected.attacker_address==owned.address;
-        const bool defends=selected.defender_address==owned.address;
+        bool attacks=selected.attacker_address==owned.address;
+        bool defends=selected.defender_address==owned.address;
         acquisition_stage_=6;
         if(!strict_&&preserve_special_&&selected.outcome!=0&&selected.outcome!=5)return reject_selected(input,selected);
         NativeActor enemy;
@@ -314,6 +316,10 @@ public:
             own_facts.known|=EffectiveCombat;enemy_facts.known|=EffectiveCombat;
         }
         if(strict_)own_facts.routing=false; // Morale still carries a severe penalty; an admitted FPS exchange cannot bypass its prompt.
+        // A missed attack (no click / wrong button) forces this exchange to be a guard.
+        if(attacks&&force_guard_next.exchange(0)){
+            std::swap(selected.attacker_address,selected.defender_address);selected.outcome=0;attacks=false;defends=true;
+        }else if(defends)force_guard_next.store(0);
         Pair pair{owner.battle,owner.lease,owned.serial,enemy.serial,owned.unit_serial,enemy.unit_serial};
         WitnessKey key{witness,generation,pair};
         Verdict verdict{selected.outcome,attacks?owned.serial:enemy.serial,attacks?enemy.serial:owned.serial};
