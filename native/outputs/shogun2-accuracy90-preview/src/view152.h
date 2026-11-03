@@ -26,9 +26,10 @@ inline bool eye(const deathpose::Eye& native,float yaw,float pitch,deathpose::Ey
 struct Input {
     bool held{};unsigned toggles{};int wheel{};
     void key(std::uint8_t* current,std::uint8_t* previous,bool owned,bool valid){
-        if(!valid)return;bool down=(current[0x19]&0x80)!=0;
+        // P (0x19) or V (0x2F) switches first/third person.
+        if(!valid)return;bool down=((current[0x19]|current[0x2F])&0x80)!=0;
         if(owned&&down&&!held)++toggles;
-        if(owned||held)current[0x19]=previous[0x19]=0;
+        if(owned||held)current[0x19]=previous[0x19]=current[0x2F]=previous[0x2F]=0;
         held=down&&(owned||held);
     }
 };
