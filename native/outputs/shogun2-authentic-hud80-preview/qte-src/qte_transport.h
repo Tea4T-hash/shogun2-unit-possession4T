@@ -43,7 +43,7 @@ inline bool valid(const Payload& value){
     if(!value.pid||!std::isfinite(value.published_wall)||value.published_wall<0||value.enabled>1||value.occupied>1)return false;
     if(!s.active)return true;
     return value.enabled&&value.occupied&&value.lease&&s.serial&&s.opponent_unit&&
-        (attacking(s.action)||s.action==Action::Defend)&&uint32_t(s.result)<=uint32_t(Result::Canceled)&&
+        (attacking(s.action)||s.action==Action::Defend)&&uint32_t(s.result)<=uint32_t(Result::Blue)&&
         std::isfinite(s.response_elapsed)&&s.response_elapsed>=0&&s.response_elapsed<=MaximumResponseSeconds95&&s.response_elapsed<=response_deadline(s)+1e-6&&
         (s.result!=Result::Pending||s.response_elapsed<ResponseWindowSeconds91||s.elapsed<2.*s.duration)&&
         (s.result!=Result::Timeout||(s.response_elapsed+1e-6>=ResponseWindowSeconds91&&s.elapsed+1e-5>=2.*s.duration))&&
