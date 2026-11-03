@@ -293,7 +293,7 @@ inline void render(Graphics& g,const Assets& a,float width,float height,const Vi
         const float cx=context.x,cy=context.y;
         panel(g,a,RectF(cx,cy,context.w,context.h));
         if(v.climb_mode){
-            if(v.climb_mode<=2){key_image(g,L"F",RectF(cx+27,cy+24,32,30));text(g,L"Climb wall",cx+73,cy+26,286,28,19,ink(),true);}
+            if(v.climb_mode<=2){key_image(g,L"E",RectF(cx+27,cy+24,32,30));text(g,L"Climb wall",cx+73,cy+26,286,28,19,ink(),true);}
             else if(v.climb_mode==5)text(g,L"Cannot climb here",cx+30,cy+27,330,28,19,ink(),true);
             else if(v.climb_mode==6)text(g,L"Approaching wall",cx+30,cy+27,330,28,19,ink(),true);
             else if(v.climb_mode==4)text(g,L"Climbing over",cx+30,cy+27,330,28,19,ink(),true);
@@ -324,7 +324,7 @@ inline void render(Graphics& g,const Assets& a,float width,float height,const Vi
     text(g,command_title,right+23,top+20,178,26,13,ink(),true);
     const bool placing=v.commands_known&&v.commands.placing;
     const wchar_t* fire_mode=!v.commands_known?L"Fire mode unknown":v.commands.fire_mode==0?L"Hold fire":v.commands.fire_mode==1?L"Fire at will":L"Fire on command";
-    const wchar_t* keys[]={L"Q",L"E",L"Z",L"C",L"R"};
+    const wchar_t* keys[]={L"F1",L"F2",L"F3",L"F4",L"R"}; // F1 move/attack, F2 stop, F3 hold, F4 follow
     const wchar_t* labels[]={L"Move / attack",L"Stop",L"Hold here",L"Follow me",fire_mode};
     for(unsigned i=0;i<5;++i){float row=top+49+i*36.f;
         key_image(g,keys[i],RectF(right+24,row,28,26));
@@ -341,8 +341,8 @@ inline void render(Graphics& g,const Assets& a,float width,float height,const Vi
             else if(item.cooldown>.05f)swprintf_s(status,L"Ready in %.0fs",std::ceil(item.cooldown));
             else wcscpy_s(status,item.flags&ability141::Active?L"Active":item.flags&ability141::Available?(item.flags&ability141::Targeted?L"Aim at an ally":L"Ready"):L"Unavailable");
             native_fonts.paint(g,status,RectF(ax+68,ay+39,command.w-88,21),12,v.abilities.error?red():muted(),true);
-            key_image(g,L"T",RectF(ax+24,ay+66,28,24));text(g,L"Next",ax+60,ay+66,48,24,12,muted());
-            key_image(g,L"G",RectF(ax+124,ay+66,28,24));text(g,item.flags&ability141::Active?L"End":L"Use",ax+160,ay+66,40,24,12,muted());
+            key_image(g,L"G",RectF(ax+24,ay+66,28,24));text(g,L"Next",ax+60,ay+66,48,24,12,muted());
+            key_image(g,L"F",RectF(ax+124,ay+66,28,24));text(g,item.flags&ability141::Active?L"End":L"Use",ax+160,ay+66,40,24,12,muted());
         }
     }
     auto reticle=weapon_state89(v);
