@@ -3,7 +3,8 @@
 #include "death_pose_geometry.h"
 namespace animationview {
 inline float eyelid_fraction(uint64_t elapsed_ms){
-    float t=float(elapsed_ms>3000?elapsed_ms-3000:0)/1500.f; // eyes close 3.0-4.5 s after death, then RTSt=std::fmin(1.f,t);return t*t*(3.f-2.f*t);
+    // Eyes close 3.0-4.5 s after death, then the view returns to RTS.
+    float t=float(elapsed_ms>3000?elapsed_ms-3000:0)/1500.f;t=std::fmin(1.f,t);return t*t*(3.f-2.f*t);
 }
 // Native134fad0 copies affine translation into the eye, adds column +Z for
 // forward, and copies column +Y for up. Preserve those native values rather
