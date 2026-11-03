@@ -1,98 +1,97 @@
 *Assisted by AI*
 
 [h2]NOW WITH STEAM DECK INTEGRATION[/h2]
-The same mod now supports PC and Steam Deck, with automatic controls and UI sizing for each. Existing subscribers do not need another mod.
+The same mod supports [b]PC and Steam Deck[/b], automatically adapting its controls and UI. [b]No separate download or resubscription required.[/b]
 
-On Deck, use the Windows version of Shogun 2 through Proton (tested with Proton 9.0-4). Press [b]Y[/b] to possess or return to RTS, and hold [b]View[/b] for the in-game controls guide. Use the right trackpad in menus. The labelled controller schemes appear as [b]Unit Possession Layout[/b] in Steam.
+[b]Campaign, Battle (RTS), and Unit Possession[/b] each have dedicated controller schemes that switch automatically as you move between strategic command and soldier control.
+
+[b]Steam Deck setup[/b]
+[list]
+[*]Run the [b]Windows version[/b] through Proton. Tested with [b]Proton 9.0-4[/b].
+[*]Press [b]Y[/b] to enter or exit possession.
+[*]Hold [b]View[/b] for the in-game controls guide.
+[*]Use the [b]right trackpad[/b] for menu navigation.
+[*]Labelled schemes appear as [b]Unit Possession Layout[/b] in Steam's controller settings.
+[/list]
 
 [h1]Command the army. Then join the fight.[/h1]
-Select a unit, press F9, and take control of a soldier in the middle of your Shogun 2 battle. Fight on foot, ride with the cavalry, shoot from the ranks, or lead your men from the front. Your army keeps fighting around you. Press F10 whenever you want to return to your RTS camera.
+Select a unit, press F9, and control a soldier in your Shogun 2 battle. Fight on foot, ride with cavalry, shoot from the ranks, or lead from the front. Your army keeps fighting around you. Press F10 to return to your RTS camera.
 
-Play in third person or first person, and switch between them with P. Third person is the default. Scroll to change the camera distance, or hold the middle mouse button to orbit around your soldier.
+Third person is the default. Press P to switch views, scroll to change camera distance, or hold middle mouse to orbit your soldier.
 
 [h2]What you can do[/h2]
 [list]
-[*][b]Choose your soldier.[/b] Zoom the RTS camera in close, point the mouse cursor at someone in your selected unit, and press F9. Generals, officers, flag bearers and musicians are included, with their own equipment. From higher up, a soldier is picked for you.
-[*][b]Fight in melee.[/b] Follow the LMB or RMB prompt and time your click as the moving indicator reaches the green zone. The fight uses Shogun 2's combat animations.
-[*][b]Aim and shoot.[/b] Use bows, guns and thrown weapons. Ranged spread follows your unit's accuracy. Firearm sights show the spread; other projectile sights include descending dashes to help with drop. Hold and release LMB with a bow to vary shot strength.
-[*][b]Command from the front.[/b] Point out a move or attack, drag out a formation, tell your men to hold a position or follow you, and choose when they fire. The rest of the army continues fighting under its normal AI.
-[*][b]Use your unit's abilities.[/b] Cycle its available abilities and special ammunition. Aim at a friendly unit for targeted abilities such as Inspire. Native restrictions and cooldowns still apply.
-[*][b]Take part in sieges.[/b] Request a wall climb independently of your formation, and mount or dismount where supported. Climbing is improved but still intermittent; see the known problems below.
+[*][b]Choose your soldier.[/b] Zoom close, point at someone in your selected unit and press F9. Generals, officers, flag bearers and musicians use their own equipment. From higher up, a soldier is picked for you.
+[*][b]Fight in melee.[/b] Follow the LMB/RMB prompt and time your click as the moving indicator reaches the green zone, using the game's combat animations.
+[*][b]Aim and shoot.[/b] Use bows, guns and thrown weapons. Unit accuracy affects spread; sight markings help with projectile drop. Hold/release bow shots to vary strength.
+[*][b]Command from the front.[/b] Issue move/attack orders, place formations, hold position, follow and choose fire orders.
+[*][b]Use unit abilities.[/b] Select abilities or special ammunition. Aim at friendlies for targeted abilities such as Inspire. Native restrictions and cooldowns apply.
+[*][b]Take part in sieges.[/b] Request an individual wall climb without ordering your formation to climb. Mount/dismount where supported.
 [/list]
-The HUD shows your unit, weapon, ammunition, abilities and commands. Press K for a clearer view; melee timing prompts stay visible. During possession, K cycles through hiding the RTS HUD, hiding both HUDs, then restoring both. A tap of View does the same on Deck.
+The HUD shows your unit, weapon, ammunition, abilities and commands. Melee timing prompts remain visible when the HUD is hidden.
 
 [h2]Install and get started[/h2]
 [list]
-[*]Subscribe to this Workshop item.
-[*]Enable it in Shogun 2's launcher, then launch through Steam.
-[*]In a single-player land battle or siege, select a friendly unit and press F9 on PC, or Y on Deck.
-[*]Press F10 on PC, or Y on Deck, to return to RTS control.
+[*]Subscribe and enable this mod in Shogun 2's launcher.
+[*]Launch through Steam and select a friendly unit in a single-player land battle or siege.
+[*]Press F9 on PC, or Y on Deck, to possess.
+[*]Press F10 on PC, or Y on Deck, to return to RTS.
 [/list]
+Restart after updates and enable only one possession build. Remove any older installer version before using Workshop.
 
 [h2]Controls[/h2]
-[b]Your soldier[/b]
+[b]Your soldier - PC[/b]
 [list]
-[*][b]WASD:[/b] move. [b]Shift:[/b] run.
-[*][b]RMB:[/b] ready or aim your ranged weapon.
-[*][b]LMB:[/b] fire guns or thrown weapons. With a bow, hold and release to choose shot strength.
-[*][b]Shown LMB/RMB prompt:[/b] time the indicated click into the green zone during melee.
-[*][b]1:[/b] toggle the unit's native melee/ranged mode, where available.
+[*][b]WASD / Shift:[/b] move / run.
+[*][b]RMB / LMB:[/b] ready or aim / fire. Hold and release LMB for bow strength.
+[*][b]Shown LMB/RMB prompt:[/b] time your response into the green zone during melee.
+[*][b]1:[/b] toggle the unit's supported melee/ranged mode.
 [*][b]T / G:[/b] select / use an ability or ammunition option. Aim at friendlies for targeted abilities.
-[*][b]Hold Ctrl:[/b] crouch to fire, where supported.
-[*][b]M:[/b] order the unit to mount or dismount, where supported.
-[*][b]F near a wall:[/b] request an individual climb; no unit climb order is needed. Press again to cancel a pending approach. [b]W / S:[/b] ascend / descend during a climb; release both to hold position.
-[*][b]W + Shift + LMB toward an enemy:[/b] request a personal charge. Use melee mode and release RMB. When the native conditions are met, the game handles charge contact and the attack or defensive outcome.
+[*][b]Hold Ctrl:[/b] crouch to fire, where supported. [b]M:[/b] mount/dismount the unit.
+[*][b]F near a wall:[/b] request an individual climb; press again to cancel a pending approach. [b]W / S:[/b] ascend / descend during a climb; release both to hold.
+[*][b]W + Shift + LMB toward an enemy:[/b] request a personal charge. Use melee mode and release RMB. Native charge conditions and attack/defensive outcomes apply.
 [/list]
-[b]Your unit[/b]
+[b]Your unit - PC[/b]
 [list]
-[*][b]Q — Move / Attack:[/b] point at the ground to move, or at an enemy or supported breakable target to attack. Hold Q and drag left to right to place the formation, then release.
-[*][b]E — Stop:[/b] stop the unit.
-[*][b]Z — Hold Here:[/b] form up at your position, facing the direction you were looking when you pressed Z.
-[*][b]C — Follow Me:[/b] form up beside you, run to catch up when needed, then match your pace.
-[*][b]R — Fire orders:[/b] cycle Hold Fire, Fire at Will and Fire on Command. Fire on Command tells the unit to fire when you fire.
+[*][b]Q:[/b] move/attack. Hold and drag left to right to place a formation.
+[*][b]E:[/b] stop. [b]Z:[/b] hold here, facing your current view.
+[*][b]C:[/b] follow you, catch up at a run, then match your pace.
+[*][b]R:[/b] cycle Hold Fire, Fire at Will and Fire on Command. Fire on Command makes the unit fire when you do.
 [/list]
-Tap Q or Z for a walking order; double-tap for a running order. Unit orders are unavailable during locked melee animations, climbing or landing.
+Tap Q/Z to walk; double-tap to run. Unit orders are unavailable during locked melee animations, climbing or landing.
 
-[b]Camera and interface[/b]
+[b]Camera and HUD[/b]
 [list]
-[*][b]F9 / F10:[/b] possess / return to your RTS camera.
-[*][b]P:[/b] switch between third person and first person.
-[*][b]Mouse wheel in third person:[/b] change camera distance.
-[*][b]Hold middle mouse in third person:[/b] orbit around your soldier.
-[*][b]K:[/b] cycle HUD visibility during possession; hide/show the HUD normally in RTS. Combat timing prompts remain visible.
+[*][b]P:[/b] switch first/third person. [b]Mouse wheel:[/b] third-person distance. [b]Hold middle mouse:[/b] orbit.
+[*][b]K on PC / tap View on Deck:[/b] while possessed, hide RTS HUD, hide both HUDs, then restore both. In RTS, toggle its HUD. Melee prompts remain available.
 [/list]
 
-[b]Steam Deck essentials[/b]
+[b]Steam Deck combat essentials[/b]
 [list]
-[*][b]Left stick / right stick:[/b] move / look while possessed. In RTS, pan / turn the camera. Campaign right stick turns and zooms.
-[*][b]RT / LT:[/b] fire / ready your weapon while possessed; select / move or attack in campaign and RTS.
-[*][b]Hold L3:[/b] run while possessed. Hold forward + L3 + RT to request a charge in melee mode, with LT released.
-[*][b]Y:[/b] possess / return to RTS. [b]Hold R3:[/b] switch first/third person while possessed.
-[*][b]A / B while possessed:[/b] climb / mount or dismount. [b]X:[/b] toggle the unit's melee/ranged mode.
-[*][b]Hold R1 while possessed:[/b] command wheel for Follow Me, Stop, Hold Here and Fire Orders. Choose with the right stick or D-pad, then release R1.
-[*][b]Hold View:[/b] open the in-game controls guide for the current mode. [b]Tap View in battle:[/b] hide/cycle the HUD.
+[*][b]Left/right stick:[/b] move/look while possessed; pan/turn in RTS. Campaign right stick turns and zooms.
+[*][b]RT / LT:[/b] fire / ready while possessed; select / move or attack in campaign and RTS.
+[*][b]Hold L3:[/b] run. Hold forward + L3 + RT to charge in melee mode, with LT released.
+[*][b]Hold R3:[/b] switch views. [b]A / B:[/b] climb / mount-dismount. [b]X:[/b] unit melee/ranged toggle.
+[*][b]Hold R1:[/b] command wheel: Follow Me, Stop, Hold Here, Fire Orders. Choose with right stick/D-pad and release R1.
 [/list]
+Hold View for the full controls for each mode.
 
 [h2]Requirements and known problems[/h2]
-[b]For the supported original Windows Steam version of Shogun 2, in single-player land battles and sieges.[/b] Compatible fonts from an installed language pack are required. English advisor audio and its Windows media decoder are optional; missing audio does not block possession. Weapons from Shogun 2, Rise of the Samurai and Fall of the Samurai are recognised, but not every unit, weapon or ammunition combination has been tested. Artillery keeps the game's own first-person mode.
+[b]Original Windows Steam version of Shogun 2. Single-player land battles and sieges.[/b] Compatible installed-game fonts are required; English advisor audio is optional. Shogun 2, Rise of the Samurai and Fall of the Samurai weapons are recognised, but not every combination is tested. Artillery keeps the game's first-person mode.
 
-[b]NAVAL BATTLES DO NOT SUPPORT POSSESSION.[/b] Naval support is planned for later.
-
-[b]MULTIPLAYER IS NOT IMPLEMENTED.[/b] Versus and campaign drop-in support are under consideration.
+[b]NAVAL POSSESSION DOES NOT WORK.[/b] Planned for later.
+[b]MULTIPLAYER IS NOT IMPLEMENTED.[/b] Versus and campaign drop-in are under consideration.
 
 [list]
-[*]Charging has been improved, but can still fail when native charge conditions are not met or in untested situations.
-[*]Castle wall climbing is intermittent.
-[*]Enemies may still ignore a possessed soldier who has moved away from the formation.
-[*]Some large Deck campaign panels shrink to fit and remain hard to read. Controller failures during campaign/battle transitions are still under investigation.
-[*]Visual and gameplay bugs, weapon/arm clipping and some crashes are expected.
-[*]Very large battles on Ultra unit size can slow down substantially.
-[*]The original engine and reviewed Bugfix engine are supported; neither Bugfix nor Shogun2 Loader is required. Other engine edits, overhaul combinations or competing front-end scripts can still conflict.
-[*]Bow draw animation and sound still begin with RMB, even though shot strength uses held LMB.
+[*]Charging and wall climbing can still fail intermittently.
+[*]Enemies may ignore your soldier away from the formation.
+[*]Some large Deck campaign panels shrink to fit and retain small text. Campaign/battle controller transitions can occasionally fail.
+[*]Visual/gameplay bugs, clipping and crashes remain. Large Ultra-unit battles can slow down severely.
+[*]The original and reviewed Bugfix engines are supported; Bugfix/Loader are not required. Other engine edits, overhauls or competing UI scripts may conflict.
+[*]Bow animation/audio begins with RMB, while shot strength uses held LMB.
 [/list]
-This is a native-code mod. Restart the game after enabling, disabling or updating it. Use one possession build at a time. If you have an older installer version, remove it before using the Workshop build.
 
 [h2]Credits and game resources[/h2]
-An unofficial fan mod, not an official Creative Assembly or SEGA product. Shogun 2 and its resources belong to their respective rights holders. Game resources are prepared locally from each player's own copy. Mod code is MIT licensed; MinHook/HDE keep their own notices. License notices are included inside the pack.
+Unofficial fan mod, not a Creative Assembly or SEGA product. Game resources come from each player's own copy. First-party code is MIT licensed; vendor notices are included. No recorder or debugger is included.
 
-[url=https://steamcommunity.com/workshop/filedetails/discussion/3825625050/564798191048897978/]Bug reports[/url] · [url=https://github.com/logsam58/shogun2-unit-possession]Source code and full controls[/url]
+[url=https://steamcommunity.com/workshop/filedetails/discussion/3825625050/564798191048897978/]Bug reports[/url] | [url=https://github.com/logsam58/shogun2-unit-possession]Source and full controls[/url]
