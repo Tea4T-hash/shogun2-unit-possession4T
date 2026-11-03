@@ -119,7 +119,43 @@ static void request_possession(){
     InterlockedExchange(&entry_attempted,0);
     InterlockedExchange(&state->acquire,1);InterlockedExchange(&state->mode,ARMED);
 }
+// ---------------------------------------------------------------------------------------------
+// Player key layout (custom build). Applied before every other key handler while possessed.
+//   Up arrow    = Move / Attack (was Q)      Down arrow  = Hold Here (was Z)
+//   Left arrow  = Follow Me (was C)          Right arrow = Stop (was E)
+//   F = select ability (was T)               G = use ability (unchanged)
+//   E = interact, in priority order: dismount -> climb wall -> mount
+// The old Q, Z, C, T, M and F-climb keys do nothing while possessed.
+// ---------------------------------------------------------------------------------------------
+static int interact_next201; // 0 = climb next, 1 = mount next (when on foot)
+static void interact201(){
+    if(!state||charge_input_locked146())return;
+    const LONG lease=LONG(state->lease_generation);
+    if(possession_lease.identity.mount){InterlockedExchange(&mount_request154,lease);interact_next201=0;return;} // 1. dismount
+    // 2. interact with object: the game has no other usable object interaction for a single soldier
+    if(interact_next201==0){climb_request199.set(state->lease_generation,GetTickCount64());interact_next201=1;return;} // 3. climb
+    InterlockedExchange(&mount_request154,lease);interact_next201=0; // 4. mount
+}
+static bool remap_keys201(UINT message,WPARAM& w,LPARAM l){
+    if(!enabled||!state||state->stop||state->release||state->mode!=POSSESSED)return false;
+    const bool key=message==WM_KEYDOWN||message==WM_KEYUP||message==WM_SYSKEYDOWN||message==WM_SYSKEYUP;
+    const bool chr=message==WM_CHAR||message==WM_SYSCHAR;
+    if(!key&&!chr)return false;
+    unsigned k=unsigned(w);if(chr&&k>='a'&&k<='z')k-=32;
+    if(chr){switch(k){case 'Q':case 'Z':case 'C':case 'T':case 'E':case 'F':case 'M':return true;}return false;}
+    switch(k){
+    // Unit orders: F1 move/attack, F2 stop, F3 hold here, F4 follow me.
+    case VK_F1:w='Q';return false;
+    case VK_F2:w='E';return false;
+    case VK_F3:w='Z';return false;
+    case VK_F4:w='C';return false;
+    case 'Q':case 'Z':case 'C':case 'T':case 'M':case 'F':return true; // retired (F is read directly as the ability key)
+    case 'E':if(message==WM_KEYDOWN&&!(l&(1L<<30)))interact201();return true;
+    }
+    return false;
+}
 static LRESULT CALLBACK weapon_window_proc(HWND window,UINT message,WPARAM w,LPARAM l){
+    if(remap_keys201(message,w,l))return 0;
     if(charge_input_locked146()){
         // Drain command key releases without dispatching an order. Keys held
         // before native commitment must not remain latched after it ends.
@@ -148,7 +184,7 @@ static LRESULT CALLBACK weapon_window_proc(HWND window,UINT message,WPARAM w,LPA
     if(enabled&&state&&!state->stop&&!state->release&&state->mode==POSSESSED){
         if(third_person152&&(message==WM_MBUTTONDOWN||message==WM_MBUTTONUP||message==WM_MBUTTONDBLCLK)){orbit_button154(message!=WM_MBUTTONUP);return 0;}
         if(message==WM_MOUSEWHEEL&&third_person152){view_wheel152(GET_WHEEL_DELTA_WPARAM(w));return 0;}
-        if(message==WM_KEYDOWN&&w=='F'&&!(l&(1L<<30)))climb_request199.set(state->lease_generation,GetTickCount64());
+        // Climbing is requested through E (interact201).
         // Consume owned movement/order keys so they do not also become Total War
         // camera or unit commands. Release/menu keys continue to the native window.
         if(message==WM_KEYDOWN||message==WM_KEYUP||message==WM_SYSKEYDOWN||message==WM_SYSKEYUP){
@@ -219,7 +255,7 @@ static bool native_routing(uintptr_t actor_unit);
 // After proven death, the camera consumes only numeric head poses captured by
 // the native renderer; it never polls a retired corpse/roster from this thread.
 static bool death_context(uintptr_t camera=0){
-    if(!dead_view()||!possession_lease.active||!death_eye_valid||death_elapsed()>=16000)return false;
+    if(!dead_view()||!possession_lease.active||!death_eye_valid||death_elapsed()>=5500)return false;
     const auto& old=possession_lease.identity;
     __try{auto root=field<uintptr_t>(base,0x1bc8180);
         if(!root||field<uintptr_t>(root,0x110)!=old.environment)return false;
@@ -1166,7 +1202,7 @@ static DWORD WINAPI worker(void*) {
                 }
             }else mouse_captured=false;
             update_eyelids(focus);
-            if(dead_view()&&death_elapsed()>=15000&&!InterlockedCompareExchange(&death_return_pending,1,0)){
+            if(dead_view()&&death_elapsed()>=4500&&!InterlockedCompareExchange(&death_return_pending,1,0)){
                 if(!input_window||!PostMessageW(input_window,RESTORE_INTERFACE_MESSAGE,0,0)){
                     InterlockedExchange(&death_return_pending,0);InterlockedExchange(&state->release,1);
                 }
