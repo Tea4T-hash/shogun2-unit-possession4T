@@ -21,6 +21,11 @@ The adapter vendor tree supplies the MinHook objects used by the component
 builds. Retain both vendor copies and their notices until all include/build and
 licensing references have been reconciled.
 
+`deck` contains local Steam Deck input, routing and UI-model development work.
+It is not linked into the current Workshop gameplay build. See the
+[input proof guide](../tools/deck/README.md); real Deck/Proton validation and
+gameplay dispatch are pending.
+
 ## Tests and generated files
 
 The native builder discovers adapter `verify.cpp` / `verify_*.cpp`, QTE

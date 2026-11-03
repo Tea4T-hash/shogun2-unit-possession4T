@@ -12,7 +12,8 @@ int main(){try{
         for(Rect r:{l.soldier,l.commands,l.context})check(r.x>=0&&r.y>=0&&r.x+r.w<=l.width&&r.y+r.h<=l.height,"HUD panel outside viewport");
         check(!overlaps(l.soldier,l.context)&&!overlaps(l.commands,l.context)&&!overlaps(l.soldier,l.commands),"HUD panels overlap");
         Rect q{l.width*.5f-qte_surface*.5f,qte_anchor_y(l.height)-qte_surface*.5f,qte_surface,qte_surface};
-        check(q.y>=0&&q.y+q.h<l.height*.5f,"QTE obscures central aim or clips viewport");
+        check(q.y>=0&&q.y+q.h<l.height*.5f,"Active QTE clips viewport or covers lower HUD");
+        check(q.y*l.zoom>=6.f+38.f*std::min(1.f,(view[0]-24.f)/760.f),"QTE overlaps the compact View header");
         check(!overlaps(q,l.soldier)&&!overlaps(q,l.commands)&&!overlaps(q,l.context),"QTE overlaps peripheral HUD");
     }
     Context idle{true,false,false,false,false,0,0,0,20,0};

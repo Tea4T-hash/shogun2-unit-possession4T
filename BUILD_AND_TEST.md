@@ -1,5 +1,7 @@
 # Build and test
 
+**v0.34:** use [BUILD_STEAM_DECK.md](BUILD_STEAM_DECK.md) for the maintained combined PC/Deck runtime. The Test173 commands below describe the preceding v0.33 build and do not include Deck integration.
+
 v0.33 packages **Test173**, based on the owner-accepted Test172 implementation.
 Test173 has offline checks; its live acceptance remains pending. Directory suffixes such as
 45, 99, 159 and 165 are historical implementation names, not product versions.

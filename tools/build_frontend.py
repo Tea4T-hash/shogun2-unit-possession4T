@@ -77,6 +77,11 @@ def source_files(root):
     ):
         if (root / name).is_file():
             yield root / name
+    # This first-party default is a build input, not a personal configuration.
+    # Keep the exception exact rather than exporting arbitrary .ini files.
+    deck_defaults = root / 'native/deck/controller174.ini'
+    if deck_defaults.is_file():
+        yield deck_defaults
 
 
 def resource_inputs(folder):

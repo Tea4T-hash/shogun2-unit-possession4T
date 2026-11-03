@@ -41,6 +41,10 @@ public:
         HRSRC r=FindResourceW(module,MAKEINTRESOURCEW(id),MAKEINTRESOURCEW(10));if(!r)return false;
         length=SizeofResource(module,r);data=static_cast<const BYTE*>(LockResource(LoadResource(module,r)));
 #endif
+        return load_data(data,length,size);
+    }
+    bool load_data(const BYTE* bytes,size_t bytes_count,unsigned size){
+        data=bytes;length=bytes_count;
         if(!data||length<0x20020||memcmp(data,"CUF0",4))return false;
         nominal=size;glyph_count=u16(26);bitmap_start=0x20020+glyph_count*8;bitmap_end=bitmap_start+u32(28);
         if(!glyph_count||bitmap_end+4>length)return false;
@@ -76,6 +80,10 @@ public:
     bool boshin=false;
     bool load(HMODULE module){if(!sizes.empty())return true;unsigned values[]={12,14,16,18,20,22,24,28,32,38};
         for(unsigned i=0;i<20;++i){auto font=std::make_unique<NativeFont>();if(!font->load(module,201+i,values[i%10])){clear();return false;}sizes.push_back(std::move(font));}return true;}
+    template<class Reader>bool load_local(Reader reader){
+        if(!sizes.empty())return true;unsigned values[]={12,14,16,18,20,22,24,28,32,38};
+        for(unsigned i=0;i<20;++i){auto blob=reader(201+i);auto font=std::make_unique<NativeFont>();if(!font->load_data(blob.bytes,blob.size,values[i%10])){clear();return false;}sizes.push_back(std::move(font));}return true;
+    }
     void clear(){sizes.clear();}
     void paint(Gdiplus::Graphics& g,const std::wstring& value,Gdiplus::RectF rect,float size,Gdiplus::Color color,bool center=false)const{
         if(sizes.empty())return;Gdiplus::Matrix world;g.GetTransform(&world);float matrix[6];world.GetElements(matrix);float physical=size*std::hypot(matrix[0],matrix[1]);

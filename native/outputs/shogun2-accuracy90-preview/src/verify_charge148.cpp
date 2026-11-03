@@ -68,9 +68,25 @@ int main(){SetUnhandledExceptionFilter(&fault147);try{
     equipment_ranged81=0;equipment_slot81=equipment81::Melee;state->heartbeat=GetTickCount64();state->input=FORWARD|RUN;
     require(MH_Initialize()==MH_OK,"Personal charge hooks init");create_unit_detach130();require(MH_EnableHook(MH_ALL_HOOKS)==MH_OK,"Personal charge hooks enable");charge_mapping146();
     sync_members130(unit);require(proximity_squad147(actor)==ip&&field<uintptr_t>(actor,0x3b4)==ip,"Far actor did not have independent native participation");
+    // Reverse the native perception query: an enemy with NO preassigned target
+    // must enumerate the separated player although the player's formation is far away.
+    auto seen_actor=field<uintptr_t>(P::ptr(nodes),0xc);auto seen_next=field<uintptr_t>(P::ptr(nodes),0x14);
+    field<uintptr_t>(P::ptr(nodes),0xc)=actor;field<uintptr_t>(P::ptr(nodes),0x14)=0;
+    auto foe_z=field<float>(enemies[0],0x50);auto foe_bearing=field<unsigned short>(enemies[0],0x64);
+    field<float>(enemies[0],0x50)=4;field<unsigned short>(enemies[0],0x64)=32768;
+    ChargeList148 observed{};
+    reinterpret_cast<ChargeQuery148>(base+0x3d1fa0)(reinterpret_cast<void*>(enemies[0]),&observed,6.f,0x71c,1);
+    require(observed.count==1&&field<uintptr_t>(observed.data,0)==actor,"Native enemy perception lost separated player");
+    reinterpret_cast<void(__cdecl*)(void*)>(base+0xf04d0)(reinterpret_cast<void*>(observed.data));
+    field<uintptr_t>(P::ptr(nodes),0xc)=seen_actor;field<uintptr_t>(P::ptr(nodes),0x14)=seen_next;
+    field<float>(enemies[0],0x50)=foe_z;field<unsigned short>(enemies[0],0x64)=foe_bearing;cell_calls148=collision_calls148=0;
     charge_reset139();charge_boundary146(unit,false);require(!charge_input_locked146()&&!cell_calls148,"Entry movement carry created a charge without actual W+Shift");
-    for(unsigned input:{unsigned(FORWARD),unsigned(RUN),unsigned(FORWARD|RUN|BACKWARD),unsigned(FORWARD|RUN|LEFT)}){charge_physical_input148=LONG(input);charge_boundary146(unit,false);require(!charge_input_locked146()&&!cell_calls148,"Invalid physical input queried/started charge");}
-    charge_physical_input148=FORWARD|RUN;
+    for(unsigned input:{unsigned(FORWARD|RUN),unsigned(FORWARD),unsigned(RUN),unsigned(FORWARD|RUN|BACKWARD),unsigned(FORWARD|RUN|LEFT)}){charge_physical_input148=LONG(input);charge_boundary146(unit,false);require(!charge_input_locked146()&&!cell_calls148,"Invalid physical input queried/started charge");}
+    for(auto value:{charge_intent199(FORWARD|RUN,false,false,true),charge_intent199(FORWARD|RUN,true,true,true),charge_intent199(FORWARD|RUN,true,false,false)}){
+        charge_physical_input148=LONG(value);charge_probe_tick148=0;charge_boundary146(unit,false);
+        require(!charge_input_locked146()&&!cell_calls148,"Unowned, aim or sprint-only input requested personal charge");
+    }
+    charge_physical_input148=charge_intent199(FORWARD|RUN,true,false,true);
     auto before_combat_queries=charge_queries148;
     for(unsigned posture:{8u,9u,10u,11u,29u}){field<unsigned>(actor,0x1f0)=posture;charge_probe_tick148=0;charge_boundary146(unit,false);require(!charge_input_locked146()&&charge_queries148==before_combat_queries,"Native fighting/defending posture was reset by a new charge");}
     field<unsigned>(actor,0x1f0)=0;
@@ -82,7 +98,7 @@ int main(){SetUnhandledExceptionFilter(&fault147);try{
     auto cached_blocks=blocks147.size();
     for(unsigned i=0;i<100;++i){charge_probe_tick148=0;charge_boundary146(unit,false);require(!charge_input_locked146(),"Repeated rejected scene created a charge");}
     require(blocks147.size()==cached_blocks,"Repeated native perception accumulated live allocations");
-    blocked_scene148=false;charge_probe_tick148=0;charge_boundary146(unit,false);
+    state->follow=1;blocked_scene148=false;charge_probe_tick148=0;charge_boundary146(unit,false);require(state->follow==1,"Personal charge cancelled Follow Me");
     if(!charge_input_locked146()||!charge_native_task146(actor))std::cerr<<"Start stage cells="<<cell_calls148<<" candidates="<<charge_candidates148<<" eligible="<<charge_eligibility148<<" starts="<<charge_starts139<<" returns="<<charge_returns146<<" errors="<<charge_errors139<<" reject="<<charge_reject148<<" target="<<charge_control146.proof.target<<" task="<<std::hex<<field<uintptr_t>(actor,0x250)-base<<" present="<<unsigned(field<unsigned char>(actor,0x2e8))<<" done="<<unsigned(field<unsigned char>(actor,0x258))<<std::dec<<"\n";
     require(charge_input_locked146()&&charge_native_task146(actor)&&field<uintptr_t>(actor+0x250,0x1c)==enemies[0],"Native perception/eligibility did not choose nearest valid forward enemy");
     require(charge_control146.squad==ip&&field<uintptr_t>(actor,0x3b4)==ip&&field<uintptr_t>(actor+0x250,0x20)==eu&&!field<unsigned>(unit,0x9ec),"Personal charge depended on whole-unit order or rejoined distant formation");
@@ -119,7 +135,7 @@ int main(){SetUnhandledExceptionFilter(&fault147);try{
     charge_boundary146(unit,true);require(!charge_input_locked146(),"Finished native pair kept charge control forever");
     charge_physical_input148=0;
     // Current native target death/removal does not manufacture a replacement.
-    field<unsigned char>(enemies[0],0xf0)=0;field<unsigned char>(enemies[1],0xf0)=0;charge_probe_tick148=0;charge_physical_input148=FORWARD|RUN;charge_boundary146(unit,false);require(!charge_input_locked146(),"No valid forward enemy still created a charge");
+    field<unsigned char>(enemies[0],0xf0)=0;field<unsigned char>(enemies[1],0xf0)=0;charge_probe_tick148=0;charge_physical_input148=charge_intent199(FORWARD|RUN,true,false,true);charge_boundary146(unit,false);require(!charge_input_locked146(),"No valid forward enemy still created a charge");
     charge_physical_input148=0;
     state->mode=IDLE;sync_members130(unit);
     require(!proximity_count147&&!detached_count130,"Foot charge exit retained membership ownership");
@@ -133,7 +149,7 @@ int main(){SetUnhandledExceptionFilter(&fault147);try{
     field<uintptr_t>(P::ptr(horse_holder),8)=h;field<uintptr_t>(P::ptr(peer_horse_holder),8)=ph;field<unsigned>(P::ptr(f.view),0x18)=4;field<uintptr_t>(P::ptr(f.view),0x1c)=reinterpret_cast<uintptr_t>(holders);
     field<unsigned>(actor,0x1f0)=29;state->mode=POSSESSED;require(followed(actor,true),"Fresh independent mounted charge lease");state->lease_generation=possession_lease.generation;state->heartbeat=GetTickCount64();
     field<unsigned char>(enemies[0],0xf0)=field<unsigned char>(enemies[1],0xf0)=1;
-    charge_reset139();charge_physical_input148=FORWARD|RUN;charge_probe_tick148=0;charge_boundary146(unit,false);
+    charge_reset139();charge_physical_input148=charge_intent199(FORWARD|RUN,true,false,true);charge_probe_tick148=0;charge_boundary146(unit,false);
     require(charge_input_locked146()&&charge_native_task146(h)&&field<uintptr_t>(h+0x250,0x1c)==enemies[0]&&field<uintptr_t>(actor,0x250)==base+0x15e1b34,"Independent mounted trigger lost real nearest target or original rider propagation");
     require(field<uintptr_t>(h,0x3b4)!=formation&&!field<uintptr_t>(actor,0x3b4)&&!field<unsigned>(unit,0x9ec),"Mounted charge required unit order or duplicated rider formation membership");
     auto mounted_before=horse;state->heartbeat=GetTickCount64();require(!prepare(h)&&horse==mounted_before,"Manual movement overwrote independent native horse charge");
@@ -145,5 +161,5 @@ int main(){SetUnhandledExceptionFilter(&fault147);try{
     // This private fixture owns its allocator; retire every remaining fixture
     // block once all native operations have finished, before freeing the image.
     while(!blocks147.empty())free_words147(*blocks147.begin());
-    std::cout<<"PASS: independent physical W+Shift only; original native perception/height/allegiance/FOV/eligibility and nearest reduction choose real forward target; behind/dead/high/occluded cases; repeated queries retain no extra allocations; no unit order or forced kill; original human/horse/rider dispatch,1000 committed ticks without reprobe, input yield, confirmed native contact-to-QTE handoff and exit restoration. Grid/collision/path/allocation services supplied; rendered outcomes remain live validation.\n";return 0;
+    std::cout<<"PASS: deliberate primary + forward sprint, preserved Follow Me, native enemy perception of independent player; original native perception/height/allegiance/FOV/eligibility and nearest reduction choose real forward target; behind/dead/high/occluded cases; repeated queries retain no extra allocations; no unit order or forced kill; original human/horse/rider dispatch,1000 committed ticks without reprobe, input yield, confirmed native contact-to-QTE handoff and exit restoration. Grid/collision/path/allocation services supplied; rendered outcomes remain live validation.\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -71,8 +71,15 @@ int main(){SetUnhandledExceptionFilter(&fault147);try{
  field<unsigned char>(P::ptr(f.peer),0x384)=1;field<unsigned char>(P::ptr(f.peer),0x11f)=0;
  require(!arrival(reinterpret_cast<void*>(formation))&&moving(fire_state.data()),"Proximity waived an AI peer's real readiness");field<unsigned char>(P::ptr(f.peer),0x384)=0;field<unsigned char>(P::ptr(f.peer),0x11f)=1;
  auto set_distance=[&](float distance){field<float>(possessed,0x48)=field<float>(P::ptr(f.peer),0x48)+distance;state->heartbeat=GetTickCount64();auto record=proximity_find147(possessed);if(record)record->checked=0;sync_members130(unit);};
+ // An explicit personal wall request must detach even inside join distance.
+ // The ORIGINAL kind2 factory/transfer/retirement and actor target resolver run.
+ auto created_before200=proximity_created147;
+ climb_align152=true;climb_entry153.actor=possessed;climb_entry153.serial=field<unsigned>(possessed,0x1c8);climb_entry153.generation=possession_lease.generation;
+ for(unsigned i=0;i<20;++i){state->heartbeat=GetTickCount64();sync_members130(unit);require(proximity_independent200(possessed)&&field<uintptr_t>(P::ptr(f.peer),0x3b4)==formation,"Personal wall climb rejoined nearby unit or moved a peer");}
+ require(proximity_created147==created_before200+1&&field<uintptr_t>(unit,0xb9c)==formation&&field<uintptr_t>(possessed,0x214)==unit&&physical[0]==possessed,"Personal wall climb replaced unit ownership or accumulated groups");
+ climb_cancel200(possessed);set_distance(2);require(field<uintptr_t>(possessed,0x3b4)==formation&&!field<unsigned>(unit,0xb70),"Cancelled personal climb did not restore ordinary proximity");
  auto saved_config=f.config;auto original_owner=field<uintptr_t>(possessed,0x214);set_distance(20);
- require(proximity_squad147(possessed)==ip&&field<uintptr_t>(possessed,0x3b4)==ip&&squad_matches130(formation,possessed)==0&&squad_matches130(ip,possessed)==1&&proximity_created147==1,"Far player did not enter a real independent native group");
+ require(proximity_squad147(possessed)==ip&&field<uintptr_t>(possessed,0x3b4)==ip&&squad_matches130(formation,possessed)==0&&squad_matches130(ip,possessed)==1&&proximity_created147==created_before200+2,"Far player did not enter a real independent native group");
  require(field<unsigned>(ip,8)==2&&!field<unsigned char>(ip,0x515)&&field<uintptr_t>(unit,0xb9c)==formation&&field<uintptr_t>(possessed,0x214)==original_owner&&physical[0]==possessed&&physical[1]==P::ptr(f.peer)&&f.config==saved_config,"Proximity changed native unit ownership, roster, stats or main group");
  require(reinterpret_cast<NativePose130>(base+0x1679c0)(target_context.data())==ip,"Native selected-actor targeting fell back to distant formation");
  // Original foot target enumeration includes the independent player, and

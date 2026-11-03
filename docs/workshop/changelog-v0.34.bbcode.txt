@@ -1,0 +1,30 @@
+[h2]Steam Deck integration + possession improvements[/h2]
+One Unit Possession mod for PC and Steam Deck. The mod now detects your device and loads the appropriate controls and UI. Existing subscribers use this same Workshop item.
+
+[h3]Steam Deck[/h3]
+[list]
+[*]Separate, automatic control schemes for menus, campaign, Battle RTS and possession, labelled in Steam as “Unit Possession Layout.”
+[*]Thumbstick camera controls, smooth campaign and battle zoom, faster campaign panning with L3, and a visible right-trackpad cursor in campaign menus.
+[*]Y enters/leaves possession. Hold L3 to run; hold R3 to switch first/third person. RT selects in menus, campaign and battles.
+[*]Hold View for an in-game controls guide, with labelled Deck buttons and pages. Compact hints replace the large permanent legend.
+[*]A four-section R1 command wheel for Follow Me, Stop, Hold Here and Fire Orders, using local Shogun artwork and your unit’s clan mon.
+[*]Larger Deck HUD, melee prompts and map UI. Large campaign windows fit to the screen, although some still use smaller text.
+[*]Battle selection improvements: steadier clicks, L3/L5 add/remove selection, L4 range selection/queued orders, hold D-pad to assign groups, double RT to focus a unit, and L4 + R4 to select all.
+[*]Battle A shows formations/ranges, X toggles run/walk, and LB/RB smoothly zoom in/out. Right-trackpad click is disabled.
+[*]Campaign shortcuts for Arts, Finances, Diplomacy and Clan Management; held Y ends the turn. Campaign controls recover after returning from battle. The redundant news panel is removed on Deck.
+[*]Moving the cursor to the screen edges no longer moves or rotates the map on Deck.
+[/list]
+
+[h3]Possession, camera and combat[/h3]
+[list]
+[*]PC K and Deck View now share the same HUD cycle: hide RTS HUD, hide both HUDs, restore both. Melee timing prompts stay available.
+[*]Reworked personal infantry/cavalry charging and native contact animations. PC: hold W + Shift + LMB. Deck: push forward with L3 + RT held. Use melee mode and do not hold aim/ready.
+[*]Wall climbing can be requested by your soldier without first ordering the whole unit up the wall. Stalled approaches cancel instead of trapping you; the unsupported “Climb Down Wall” entry/prompt is removed.
+[*]Smoother right-stick looking in first and third person, including aiming, plus steadier forward movement.
+[*]Third-person framing moves the soldier away from the aiming marker and adjusts with camera distance and scrolling.
+[*]Fixed reproduced infantry and cavalry movement-animation cases where the soldier or horse slid while appearing idle.
+[*]Corrected possession unit-card proportions and reduced weapon/fire-order display flicker.
+[*]Additional enemy-targeting work is included, but the latest test still left a lone possessed soldier ignored. This issue remains unresolved.
+[/list]
+
+[b]Still known:[/b] intermittent wall-climb/charge failures, small text in some Deck campaign panels, occasional controller failures during campaign-to-battle transitions, visual bugs, crashes and severe slowdown in very large battles. Naval possession and multiplayer are not supported.

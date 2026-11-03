@@ -15,8 +15,8 @@ using TargetSquad147=uintptr_t(__thiscall*)(void*);
 static TargetSquad147 original_target_squad147;
 static bool proximity_eligible147(uintptr_t actor){
     return actor==locomotion_actor()&&member_owned130(actor)&&field<uintptr_t>(actor,0x28)==environment&&
-        !dismount_native_motion143()&&!wall_subject97(possessed)&&!native_airborne_subject99(possessed)&&
-        !native_recovery103(actor)&&!native_routing(unit)&&!field<uintptr_t>(actor,0x18)&&!field<uintptr_t>(actor,0x688);
+        !dismount_native_motion143()&&((!wall_subject97(possessed)&&!native_airborne_subject99(possessed))||climb_independent200(actor))&&
+        !native_recovery103(actor)&&!native_routing(unit)&&(!field<uintptr_t>(actor,0x18)||climb_independent200(actor))&&!field<uintptr_t>(actor,0x688);
 }
 static bool proximity_capable147(uintptr_t native_unit,uintptr_t env){
     // Current native registries/ID object are prerequisites for original factory
@@ -134,9 +134,14 @@ static void proximity_sync147(uintptr_t current,uintptr_t env,uintptr_t phase,un
         auto target=charge_squad147(actor);if(target&&!proximity_transfer147(*p,target))InterlockedIncrement(&proximity_errors147);return;
     }
     if(charge_native_task146(actor)||native_mounted_jump140(actor))return;
-    auto now=GetTickCount64();if(now-p->checked<100)return;p->checked=now;
+    const bool personal_wall=climb_independent200(actor);
+    auto now=GetTickCount64();if(!personal_wall&&now-p->checked<100)return;p->checked=now;
     auto main=field<uintptr_t>(current,0xb9c);if(main==p->independent)main=p->formation;
-    bool within=p->joined;if(!proximity_near147(*p,main,within))return;p->formation=main;
+    bool within=false;
+    // A personal climb never rejoins a nearby formation, even at the foot of
+    // the wall. Keep the native owner/roster and a targetable independent group.
+    if(!personal_wall&&!proximity_near147(*p,main,within))return;
+    if(squad_registered130(main,current,env))p->formation=main;
     if(!within&&!p->independent){
         using Factory=uintptr_t(__thiscall*)(void*,unsigned,uintptr_t,unsigned,unsigned);
         p->independent=reinterpret_cast<Factory>(base+0x1668e0)(reinterpret_cast<void*>(current+0xb64),2,current,0,0);
@@ -152,6 +157,15 @@ static void proximity_sync147(uintptr_t current,uintptr_t env,uintptr_t phase,un
         if(!proximity_retire147(*p))p->independent=0; // Native controller adopted it; engine owns it.
     }
     InterlockedExchange(&proximity_joined_generation147,within?LONG(p->generation):0);
+}
+static bool proximity_independent200(uintptr_t actor){
+    bool result=false;const bool locked=!member_sync_active130;
+    if(locked)AcquireSRWLockShared(&member_lock130);
+    __try{auto p=proximity_find147(actor);result=p&&proximity_identity147(*p,unit)&&
+        p->generation==possession_lease.generation&&!p->joined&&p->independent&&
+        squad_registered130(p->independent,unit,environment)&&
+        field<uintptr_t>(actor,0x3b4)==p->independent&&squad_matches130(p->independent,actor)==1;}
+    __finally{if(locked)ReleaseSRWLockShared(&member_lock130);}return result;
 }
 static void proximity_log147(std::ostream& log){
     static LONG joins=-1,leaves=-1,created=-1,retired=-1,errors=-1;

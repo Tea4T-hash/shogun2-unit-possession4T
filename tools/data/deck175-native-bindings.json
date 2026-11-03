@@ -1,0 +1,398 @@
+{
+  "schema": 175,
+  "stock_sha256": "022fae2e2da92b59b8b1b8ee52887003c624e3c8eca060b209f5d792a7f874f5",
+  "reviewed_bugfix_sha256": "c4d91d74ce9ff8338cf61d5b021b03a2776830177a590fcac205509a42239545",
+  "camera_slots": [
+    {
+      "slot": 148,
+      "function_rva": 20324400
+    },
+    {
+      "slot": 152,
+      "function_rva": 20324224
+    },
+    {
+      "slot": 156,
+      "function_rva": 20324672
+    },
+    {
+      "slot": 160,
+      "function_rva": 20324576
+    },
+    {
+      "slot": 164,
+      "function_rva": 20324912
+    },
+    {
+      "slot": 168,
+      "function_rva": 20324304
+    },
+    {
+      "slot": 300,
+      "function_rva": 3295472
+    },
+    {
+      "slot": 304,
+      "function_rva": 3282976
+    }
+  ],
+  "functions": [
+    {
+      "rva": 20324400,
+      "size": 69,
+      "sha256": "9e0fba83c17200fd36f5c74a39bccda36817c6fd118bb4bccb98fdcdc3dbc2bb",
+      "relocations": []
+    },
+    {
+      "rva": 20324224,
+      "size": 76,
+      "sha256": "71ef9cbea486a82a051af13e72ed9e9302d5fd6087a42d9d35c1f06b87f360a7",
+      "relocations": [
+        15
+      ]
+    },
+    {
+      "rva": 20324672,
+      "size": 75,
+      "sha256": "349c57c79eeecdfa2f1f6ab45ab462e47b39fa679d9567d675538fdf2e93d532",
+      "relocations": []
+    },
+    {
+      "rva": 20324576,
+      "size": 82,
+      "sha256": "eb953150b57055b8d2f78bb5f17a170a0087c478b5a630ba15f0ed5db79fbe2b",
+      "relocations": [
+        15
+      ]
+    },
+    {
+      "rva": 20324912,
+      "size": 75,
+      "sha256": "e34c983de77e77688f8f44e64d5beaebdebe147152bc028bc964fbe559c721c2",
+      "relocations": []
+    },
+    {
+      "rva": 20324304,
+      "size": 82,
+      "sha256": "662bf8a629a742b5fed7f0cba3290abb1f438d8140b7e554fba84e7cb4fbd4b1",
+      "relocations": [
+        15
+      ]
+    },
+    {
+      "rva": 3295472,
+      "size": 88,
+      "sha256": "c3edad3381773093804c7e5a215390b2b898a7e8bb221e21904de514b638101a",
+      "relocations": [
+        48
+      ]
+    },
+    {
+      "rva": 3282976,
+      "size": 83,
+      "sha256": "64d8eb563360385c1715b301bc374726833b30de473a38c27c085b4b85814aff",
+      "relocations": [
+        48
+      ]
+    },
+    {
+      "rva": 3110624,
+      "size": 112,
+      "sha256": "40d2f5196946860cc7bae6b36a2f61f890e980cb83329b954fc9ad3fea5ecf29",
+      "relocations": []
+    },
+    {
+      "rva": 3111504,
+      "size": 158,
+      "sha256": "064199de22c025956251b34cac7ed2f7c9703c92d7833ff8e89751efb8b7abb8",
+      "relocations": []
+    },
+    {
+      "rva": 3037200,
+      "size": 27,
+      "sha256": "6c4001a14281bb8fd961c0a59a1503f9948fbb593b4329549c25607c8c376667",
+      "relocations": [
+        14
+      ]
+    },
+    {
+      "rva": 12405264,
+      "size": 648,
+      "sha256": "c0adb0354a35d1c3a0799b672ab77bd1e83a6f0661fa887986846906d816fa44",
+      "relocations": [
+        54,
+        64,
+        103,
+        124,
+        152,
+        198,
+        205,
+        223,
+        233,
+        244,
+        256,
+        274,
+        280,
+        296,
+        307,
+        322,
+        340,
+        348,
+        356,
+        364,
+        372,
+        380,
+        388,
+        396,
+        422,
+        429,
+        435,
+        444,
+        475,
+        491,
+        500,
+        534,
+        550,
+        559,
+        593,
+        627
+      ]
+    },
+    {
+      "rva": 3109712,
+      "size": 251,
+      "sha256": "31947b9d19ee88f930bd29c08cfa3ee0054395a14df0093a952343a4f0acfd70",
+      "relocations": []
+    },
+    {
+      "rva": 17817136,
+      "size": 31,
+      "sha256": "506086ef68ade2801d2235f012c30201929fd2deb8a4d8e3102d3978eb229f27",
+      "relocations": []
+    },
+    {
+      "rva": 3363424,
+      "size": 543,
+      "sha256": "2b162c67c27e03c3a6b97657aa1299a77ca44cc9dca370c3fcbd41d16e408a79",
+      "relocations": [
+        34,
+        52,
+        72
+      ]
+    },
+    {
+      "rva": 17833376,
+      "size": 101,
+      "sha256": "cef6a76c3ecb254fcb4fa0257be2a410b34cf7289289045c9d7f98ce51acfe6f",
+      "relocations": []
+    },
+    {
+      "rva": 2445056,
+      "size": 94,
+      "sha256": "1008352274cef945903d4649fafc5b533156e18fa3e6f6706cf4d159c8c9f6c5",
+      "relocations": [
+        17,
+        24
+      ]
+    },
+    {
+      "rva": 1884672,
+      "size": 192,
+      "sha256": "bb58912d4c3d06a4a31ba8a857e748768a7845c8160bd2058a3040b2a79ba52a",
+      "relocations": []
+    },
+    {
+      "rva": 1903936,
+      "size": 85,
+      "sha256": "a73b4417c81974e0a040a8bb523049947fab81d1752a1f73ac47b3f43f247fce",
+      "relocations": []
+    },
+    {
+      "rva": 1904880,
+      "size": 91,
+      "sha256": "40f8f4051934e5f4b20ddf0fd9bde7b4ae869bb74e28a0c1950527012a67ad86",
+      "relocations": [
+        85
+      ]
+    },
+    {
+      "rva": 3042160,
+      "size": 21,
+      "sha256": "2b0c29de997cbfb86f8dcc3effdaddcef243f85d78921c936000115384db96c0",
+      "relocations": []
+    },
+    {
+      "rva": 17693568,
+      "size": 71,
+      "sha256": "30de375225c9368afacd1bc140b43939ba8e433252cbff18ff35788bdcb19052",
+      "relocations": []
+    },
+    {
+      "rva": 17799120,
+      "size": 3557,
+      "sha256": "d5da1be5be26c6826de5dcc466956134d261676e50791d6de07c54b8d4efab7a",
+      "relocations": [
+        62,
+        96,
+        135,
+        713,
+        720,
+        1559,
+        1596,
+        1677,
+        1811,
+        3352,
+        3445,
+        3472
+      ]
+    },
+    {
+      "rva": 17817360,
+      "size": 66,
+      "sha256": "aabb097c5288f7c1d184b0784bbf6face41eb2cbe6e576c239e4fb5a774472fc",
+      "relocations": []
+    },
+    {
+      "rva": 17633424,
+      "size": 87,
+      "sha256": "6a2257f74010ec862b8edd3ed3db9e6d70c5d3017193aeee63ff3d01754f35c3",
+      "relocations": []
+    },
+    {
+      "rva": 3418416,
+      "size": 232,
+      "sha256": "c6a50f3a59920642af82e1c7bc296dc1169e501462ac5c09eaf4d25b7168556a",
+      "relocations": []
+    },
+    {
+      "rva": 2644480,
+      "size": 21,
+      "sha256": "a2bc3a8977f219fe94ede3fa2473129fa40ebcd26830364c0c99493a1c8eca61",
+      "relocations": []
+    },
+    {
+      "rva": 2645120,
+      "size": 45,
+      "sha256": "03712a1f6c89a45a8d3605255eacf6c2ebbb581cb22b3c818edd97c0ade7c7c0",
+      "relocations": []
+    },
+    {
+      "rva": 2644976,
+      "size": 45,
+      "sha256": "24281aae65497aa8ebfa2e9e1cb7959faf3fe6fc104b73922c6d965370682da4",
+      "relocations": []
+    },
+    {
+      "rva": 12125168,
+      "size": 23,
+      "sha256": "cbc47f53308b8e1cc387562b7948c8203cba227ff53b5f3f0c7471bcbd3ad375",
+      "relocations": []
+    },
+    {
+      "rva": 3418304,
+      "size": 103,
+      "sha256": "d555674c1e5a86ecceb6ee529b80eb124f0b313b3c4a6b3f3315e565c20a1336",
+      "relocations": []
+    },
+    {
+      "rva": 9177568,
+      "size": 314,
+      "sha256": "62bbe0d85c84b9edeab81336e376a5f543d5c5b241d2aff5b533a34a46354d6c",
+      "relocations": [
+        100
+      ]
+    },
+    {
+      "rva": 9177248,
+      "size": 314,
+      "sha256": "64e1ead2f16ddc4b29e6f1b736d5cc12277d5a75b50f7a884b923ca9c710ad86",
+      "relocations": [
+        100
+      ]
+    },
+    {
+      "rva": 9177888,
+      "size": 311,
+      "sha256": "308f4771e65c0e6be7073321b9275c9454f8c29953f8a33a22ee1026dae10786",
+      "relocations": [
+        100
+      ]
+    },
+    {
+      "rva": 9178384,
+      "size": 314,
+      "sha256": "b6fc33e1bd16803a95ac542bc2ee1efd60d41f814eb67bb2acd472188c93489a",
+      "relocations": [
+        100
+      ]
+    },
+    {
+      "rva": 9367600,
+      "size": 23,
+      "sha256": "bafa2c2122e79e0f7e302d0d1875b870e40e255b98166d0f3b0c126150f5c7c4",
+      "relocations": []
+    },
+    {
+      "rva": 9372816,
+      "size": 166,
+      "sha256": "9011330fa422c3f4f25b883fdb42204109f8273169f2cf1a347c268291e7128d",
+      "relocations": [
+        24
+      ]
+    },
+    {
+      "rva": 16329440,
+      "size": 132,
+      "sha256": "f6f570ee9a3cddb103444cb48ac05e9957268c0def6a360ead414b64d41df40b",
+      "relocations": [
+        55,
+        88,
+        112,
+        123
+      ]
+    },
+    {
+      "rva": 12391072,
+      "size": 46,
+      "sha256": "02f737aefbc9318aa88d823dde9927889a9f2aea7f54491a1120d47822133d4f",
+      "relocations": [
+        2,
+        8,
+        24,
+        30
+      ]
+    },
+    {
+      "rva": 16319280,
+      "size": 6,
+      "sha256": "1d4f14d619a9a8f99b7af4a3c9c9f08742b708d98975a3301f6465da58845525",
+      "relocations": [
+        1
+      ]
+    }
+  ],
+  "scope": "Exact native body hashes and relocation offsets; recovered C is analysis, not an ABI proof. No game bytes included.",
+  "campaign181_review": {
+    "vtable_rva": 23202296,
+    "slots": [
+      148,
+      152,
+      156,
+      160,
+      264,
+      268
+    ],
+    "functions": [
+      9177568,
+      9177248,
+      9178384,
+      9177888,
+      9367600,
+      9372816
+    ],
+    "mutable_global_rva": 29134820,
+    "evidence": "SHA-verified indexed assembly and focused disassembly; yaw identified by native SetCameraHeading -> slot10c; pitch slot108 -> native pitch virtual b4; all float thiscall RET4",
+    "thread": "fresh UI owning-window callback only; worker queues numeric input and camera identity",
+    "scope": "No gameplay/animation rule changes; hardware feel pending"
+  }
+}

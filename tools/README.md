@@ -40,6 +40,7 @@ See [derived data](../docs/public-release/DERIVED_DATA.md) and [resources](../do
 
 | Area | Scope |
 | --- | --- |
+| `deck` | Local input-only Steam Deck/Proton development probe and simulation tests; hardware proof and gameplay integration pending. Read its [test guide](deck/README.md). Not included in the normal Workshop payload |
 | `installer` | Shared resource extraction plus historical Inno setup, Steam-launch and transaction fixtures; see its [scope note](installer/README.md) |
 | `check_historical.py`, `run_historical.py` | Optional exact-archive preflight and compatibility tests; missing archives are skips, not passes |
 | `diagnostics` | Optional external recording/debugging and dump analysis; read its [guide](diagnostics/README.md) before explicit operator use |

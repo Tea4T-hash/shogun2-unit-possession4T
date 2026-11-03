@@ -35,9 +35,9 @@ static bool detached_actor_live130(uintptr_t actor){
 static void personal_task130(void* task,UnitTick130 original){
     uintptr_t previous=detached_task_actor130;
     auto actor=field<uintptr_t>(reinterpret_cast<uintptr_t>(task),4);
-    // A user-requested native wall route owns this soldier until attachment.
+    // A personal wall approach, traversal and landing own this soldier.
     // Formation idle/move tasks must not replace its goal with its old slot.
-    if(climb_pending153(actor))return;
+    if(climb_independent200(actor))return;
     detached_task_actor130=detached_actor_live130(actor)?actor:0;
     __try{original(task);}__finally{detached_task_actor130=previous;}
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "../../shogun2-possession-cleanup-v46/src/actor_types152.h"
 #include "../../shogun2-possession-cleanup-v46/src/charge_protocol146.h"
-// Player charge intent is W+Shift, independent of the unit's attack order.
+// Player charge intent is primary attack + forward sprint, independent of unit orders.
 // Native forward perception, nearest-distance reduction, eligibility and actor virtual154
 // choose/approach a real opponent. Native contact/outcome/clip selection owns
 // the encounter; no synthetic kill, random roll or animation asset is forced.
@@ -142,7 +142,7 @@ static bool charge_select148(uintptr_t actor,Charge139& selected){
 }
 static void charge_try148(){
     auto actor=locomotion_actor();unsigned generation=possession_lease.generation;
-    if((unsigned(InterlockedCompareExchange(&charge_physical_input148,0,0))&(FORWARD|RUN|BACKWARD|LEFT|RIGHT))!=(FORWARD|RUN)||!charge_admission146(actor))return;
+    if((unsigned(InterlockedCompareExchange(&charge_physical_input148,0,0))&(FORWARD|RUN|BACKWARD|LEFT|RIGHT|ChargePrimary199))!=(FORWARD|RUN|ChargePrimary199)||!charge_admission146(actor))return;
     auto now=GetTickCount64();if(charge_probe_lease148==generation&&now-charge_probe_tick148<100)return;charge_probe_lease148=generation;charge_probe_tick148=now;
     sync_members130(unit);auto squad=field<uintptr_t>(actor,0x3b4);if(!charge_joined146(actor,squad)){InterlockedExchange(&charge_reject148,1);return;}
     Charge139 selected{};if(!charge_select148(actor,selected)){InterlockedExchange(&charge_reject148,2);return;}
@@ -150,7 +150,7 @@ static void charge_try148(){
     AcquireSRWLockExclusive(&charge_lock146);
     auto& c=charge_control146;c={};c.proof=selected;c.proof.actor=actor;c.proof.generation=generation;c.proof.active=true;
     c.unit=unit;c.squad=squad;c.target_unit=selected.target_unit;c.target_id=selected.target_unit_serial;c.physical_serial=field<unsigned>(actor,0x1c8);c.assigning=true;
-    InterlockedExchange(&state->follow,0);InterlockedExchange(&entry_movement125,0);InterlockedExchange(&state->input,0);
+    InterlockedExchange(&entry_movement125,0);InterlockedExchange(&state->input,0);
     InterlockedExchange(&charge_input_generation146,LONG(generation));InterlockedIncrement(&charge_starts139);InterlockedExchange(&charge_reject148,0);charge_publish146();
     ReleaseSRWLockExclusive(&charge_lock146);
     ChargeIntent139 intent{selected.target,selected.target_unit,selected.forward_x,selected.forward_z,0,0,{}};bool completed=false;

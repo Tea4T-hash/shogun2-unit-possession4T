@@ -24,8 +24,8 @@ v0.24 gameplay was accepted, with first-person weapon/arm poses and clipping lef
 
 - **Bow draw and sound:** bow strength depends on holding LMB, but the native draw animation and sound begin with RMB. Separating sound timing from that animation is deferred.
 
-- **Attack charging is partly broken:** it remains unreliable and may work in one attempt and fail in another. This is an open bug in the current build.
-- **Enemies targeting a separated player:** autonomous enemy shooting and charge acquisition when you leave your formation still need investigation. Being present in native targeting data does not prove that an enemy will choose you.
+- **Personal charging has improved:** the new request/contact behavior was accepted by the owner. Use forward sprint plus LMB/RT in melee mode without aiming; intermittent failures can still occur.
+- **Enemies targeting a separated player:** enemies still ignored the lone possessed soldier in the latest revision34 test. The included targeting corrections have not resolved autonomous shooting, pursuit or melee acquisition.
 
 - **Interrupted melee prompts:** another hit, death or a change in the fight can cut a prompt short. INTERRUPTED is there to show that it ended early. Crowded fights still need more testing.
 - **Shots or volleys not releasing:** include the exact unit, weapon and ammo. Bow, gun and other weapon support is broader than the combinations tested so far. Say whether it was your soldier, the rest of the unit, or both.
@@ -67,6 +67,15 @@ camera-helper Steam launch option before enabling Workshop.
 unsubscribe. Necessary local caches may remain; the runtime does not prune old
 versions or rollback backups. No recorder or debugger is installed with it,
 and routine gameplay/input/QTE disk logs are disabled.
+
+## Steam Deck
+
+Use the Windows game through Proton (tested 9.0-4). Menu directional highlighting
+is unfinished; use the right trackpad. Large campaign panels shrink to fit and
+can retain uncomfortable small text. Campaign-to-battle/deployment controller
+failures remain under investigation even though some subsequent tests worked.
+The latest melee/QTE crash remains undiagnosed. Controller support is community
+tested, not an official Valve verification status.
 
 ## Reporting a problem
 

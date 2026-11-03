@@ -1,6 +1,7 @@
 #include "identity.h"
 #include "../../shogun2-possession-cleanup-v46/src/actor_types152.h"
 #include "steering.h"
+#include "personal_input199.h"
 #include "mounted_look85.h"
 #include "look_pitch96.h"
 #include "animation_look104.h"
@@ -93,7 +94,7 @@ static constexpr UINT ENTER_SOLDIER_MESSAGE=WM_APP+0x53a;
 static_assert(COMMAND_CANCEL_MESSAGE100!=RETURN_RTS_MESSAGE90&&COMMAND_CANCEL_MESSAGE100!=ENTER_SOLDIER_MESSAGE&&COMMAND_CANCEL_MESSAGE100!=RESTORE_INTERFACE_MESSAGE,"Private command/window messages must remain distinct");
 static __declspec(thread) LONG camera_callback_depth;
 static volatile LONG motion_callback_depth,entry_pending,entry_attempted;
-static volatile LONG climb_action97;
+static ClimbRequest199 climb_request199;
 static void command_reset100();
 static void command_native_cancel100();
 static bool command_native_signatures100(uintptr_t);
@@ -111,6 +112,7 @@ static void enter_selected_soldier();
 static void climb_adopt98(uintptr_t actor);
 static void climb_observe98(uintptr_t actor);
 static bool climb_pending153(uintptr_t actor);
+static bool climb_independent200(uintptr_t actor);
 static void request_possession(){
     if(!startup168::can_possess())return;
     if(!enabled||!state||state->stop||state->release||state->mode==POSSESSED||state->mode==ARMED)return;
@@ -146,7 +148,7 @@ static LRESULT CALLBACK weapon_window_proc(HWND window,UINT message,WPARAM w,LPA
     if(enabled&&state&&!state->stop&&!state->release&&state->mode==POSSESSED){
         if(third_person152&&(message==WM_MBUTTONDOWN||message==WM_MBUTTONUP||message==WM_MBUTTONDBLCLK)){orbit_button154(message!=WM_MBUTTONUP);return 0;}
         if(message==WM_MOUSEWHEEL&&third_person152){view_wheel152(GET_WHEEL_DELTA_WPARAM(w));return 0;}
-        if(message==WM_KEYDOWN&&w=='F'&&!(l&(1L<<30)))InterlockedExchange(&climb_action97,1);
+        if(message==WM_KEYDOWN&&w=='F'&&!(l&(1L<<30)))climb_request199.set(state->lease_generation,GetTickCount64());
         // Consume owned movement/order keys so they do not also become Total War
         // camera or unit commands. Release/menu keys continue to the native window.
         if(message==WM_KEYDOWN||message==WM_KEYUP||message==WM_SYSKEYDOWN||message==WM_SYSKEYUP){
@@ -1144,7 +1146,7 @@ static DWORD WINAPI worker(void*) {
             }else {if(was_focus)InterlockedExchange(&state->release,1);f9=f10=false;}
             if(!focus){left_mouse=false;InterlockedExchange(&state->aiming,0);}
             if((state->mode!=POSSESSED||state->stop||state->release||!focus)&&interface_active)restore_interface_on_window();
-            InterlockedExchange(&charge_physical_input148,focus&&!dead_view()?LONG(input):0);
+            InterlockedExchange(&charge_physical_input148,LONG(charge_intent199(input,down(VK_LBUTTON),down(VK_RBUTTON),focus&&state->mode==POSSESSED&&!state->release&&!dead_view())));
             was_focus=focus;input=entry_input125(input,focus&&!dead_view()&&!charge_locked146);if(charge_locked146)input=0;
             InterlockedExchange(&state->input,dead_view()?0:LONG(input));
             uint64_t now=GetTickCount64();float elapsed=std::min(float(now-last_mouse)*0.001f,0.05f);last_mouse=now;
@@ -1193,7 +1195,7 @@ static DWORD WINAPI worker(void*) {
         if(MH_DisableHook(keyboard_poll_target84)!=MH_OK)result=MH_UNKNOWN;
         for(unsigned rva:{0x2fc450u,0x2f79a0u,0x10ee5b0u,0x325ca0u,0x321d70u,0x3e5170u})if(MH_DisableHook(reinterpret_cast<void*>(base+rva))!=MH_OK)result=MH_UNKNOWN;
         for(void* p:{reinterpret_cast<void*>(base+0xf9c360),reinterpret_cast<void*>(base+0xf9bf20),reinterpret_cast<void*>(base+0x122f740),cursor_target})if(MH_DisableHook(p)!=MH_OK)result=MH_UNKNOWN;
-        for(void* p:{reinterpret_cast<void*>(base+0x2fcb10),reinterpret_cast<void*>(base+0x341560),reinterpret_cast<void*>(base+0x2d6210),reinterpret_cast<void*>(base+0x340d30),reinterpret_cast<void*>(base+0x3945c0),reinterpret_cast<void*>(base+0x3cf280),reinterpret_cast<void*>(base+0x473f80),target,cancel_target,toggle_target,matrix_target,camera_input_target,projectile_camera_target,reinterpret_cast<void*>(base+0x3ca920),reinterpret_cast<void*>(base+0x3e8b50),reinterpret_cast<void*>(base+0x3f0370),reinterpret_cast<void*>(base+0x3f03d0),reinterpret_cast<void*>(base+0x3e3f50),reinterpret_cast<void*>(base+0x3d3630),reinterpret_cast<void*>(base+0x3d4320),reinterpret_cast<void*>(base+0x3e1a20),reinterpret_cast<void*>(base+0x4272e0),reinterpret_cast<void*>(base+0x4c56d0)})if(MH_DisableHook(p)!=MH_OK)result=MH_UNKNOWN;
+        for(void* p:{reinterpret_cast<void*>(base+0x2fcb10),reinterpret_cast<void*>(base+0x341560),reinterpret_cast<void*>(base+0x2d6210),reinterpret_cast<void*>(base+0x340d30),reinterpret_cast<void*>(base+0x3945c0),reinterpret_cast<void*>(base+0x3cf280),reinterpret_cast<void*>(base+0x3ccd00),reinterpret_cast<void*>(base+0x473f80),target,cancel_target,toggle_target,matrix_target,camera_input_target,projectile_camera_target,reinterpret_cast<void*>(base+0x3ca920),reinterpret_cast<void*>(base+0x3e8b50),reinterpret_cast<void*>(base+0x3f0370),reinterpret_cast<void*>(base+0x3f03d0),reinterpret_cast<void*>(base+0x3e3f50),reinterpret_cast<void*>(base+0x3d3630),reinterpret_cast<void*>(base+0x3d4320),reinterpret_cast<void*>(base+0x3e1a20),reinterpret_cast<void*>(base+0x4272e0),reinterpret_cast<void*>(base+0x4c56d0)})if(MH_DisableHook(p)!=MH_OK)result=MH_UNKNOWN;
         if(!guarded){if(MH_DisableHook(reinterpret_cast<void*>(base+0x2ac0b0))!=MH_OK)result=MH_UNKNOWN;}
         for(void* p:{reinterpret_cast<void*>(base+0x3f06e0),reinterpret_cast<void*>(base+0x3c73e0)})if(MH_DisableHook(p)!=MH_OK)result=MH_UNKNOWN;
         for(void* p:{reinterpret_cast<void*>(base+0x3d3ce0),reinterpret_cast<void*>(base+0x3d33f0),reinterpret_cast<void*>(base+0x3d3d40),reinterpret_cast<void*>(base+0x3d3de0),reinterpret_cast<void*>(base+0x3d3e90),reinterpret_cast<void*>(base+0x3d3e60),reinterpret_cast<void*>(base+0x3d3fc0),reinterpret_cast<void*>(base+0x3cfa60),reinterpret_cast<void*>(base+0x3d41d0),reinterpret_cast<void*>(base+0x3cbe40)})if(MH_DisableHook(p)!=MH_OK)result=MH_UNKNOWN;

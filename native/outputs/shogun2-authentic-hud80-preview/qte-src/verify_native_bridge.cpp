@@ -129,6 +129,14 @@ int main(){try{using namespace qte;const OutcomeBindings fixture{0,4,true}; /* s
     timestamped.frame(owner,.2,false,true,prompt.serial,true,false);
     check(timestamped.snapshot().result==Result::Success,"Later tick rewrote click verdict");
     check(timestamped.prepare(World::witness,1,owner)==0&&world.committed.outcome==4,"Timestamped verdict failed native replay");
+    world.setup(true,4);NativeBridge charge_hold(world.reader(),world.selection(),world.calls(),World::engine,fixture);world.bridge=&charge_hold;
+    charge_hold.frame(world.owner(),0,false,true,0,true,false);
+    charge_hold.prepare(World::witness,1,world.owner());prompt=charge_hold.snapshot();
+    charge_hold.input_sample(prompt.ideal,prompt.serial,true,false,false,true);
+    check(charge_hold.snapshot().result==Result::Pending,"Charge-held attack answered a new QTE");
+    charge_hold.input_sample(0,prompt.serial,false,false,false,true);
+    charge_hold.input_sample(0,prompt.serial,true,false,false,true);
+    check(charge_hold.snapshot().result==Result::Success,"New QTE rejected fresh attack after release");
     world.setup(false,5);NativeBridge held(world.reader(),world.selection(),world.calls(),World::engine,fixture);world.bridge=&held;
     held.prepare(World::witness,1,world.owner());prompt=held.snapshot();
     held.input_sample(10,prompt.serial,false,true,true,true);

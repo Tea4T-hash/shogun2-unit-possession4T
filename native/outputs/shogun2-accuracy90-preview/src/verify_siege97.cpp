@@ -12,6 +12,7 @@ static uintptr_t __fastcall portal_world155(void*,void*,void* out,const float* x
  require(flags==3,"Portal changed native query flags");float point[3]={xz[0],portal_height155,xz[1]};
  reinterpret_cast<void(__thiscall*)(void*,const float*,uintptr_t)>(base+0x359070)(out,point,surface);return uintptr_t(out);
 }
+static void path_permission200(uintptr_t actor,const unsigned* goal);
 static void __fastcall path_plan153(void* object,void*){
  auto actor=reinterpret_cast<uintptr_t>(object);++path_requests153;memcpy(path_goal153,reinterpret_cast<void*>(actor+0x420),20);
  // Execute the ORIGINAL request builder and cached-route validation that
@@ -23,7 +24,50 @@ static void __fastcall path_plan153(void* object,void*){
  cache155[0x20]=cache155[0x21]=cache155[0x76]=1;field<unsigned>(uintptr_t(cache155.data()),0x70)=0xdeadbeef;
  unsigned cache_slot[4]={0,0,0,unsigned(uintptr_t(cache155.data()))};
  require(!reinterpret_cast<unsigned(__thiscall*)(void*,const void*,const void*)>(base+0x378c70)(reinterpret_cast<void*>(scene),cache_slot,request),"Fresh fixture path unexpectedly reused route");
+ path_permission200(actor,path_goal153);
  field<unsigned>(actor,0x3bc)=4;
+}
+// Execute the original actor request builder against an isolated navigation
+// provider. No unit-level wall order is created for the player or peers.
+static unsigned request_cases200,down_entry_refusals201;static bool request_hooked200;
+static void path_permission200(uintptr_t actor,const unsigned* goal){
+ auto env=field<uintptr_t>(actor,0x28),common=field<uintptr_t>(env,8),owner=field<uintptr_t>(actor,0x214);
+ auto scene=common;field<uintptr_t>(scene,0)=scene+0x100;field<uintptr_t>(scene+0x100,8)=scene+0x200;field<uintptr_t>(scene+0x200,0xbc)=scene+0x380;
+ field<float>(scene,0x7c)=field<float>(scene,0x80)=-100000;field<float>(scene,0x84)=field<float>(scene,0x88)=100000;
+ if(!request_hooked200)original_climb_path_request200=reinterpret_cast<ClimbPathRequest200>(base+0x3ccd00);
+ for(unsigned unit_climb=0;unit_climb<2;++unit_climb){
+  field<unsigned char>(owner,0xfac)=static_cast<unsigned char>(unit_climb);
+  unsigned original[18]{},personal[18]{};
+  original_climb_path_request200(reinterpret_cast<void*>(actor),original,goal,0,3,0);
+  require(field<unsigned char>(uintptr_t(original),0x35)==unit_climb,"Original actor wall permission did not follow unit state");
+  require(field<uintptr_t>(uintptr_t(original),0x40)==(unit_climb?owner+0xfa8:0),"Original actor wall list differs");
+  if(request_hooked200)reinterpret_cast<ClimbPathRequest200>(base+0x3ccd00)(reinterpret_cast<void*>(actor),personal,goal,0,3,0);
+  else climb_path_request200(reinterpret_cast<void*>(actor),nullptr,personal,goal,0,3,0);
+  require(field<unsigned char>(uintptr_t(personal),0x35)==1&&!field<uintptr_t>(uintptr_t(personal),0x40),"Personal route still requires unit wall order");
+  // Original371b60 has a SECOND unit-derived portal gate at request+34.
+  // Native world enabled/surface checks remain in force after admission.
+  unsigned char edge[0x60]{},start[0x40]{},end[0x40]{};auto ed=uintptr_t(edge),st=uintptr_t(start),en=uintptr_t(end);
+  field<uintptr_t>(ed,0x10)=climb_entry153.pipe;field<uintptr_t>(ed,0x14)=st;field<uintptr_t>(ed,0x18)=en;field<unsigned>(ed,8)=1;
+  field<uintptr_t>(en,0xc)=base+0x15e7fd0;field<unsigned char>(en,0x10)=1;
+  using Edge200=bool(__cdecl*)(uintptr_t,unsigned,unsigned,unsigned,unsigned,unsigned,float,void*);
+  auto edge_allowed=reinterpret_cast<Edge200>(base+0x371b60);
+  require(!edge_allowed(ed,1,0,field<unsigned char>(uintptr_t(original),0x34),0,3,1.f,nullptr),"Unordered native unit unexpectedly permitted pipe traversal");
+  require(edge_allowed(ed,1,0,field<unsigned char>(uintptr_t(personal),0x34),0,3,1.f,nullptr),"Personal route still fails original native portal admission");
+  field<unsigned char>(climb_entry153.pipe,4)=0;
+  require(!edge_allowed(ed,1,0,field<unsigned char>(uintptr_t(personal),0x34),0,3,1.f,nullptr),"Personal climb waived disabled native wall");field<unsigned char>(climb_entry153.pipe,4)=1;
+  field<unsigned char>(en,0x10)=0;require(!edge_allowed(ed,1,0,1,0,3,1.f,nullptr),"Personal climb waived disabled target surface");field<unsigned char>(en,0x10)=1;
+  field<uintptr_t>(en,0x20)=1;require(!edge_allowed(ed,1,0,1,0,3,1.f,nullptr),"Personal climb waived native region restriction");
+  require(reinterpret_cast<bool(__thiscall*)(void*)>(base+0x372bd0)(reinterpret_cast<void*>(climb_entry153.pipe)),"Original native castle-kind classification differs");
+  field<unsigned char>(uintptr_t(personal),0x34)=field<unsigned char>(uintptr_t(original),0x34);
+  field<unsigned char>(uintptr_t(personal),0x35)=static_cast<unsigned char>(unit_climb);field<uintptr_t>(uintptr_t(personal),0x40)=unit_climb?owner+0xfa8:0;
+  require(!memcmp(original,personal,sizeof original),"Personal climb altered geometry or other native path policy");
+  auto saved=climb_entry153.generation;++climb_entry153.generation;
+  if(request_hooked200)reinterpret_cast<ClimbPathRequest200>(base+0x3ccd00)(reinterpret_cast<void*>(actor),personal,goal,0,3,0);
+  else climb_path_request200(reinterpret_cast<void*>(actor),nullptr,personal,goal,0,3,0);
+  require(!memcmp(original,personal,sizeof original),"Stale possession granted personal climb permission");climb_entry153.generation=saved;
+  ++request_cases200;
+ }
+ field<unsigned char>(owner,0xfac)=0;field<uintptr_t>(env,8)=common;
 }
 static uintptr_t __fastcall surface_portal153(void*,void*){return portal_surface153;}
 static void __fastcall surface_transform153(void*,void*){} // Explicit identity surface transform provider.
@@ -32,7 +76,14 @@ static void __fastcall formation_task153(void*,void*){++task_forwards153;}
 static unsigned __fastcall fake_index97(void*,void*){++forwarded_index97;return 999;}
 static uintptr_t __fastcall fake_actor97(void*,void*,unsigned){++forwarded_actor97;return 0;}
 static LONG WINAPI fault_siege155(EXCEPTION_POINTERS* p){std::cerr<<"siege155 fault "<<std::hex<<p->ExceptionRecord->ExceptionCode<<" at "<<uintptr_t(p->ExceptionRecord->ExceptionAddress)-base<<" address "<<p->ExceptionRecord->ExceptionInformation[1]<<"\n";return EXCEPTION_EXECUTE_HANDLER;}
-int main(){SetUnhandledExceptionFilter(fault_siege155);unsigned char* mapped=nullptr;try{
+static void request_lifetime199(){
+ ClimbRequest199 r;r.set(3,1000);require(r.take(3,1001)&&!r.take(3,1001),"Climb request was lost or replayed");
+ r.set(3,1000);require(!r.take(4,1001)&&!r.take(3,1001),"Climb request crossed possession lease");
+ r.set(3,1000);require(!r.take(3,1251)&&!r.take(3,1252),"Rejected climb remained queued");
+ r.set(3,1000);r.clear();require(!r.take(3,1001),"Released possession retained climb request");
+ r.set(3,1000);require(!r.take(3,999),"Reversed clock accepted climb request");
+}
+int main(){request_lifetime199();SetUnhandledExceptionFilter(fault_siege155);unsigned char* mapped=nullptr;try{
  std::wstring path=fixture_paths::engine();require(hash_file(path)==EXPECTED_HASH,"Exact native fixture image");
  std::ifstream in(path,std::ios::binary);std::vector<unsigned char> image((std::istreambuf_iterator<char>(in)),{});auto dos=reinterpret_cast<IMAGE_DOS_HEADER*>(image.data());auto nt=reinterpret_cast<IMAGE_NT_HEADERS32*>(image.data()+dos->e_lfanew);
  mapped=static_cast<unsigned char*>(VirtualAlloc(nullptr,nt->OptionalHeader.SizeOfImage,MEM_COMMIT|MEM_RESERVE,PAGE_READWRITE));require(mapped!=nullptr,"Native fixture allocation");memcpy(mapped,image.data(),nt->OptionalHeader.SizeOfHeaders);
@@ -47,7 +98,7 @@ int main(){SetUnhandledExceptionFilter(fault_siege155);unsigned char* mapped=nul
  climb97::Status publication;publication.pid=77;publication.lease=5;publication.actor=1203;publication.unit=11;publication.tick=1000;publication.mode=climb97::Climbing;
  require(climb97::valid(publication,77,5,1203,11,1000)&&!climb97::valid(publication,77,6,1203,11,1000)&&!climb97::valid(publication,77,5,1204,11,1000)&&!climb97::valid(publication,78,5,1203,11,1000)&&!climb97::valid(publication,77,5,1203,11,1501)&&!climb97::valid(publication,77,5,1203,11,999),"Numeric wall prompt stale/battle/lease identity guards");
  Status status{};state=&status;enabled=1;state->heartbeat=GetTickCount64();state->acquire=1;state->mode=ARMED;
- std::vector<unsigned char> root(0x120),env(0x28300),common(0x100),phase(0x400),manager(0x910),cam(0x200),view(0x90),holder(0x210),other_holder(0x210),selected(0x500),owner(0x120),config(0x100),actor(0x700),dead_actor(0x700),unitbuf(0x1000),pipebuf(0x100),source(0x100),definition(0x80);
+ std::vector<unsigned char> root(0x120),env(0x28300),common(0x400),phase(0x400),manager(0x910),cam(0x200),view(0x90),holder(0x210),other_holder(0x210),selected(0x500),owner(0x120),config(0x100),actor(0x700),dead_actor(0x700),unitbuf(0x1000),pipebuf(0x100),source(0x100),definition(0x80);
  auto ptr=[](auto& v){return reinterpret_cast<uintptr_t>(v.data());};auto a=ptr(actor),u=ptr(unitbuf),v=ptr(view),pipe=ptr(pipebuf),def=ptr(definition),ph=ptr(phase),en=ptr(env);
  unsigned char nodes[]={0x0b,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0xde,0xca,0x1f,0x43,0x89,0x13,0xfe,0xc2,0x00,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0xf1,0xd9,0x31,0x43,0x3f,0xa2,0xe7,0xc2,0x00,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0xde,0xca,0x1f,0x43,0xa8,0x18,0xfe,0xc2,0x5a,0x1c,0x58,0xc2,0xf1,0xd9,0x31,0x43,0x3f,0xa2,0xe7,0xc2,0x44,0x00,0x00,0x00,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00,0x0b,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0xf1,0xd9,0x31,0x43,0x3f,0xa2,0xe7,0xc2,0x00,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0x50,0xca,0x35,0x43,0xc9,0xa8,0xe7,0xc2,0x00,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0xf1,0xd9,0x31,0x43,0x3f,0xa2,0xe7,0xc2,0x5a,0x1c,0x58,0xc2,0x50,0xca,0x35,0x43,0xc9,0xa8,0xe7,0xc2,0x44,0x00,0x00,0x00,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00,0x0b,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0x50,0xca,0x35,0x43,0xc9,0xa8,0xe7,0xc2,0x00,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0x1b,0xcd,0x35,0x43,0xe7,0x53,0xe4,0xc2,0x00,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0x50,0xca,0x35,0x43,0xc9,0xa8,0xe7,0xc2,0x5a,0x1c,0x58,0xc2,0x1b,0xcd,0x35,0x43,0xe7,0x53,0xe4,0xc2,0x44,0x00,0x00,0x00,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00,0x0b,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0x1b,0xcd,0x35,0x43,0xe7,0x53,0xe4,0xc2,0x00,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0xcd,0xcc,0x34,0x43,0x00,0x00,0xe2,0xc2,0x00,0x00,0x00,0x00,0x5a,0x1c,0x58,0xc2,0x1b,0xcd,0x35,0x43,0xe7,0x53,0xe4,0xc2,0x5a,0x1c,0x58,0xc2,0xcd,0xcc,0x34,0x43,0x00,0x00,0xe2,0xc2,0x45,0x00,0x00,0x00,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00};std::array<uintptr_t,2> active_crest98{1067,ptr(config)};std::array<uintptr_t,2> holders{ptr(other_holder),ptr(holder)};std::array<uintptr_t,1> units{u},pipes{pipe};
  field<uintptr_t>(base,0x1bc8180)=ptr(root);field<uintptr_t>(ptr(root),0x110)=en;field<uintptr_t>(en,8)=ptr(common);field<uintptr_t>(ptr(common),0xb4)=ph;field<unsigned>(ph,0x14)=6;
@@ -82,7 +133,16 @@ int main(){SetUnhandledExceptionFilter(fault_siege155);unsigned char* mapped=nul
  std::array<unsigned char,sizeof nodes> native_nodes153{};memcpy(native_nodes153.data(),nodes,sizeof nodes);
  field<float>(ptr(config),0x1c)=1.3f;field<float>(ptr(config),0x20)=3;field<float>(ptr(config),0x6c)=2;
  field<float>(u,0x22c)=1;field<float>(base+0x18d1c80,0x5c)=1;field<float>(base+0x18d1ce0,0x5c)=1;
- for(auto role153:{0x15dfec8u,0x15dbd68u,0x15dbfb4u})for(float rotate153:{0.f,1.570796327f,3.141592654f,-1.570796327f})for(bool descending153:{false,true})for(bool ground154:{false,true}){
+ // Explicit registry fixture here; native group creation/transfer is exercised
+ // separately by verify_proximity147 using original1668e0 and member lifecycles.
+ std::vector<unsigned char> definition200(0x100);field<uintptr_t>(u,0x2c)=ptr(definition200);
+ std::vector<unsigned char> independent200(0x600);auto ip200=ptr(independent200);uintptr_t registry200[]={ip200},members200[]={a};
+ field<uintptr_t>(ip200,0)=base+0x15bb21c;field<uintptr_t>(ip200,4)=en;field<uintptr_t>(ip200,0x510)=u;field<unsigned>(ip200,8)=2;field<unsigned>(ip200,0x18)=1;field<uintptr_t>(ip200,0x1c)=uintptr_t(members200);
+ field<uintptr_t>(u,0x14)=en;field<unsigned>(u,0xb70)=1;field<uintptr_t>(u,0xb74)=uintptr_t(registry200);field<unsigned>(u,0x384)=1;field<uintptr_t>(u,0x388)=uintptr_t(members200);field<uintptr_t>(a,0x3b4)=ip200;
+ proximity_records147[0]={en,ph,u,a,ptr(config),0,ip200,field<unsigned>(u,4),field<unsigned>(a,0x1c8),possession_lease.generation,0,false};
+ field<float>(base,0x15b2448)=1.f/60;
+ for(unsigned wall_kind200:{11u,12u,13u,14u})for(auto role153:{0x15dfec8u,0x15dbd68u,0x15dbfb4u})for(float rotate153:{0.f,1.570796327f,3.141592654f,-1.570796327f})for(bool descending153:{false,true})for(bool ground154:{false,true}){
+  field<unsigned>(pipe,0x40)=field<unsigned>(ptr(source),0x40)=wall_kind200;
   portal_surface153=ground154?0:ptr(surface153);
   memcpy(nodes,native_nodes153.data(),sizeof nodes);
   for(unsigned i=0;i<4;++i)for(unsigned off:{0x24u,0x30u}){auto node=uintptr_t(nodes)+i*72;float x=field<float>(node,off),z=field<float>(node,off+8);field<float>(node,off)=x*std::cos(rotate153)+z*std::sin(rotate153);field<float>(node,off+8)=-x*std::sin(rotate153)+z*std::cos(rotate153);}
@@ -97,7 +157,18 @@ int main(){SetUnhandledExceptionFilter(fault_siege155);unsigned char* mapped=nul
   field<float>(a,0x48)+=std::cos(rotate153);field<float>(a,0x50)-=std::sin(rotate153);
   field<unsigned short>(a,0x64)=20000;state->yaw=std::atan2(-std::cos(rotate153),std::sin(rotate153));state->input=FORWARD|RUN;state->heartbeat=GetTickCount64();
   float before153[3];memcpy(before153,reinterpret_cast<void*>(a+0x48),12);auto heading153=field<unsigned short>(a,0x64);auto requests153=path_requests153;
-  climb_reset97();climb_adopt98(a);climb_action97=1;require(climb_prepare97(a),"F failed to enter native approach");
+  climb_reset97();climb_adopt98(a);state->aiming=1;climb_request199.set(possession_lease.generation,GetTickCount64());
+  require(!climb_prepare97(a)&&!climb_align152&&!keyboard_wall98&&climb_error154==6,"Blocked climb did not reject without locking movement");
+  state->aiming=0;require(!climb_prepare97(a)&&!climb_align152&&path_requests153==requests153,"Rejected climb executed later without another press");
+  climb_reset97();climb_adopt98(a);climb_lease97=0;
+  if(descending153){
+   require(!climb_prepare97(a)&&!climb_near97&&!climb_align152&&!keyboard_wall98,"Top of wall still offered climb-down");
+   climb_request199.set(possession_lease.generation,GetTickCount64());
+   require(!climb_prepare97(a)&&!climb_align152&&!keyboard_wall98&&path_requests153==requests153,"F at crest began a descent or locked controls");
+   Wall97 down201;require(read_wall97(a,pipe,down201)&&!climb_begin153(a,down201,true)&&!climb_align152&&path_requests153==requests153,"Direct top-entry request was accepted");
+   ++down_entry_refusals201;continue;
+  }
+  climb_request199.set(possession_lease.generation,GetTickCount64());require(climb_prepare97(a),"F failed to enter native approach");
   require(path_goal153[3]==portal_surface153&&path_goal153[4]==0,"Bearing pose was passed as navigation location");
   require(path_requests153==requests153+1&&climb_align152&&!field<uintptr_t>(a,0x18),"F bypassed the native route/setup or bound before native arrival");
   require(!memcmp(before153,reinterpret_cast<void*>(a+0x48),12)&&field<unsigned short>(a,0x64)==heading153,"F directly teleported or forced body bearing");
@@ -105,16 +176,30 @@ int main(){SetUnhandledExceptionFilter(fault_siege155);unsigned char* mapped=nul
   for(unsigned k=0;k<3;++k){float value;memcpy(&value,path_goal153+k,4);require(std::abs(value-field<float>(far153,far_off153+k*4))<.001f,"Native route targets the wrong wall endpoint");}
   require(field<float>(a,0x438)==1.3f&&field<unsigned>(a,0x448)==2,"Stock path speed/default restrictions changed");
   for(unsigned frame153=0;frame153<100;++frame153){state->heartbeat=GetTickCount64();require(climb_prepare97(a),"Native approach lost without input");}
+  state->aiming=1;state->fire_request=1;require(climb_prepare97(a)&&climb_align152&&!state->aiming&&!state->fire_request,"Ready/fire interrupted owned native approach");
   require(path_requests153==requests153+1&&keyboard_wall98,"Held approach rebuilt routes or accepted manual movement");
   unsigned task153[2]={0,unsigned(a)},other153[2]={0,unsigned(ptr(dead_actor))};auto forwarded153=task_forwards153;
   personal_task130(task153,reinterpret_cast<UnitTick130>(formation_task153));personal_task130(other153,reinterpret_cast<UnitTick130>(formation_task153));
   require(task_forwards153==forwarded153+1,"Wall approach failed to retain its goal or blocked a peer task");
   if(role153==0x15dfec8u&&rotate153==0.f&&!descending153&&!ground154){
-   auto repeat153=[&](){state->heartbeat=GetTickCount64();climb_action97=1;require(climb_prepare97(a)&&climb_align152,"Fresh F did not restart a failed native route");};
+   auto repeat153=[&](){state->heartbeat=GetTickCount64();climb_request199.set(possession_lease.generation,GetTickCount64());require(climb_prepare97(a)&&climb_align152,"Fresh F did not restart a failed native route");};
+   // A paused pending route stays valid. A motionless admitted route is
+   // cancelled through ORIGINAL3df380 after bounded simulation time.
+   for(unsigned i=0;i<200;++i){state->heartbeat=GetTickCount64();require(climb_prepare97(a),"Paused route spent simulation budget");}
+   for(unsigned i=0;i<125&&climb_align152;++i){++field<unsigned>(ptr(common),0x50);state->heartbeat=GetTickCount64();climb_prepare97(a);}
+   require(!climb_align152&&!keyboard_wall98&&!field<unsigned>(a,0x3bc)&&climb_error154==10,"Stalled route retained native or keyboard movement lock");repeat153();
+   climb_request199.set(possession_lease.generation,GetTickCount64());require(!climb_prepare97(a)&&!keyboard_wall98&&!field<unsigned>(a,0x3bc),"Second F did not cancel owned approach");repeat153();
    field<unsigned>(a,0x3bc)=7;require(!climb_prepare97(a)&&!climb_align152,"Native route failure retained manual-input lock");repeat153();
    field<unsigned>(a,0x420)^=1;auto external153=field<unsigned>(a,0x420);
    require(!climb_prepare97(a)&&!climb_align152&&field<unsigned>(a,0x420)==external153,"External native goal was overwritten instead of releasing ownership");repeat153();
    pipes[0]=0;require(!climb_prepare97(a)&&!climb_align152,"Removed wall retained pending approach");pipes[0]=pipe;repeat153();
+  }
+  if(role153==0x15dfec8u&&rotate153==0.f&&!descending153&&!ground154){
+   unsigned char request_before200[16];memcpy(request_before200,mapped+0x3ccd00,16);
+   require(MH_Initialize()==MH_OK,"Request hook initialize");
+   require(MH_CreateHook(reinterpret_cast<void*>(base+0x3ccd00),reinterpret_cast<void*>(climb_path_request200),reinterpret_cast<void**>(&original_climb_path_request200))==MH_OK&&MH_EnableHook(reinterpret_cast<void*>(base+0x3ccd00))==MH_OK,"Request hook enable");
+   request_hooked200=true;path_permission200(a,path_goal153);request_hooked200=false;
+   require(MH_DisableHook(MH_ALL_HOOKS)==MH_OK&&MH_Uninitialize()==MH_OK&&!memcmp(request_before200,mapped+0x3ccd00,16),"Request hook did not restore exact original bytes");
   }
   field<uintptr_t>(a,0x18)=pipe;field<float>(a,0x20)=descending153?1.f:0.f;field<unsigned>(a,0x1f0)=descending153?69:68;
   require(climb_prepare97(a)&&!climb_align152&&wall_subject97(a),"Real native attachment did not restore W/S traversal");
@@ -182,7 +267,7 @@ int main(){SetUnhandledExceptionFilter(fault_siege155);unsigned char* mapped=nul
  climb_last_direction97=1;
  for(unsigned i=0;i<10000;++i){state->input=0;field<float>(a,0x20)=.2f;require(pipe_mode_hook97(reinterpret_cast<void*>(a),nullptr,pipe)==68,"Stable native up/hold mode and ABI");}
  // Actual MinHook/trampoline ABI and exact restoration, in this fixture only.
- const unsigned hook_rvas[]={0x2d6210,0x340d30,0x3945c0,0x3cf280,0x2fcb10,0x341560,0x325ca0,0x321d70};unsigned char before[8][16];for(unsigned i=0;i<8;++i)memcpy(before[i],mapped+hook_rvas[i],16);
+ const unsigned hook_rvas[]={0x2d6210,0x340d30,0x3945c0,0x3cf280,0x2fcb10,0x341560,0x325ca0,0x321d70,0x3ccd00};unsigned char before[9][16];for(unsigned i=0;i<9;++i)memcpy(before[i],mapped+hook_rvas[i],16);
  require(MH_Initialize()==MH_OK,"Fixture hook initialize");create_siege_hooks97();require(MH_EnableHook(MH_ALL_HOOKS)==MH_OK,"Fixture hook enable");
  state->heartbeat=GetTickCount64();field<float>(a,0x20)=.2f;state->input=1;
  require(reinterpret_cast<ViewIndex97>(base+0x2d6210)(reinterpret_cast<void*>(v))==0,"Ordinary native first-holder index was changed by possession");
@@ -195,7 +280,7 @@ int main(){SetUnhandledExceptionFilter(fault_siege155);unsigned char* mapped=nul
    ++field<unsigned>(ptr(common),0x50);reinterpret_cast<PipeAdvance97>(base+0x3945c0)(reinterpret_cast<void*>(a+0x14),pipe,.01f);
    require(std::abs(field<float>(a,0x20)-(.2f+(input==1?.6f/60/length:input==2?-1.f/60/length:0)))<.00001f,"Actual traversal trampoline RET8");
  }
- require(MH_DisableHook(MH_ALL_HOOKS)==MH_OK,"Fixture hook disable");for(unsigned i=0;i<8;++i)require(!memcmp(before[i],mapped+hook_rvas[i],16),"All eight roster/traversal hook bytes restored");require(MH_Uninitialize()==MH_OK,"Fixture hook teardown");
+ require(MH_DisableHook(MH_ALL_HOOKS)==MH_OK,"Fixture hook disable");for(unsigned i=0;i<9;++i)require(!memcmp(before[i],mapped+hook_rvas[i],16),"All nine roster/traversal/request hook bytes restored");require(MH_Uninitialize()==MH_OK,"Fixture hook teardown");
  if(climb_shared97)UnmapViewOfFile(climb_shared97);if(climb_mapping97)CloseHandle(climb_mapping97);climb_shared97=nullptr;climb_mapping97=nullptr;
- VirtualFree(mapped,0,MEM_RELEASE);mapped=nullptr;std::cout<<"PASS: siege98 production immediate F9 adoption, eligible logical-index choice, strict wall/crest lease, original native geometry/stride/projection, "<<cases<<" W/S/hold endpoint cases, four native crests, 10000 mode calls, 4000 actual hooked traversal ABI calls, "<<rate_cases98<<" native parameter/segment/dt cases with "<<(rate_cases98*10)<<" duplicate callbacks, six exact hook restorations, stale/resource/phase/death guards. Synthetic world; no game initialization.\n";return 0;
+ require(down_entry_refusals201==96,"Missing top-entry refusal coverage");std::cout<<"PASS wall201: "<<down_entry_refusals201<<" top-entry offers/requests refused without input lock or route mutation\n";VirtualFree(mapped,0,MEM_RELEASE);mapped=nullptr;std::cout<<"PASS wall200: "<<request_cases200<<" original per-actor request cases, all four castle wall kinds, scoped native trampoline, unit order independent permission, stalled/manual cancellation; siege98 production immediate F9 adoption, eligible logical-index choice, strict wall/crest lease, original native geometry/stride/projection, "<<cases<<" W/S/hold endpoint cases, four native crests, 10000 mode calls, 4000 actual hooked traversal ABI calls, "<<rate_cases98<<" native parameter/segment/dt cases with "<<(rate_cases98*10)<<" duplicate callbacks, nine exact hook restorations, stale/resource/phase/death guards. Synthetic world; no game initialization.\n";return 0;
 }catch(const std::exception& e){if(mapped)VirtualFree(mapped,0,MEM_RELEASE);std::cerr<<e.what()<<'\n';return 1;}}

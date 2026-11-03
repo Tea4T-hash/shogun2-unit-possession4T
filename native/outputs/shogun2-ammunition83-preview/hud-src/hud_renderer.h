@@ -23,6 +23,7 @@
 #endif
 #endif
 #include "unit_art.generated.h"
+#include "../../../common/image_fit184.h"
 #ifdef HUD80_QTE_ONLY
 #include "../qte-src/qte_core.h"
 #else
@@ -120,6 +121,13 @@ public:
             found=tiles.emplace(key,std::move(bitmap)).first;
         }
         return found->second.get();
+    }
+    RectF fitted(const wchar_t* key,RectF slot)const{
+        float w=0,h=0;
+        if(const auto* s=sprite(key)){w=float(s->logical_w);h=float(s->logical_h);}
+        else {auto tile=tiles.find(key);if(tile!=tiles.end()){w=float(tile->second->GetWidth());h=float(tile->second->GetHeight());}}
+        const auto r=imagefit184::within({slot.X,slot.Y,slot.Width,slot.Height},w,h);
+        return RectF(r.x,r.y,r.w,r.h);
     }
     void image(Graphics& g,const wchar_t* key,RectF target,float opacity=1.f,bool isolated=false)const{
         const Sprite* s=sprite(key);if(!s){auto extra=tiles.find(key);if(extra!=tiles.end())g.DrawImage(extra->second.get(),target);return;}
@@ -249,11 +257,15 @@ inline void render(Graphics& g,const Assets& a,float width,float height,const Vi
     text(g,display_name169(v),x+27,y+23,344,32,21,ink(),true);
     text(g,v.faction,x+27,y+55,322,22,14,muted());
     if(!v.mon.empty())a.image(g,v.mon.c_str(),RectF(x+380,y+26,54,54));
-    a.image(g,L"ui/panel_backgrounds/data__unit_card_background.png",RectF(x+28,y+84,146,184));
     const wchar_t* portrait=portrait_for(v.unit,v.owner);
-    if(*portrait)a.image(g,portrait,RectF(x+27,y+81,148,190));
-    else text(g,L"No portrait",x+34,y+154,132,24,15,muted());
-    Pen portrait_rim(Color(255,108,96,72),1.f);g.DrawRectangle(&portrait_rim,x+27,y+83,148.f,188.f);
+    const wchar_t* backing=L"ui/panel_backgrounds/data__unit_card_background.png";
+    const RectF card=a.fitted(*portrait?portrait:backing,RectF(x+27,y+81,148,190));
+    if(card.Width>0&&card.Height>0){
+        a.image(g,backing,card);
+        if(*portrait)a.image(g,portrait,card);
+        else text(g,L"No portrait",card.X+4,card.Y+73,card.Width-8,24,15,muted());
+        Pen portrait_rim(Color(255,108,96,72),1.f);g.DrawRectangle(&portrait_rim,card);
+    }
     text(g,class_name(v.unit),x+192,y+86,245,24,16,ink(),true);
     std::wstring strength=std::to_wstring(v.men)+L" / "+std::to_wstring(v.initial)+L" men";
     text(g,strength,x+192,y+116,244,28,21,ink(),true);
@@ -281,7 +293,9 @@ inline void render(Graphics& g,const Assets& a,float width,float height,const Vi
         const float cx=context.x,cy=context.y;
         panel(g,a,RectF(cx,cy,context.w,context.h));
         if(v.climb_mode){
-            if(v.climb_mode<=2){key_image(g,L"F",RectF(cx+27,cy+24,32,30));text(g,v.climb_mode==2?L"Climb down wall":L"Climb wall",cx+73,cy+26,286,28,19,ink(),true);}
+            if(v.climb_mode<=2){key_image(g,L"F",RectF(cx+27,cy+24,32,30));text(g,L"Climb wall",cx+73,cy+26,286,28,19,ink(),true);}
+            else if(v.climb_mode==5)text(g,L"Cannot climb here",cx+30,cy+27,330,28,19,ink(),true);
+            else if(v.climb_mode==6)text(g,L"Approaching wall",cx+30,cy+27,330,28,19,ink(),true);
             else if(v.climb_mode==4)text(g,L"Climbing over",cx+30,cy+27,330,28,19,ink(),true);
             else {key_image(g,L"W",RectF(cx+27,cy+17,28,25));text(g,L"Ascend",cx+65,cy+18,107,25,16);
                 key_image(g,L"S",RectF(cx+197,cy+17,28,25));text(g,L"Descend",cx+235,cy+18,126,25,16);

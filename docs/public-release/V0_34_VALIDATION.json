@@ -1,0 +1,46 @@
+{
+  "version": "0.34",
+  "revision": "acquisition-34",
+  "source_publication_only": true,
+  "previous_public_source": "4b0f870f94e9fdd936fa8b6ba1f8ca8eb7e81db3",
+  "private_source_checkpoint": "c2dd220cfcf5565e70fae46aaecdce8610acc011",
+  "pack_sha256": "b5760562401201c808ac1f99ae758e27f5474cdae4230b64265495904f4b4f96",
+  "pack_bytes": 4267182,
+  "native_sha256": "7a09f64629ef71db15233cb3fe0f66ed8d863f506a6022b3e3d6e22424384c70",
+  "components": {
+    "possession-v46.dll": "153beb11e8dd9293f47d53dd9f9421abf40fc7b15f805d29173fa9cfbcbdfbf0",
+    "possession-hud.exe": "9b77deebb3dbd64888b05e5129e484cc33921faabd7ee1b7db76cffc73a87fc1",
+    "qte-playable-v79.dll": "7bb87e66e12887d126356fd375d2140c92ea0c1b940a6a307d56090d793c3d4b",
+    "prepare-local-assets159.exe": "0f2d91a2c9357a21a1cfa5c00be317fa30c39ad9975a1f87846d783bc0c3ea63"
+  },
+  "full_build_checks": {
+    "adapter": 100,
+    "QTE": 50,
+    "HUD": 8,
+    "Workshop": 20,
+    "Python": 52
+  },
+  "focused_native_stock_and_reviewed_Bugfix": {
+    "foot_and_mounted": true,
+    "shared_entry_cases_per_actor": 14,
+    "distance_cases_per_actor": 18
+  },
+  "rollback_PC_and_Deck_verified": true,
+  "runtime_Deck_identity_and_hooks_verified": true,
+  "latest_enemy_targeting_owner_trial": {
+    "accepted": false,
+    "result": "Still being ignored"
+  },
+  "known_limits": [
+    "enemy acquisition unresolved",
+    "wall climbing intermittent",
+    "campaign/controller transition failures unresolved",
+    "QTE crash unresolved",
+    "large Deck panels shrink to fit",
+    "no blanket mod/roster/stability coverage"
+  ],
+  "game_assets_included": false,
+  "recorder_debugger_included": false,
+  "installer": null,
+  "Workshop_uploaded_by_this_publication": false
+}

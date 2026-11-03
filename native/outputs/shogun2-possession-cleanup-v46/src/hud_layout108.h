@@ -6,16 +6,16 @@ struct Rect {float x,y,w,h;};
 inline float scale(float width,float height){
     float s=std::min(width/1920.f,height/1080.f);
     if(width>=1280&&height>=720)s=std::max(.85f,s);
-    return s*.85f;
+    return s*.85f*1.15f;
 }
-inline float qte_anchor_y(float height){return height*.19f;}
+inline float qte_anchor_y(float height){return height*.25f;}
 struct Layout {
     float zoom,width,height,bottom;
     Rect soldier,commands,context;
     Layout(float w,float h):zoom(scale(w,h)),width(w/zoom),height(h/zoom),bottom(height-26.f),
         soldier{26.f,bottom-302.f,466.f,302.f},
         commands{width-250.f,bottom-272.f,224.f,272.f},
-        context{width*.5f-195.f,bottom-80.f,390.f,80.f}{}
+        context{std::clamp(width*.5f-195.f,soldier.x+soldier.w+12.f,commands.x-402.f),bottom-80.f,390.f,80.f}{}
 };
 struct Context {
     bool equipment,ranged,aiming,pending,crouched;

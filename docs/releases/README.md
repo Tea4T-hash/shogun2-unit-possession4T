@@ -1,3 +1,5 @@
+> Current maintained source: v0.34 combines PC and Steam Deck. Use [../../BUILD_STEAM_DECK.md](../../BUILD_STEAM_DECK.md) and [README](../../README.md). Earlier checkpoint and release instructions below are historical.
+
 # Release history
 
 **Current: [v0.33](v0.33.md)** — engine/mod compatibility updates, custom-unit

@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "note": "First-party numeric metadata only; original native move/position/dirty/resize-event and derived widget table. Equal on stock and reviewed Bugfix.",
+  "functions": [
+    {
+      "rva": 16326816,
+      "size": 145,
+      "sha256": "4603d21d841b43e6cf71873a8c1569e25e22b318f2a0fa2bc64db0d03a38d7b3",
+      "relocations": []
+    },
+    {
+      "rva": 16340400,
+      "size": 107,
+      "sha256": "08f0847dc653635dfabfae31d28dc5fc3fa959b32b86c3d11b4703cd209b905a",
+      "relocations": []
+    },
+    {
+      "rva": 16294000,
+      "size": 606,
+      "sha256": "2df8d896607f41fd4e2938e0820e6d8e2fdf0639f5b069ca82d99011707d7934",
+      "relocations": [
+        151,
+        231,
+        281,
+        315,
+        364,
+        440,
+        466,
+        515
+      ]
+    },
+    {
+      "rva": 16336368,
+      "size": 175,
+      "sha256": "8a530e0d157f926d5e8d6733b6dbb54db44ce891b272580573158c56a0196787",
+      "relocations": []
+    },
+    {
+      "rva": 24136924,
+      "size": 80,
+      "sha256": "d29ff6c9006e83b0a5ff798191a9d6e20a1ffa24851f9e64fe359d54a565ccb6",
+      "relocations": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28,
+        32,
+        36,
+        40,
+        44,
+        48,
+        52,
+        56,
+        60,
+        64,
+        68,
+        72,
+        76
+      ]
+    }
+  ]
+}

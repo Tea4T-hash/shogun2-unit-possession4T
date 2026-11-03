@@ -7,6 +7,7 @@
     "native/common/engine_contract172.h": "4953611fd54df6dce6e859533e5bb286cb5b5bbf5f869e7db3ef95d265975c41",
     "native/common/engine_profiles170.h": "80561e11a652203bf6c2a2cd4b9b5f2c7eb85ff9fe5397435876da0cbe54337a",
     "native/common/hud_sprites159.h": "ff170a237af12855091dad74d06a33bff16e3fd4d96632214e3ad3ff81771b74",
+    "native/common/image_fit184.h": "4cfe2d54154def95feb167ca90527e9e4e095376d8c86da4b70e326604f3cc18",
     "native/common/local_assets159.h": "b4a0f0b823a8bdc1fd5d777589cc11aa42f533a39ec0843c4483f0afe520d065",
     "native/common/local_assets159_recipe.h": "2d6bd2270af289bd183a1c6212b693da01c029ebd4b70f80d12c962d6215bcec",
     "native/common/qte_sprites159.h": "9195fcbb4078b50c1f7d0c096093e8b0170905c751153d11b98b6f7f5d3fcb2c",
@@ -22,7 +23,7 @@
     "native/outputs/shogun2-accuracy90-preview/src/ability_target143.h": "6d9693ccb9c299a214e141549359b11598252d4127414957ce579f806fee3543",
     "native/outputs/shogun2-accuracy90-preview/src/accuracy_geometry90.h": "5673022f01e4ee9f01c898b684993ef6fc215624f8061f182eb454a0d7cafcad",
     "native/outputs/shogun2-accuracy90-preview/src/accuracy_protocol90.h": "3638afd2116e4f15defaac0259137873fdeee0e801cef4133d373069c2f40c01",
-    "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp": "e813a6ccc03bacccc174863a9ca18b36eae065a6a40b4aafefc87dc805123ece",
+    "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp": "47d6480460bf5e2454dcb6a70c09586d583d06b8d71d4a938860639ab31c64c1",
     "native/outputs/shogun2-accuracy90-preview/src/aim_geometry.h": "43db980409c92a967a376d9d0763bfa5cbdf4cc18d5b3a6c762fd3e7f14cdf33",
     "native/outputs/shogun2-accuracy90-preview/src/ammunition_mapping83.h": "665b865cc700b90ad07ab02414d4498b29655e3d5bf92c3faa28f7516f4b0be7",
     "native/outputs/shogun2-accuracy90-preview/src/ammunition_protocol83.h": "7b0962975b377a3a24fd6c27cbea55a36c1078eaf371ae48e12293654116db2b",
@@ -35,8 +36,8 @@
     "native/outputs/shogun2-accuracy90-preview/src/camera_choice97.h": "ee28f2195931c85d6ecd31f0c8bc5f5340110646706ede2404a0ebee2ac3c9d8",
     "native/outputs/shogun2-accuracy90-preview/src/camera_entry_gate.h": "7555f2d401fd9f3846c8d3aa6c608eb2113d72cc7c8100c070ac38227f62c1fc",
     "native/outputs/shogun2-accuracy90-preview/src/camera_pick150.h": "7c72fd088e10f2d8c28ded43b90eeb80f5f3706cdcf6b37157295e6f49019b6b",
-    "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h": "63f945644523a1a55995bb2943c1fe5e904cb960200cd4ff2c418ee2686e95ff",
-    "native/outputs/shogun2-accuracy90-preview/src/climb_protocol97.h": "8a1ee1aecda9907829d12924ca063b0046aff620610fab08a7a5eed67c7569ad",
+    "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h": "5aa53362717224f56dc3c4a18e1cc19eaeaa6be60d557dacc3f21777a9d0603c",
+    "native/outputs/shogun2-accuracy90-preview/src/climb_protocol97.h": "8d1b295045f53dae6823b27f611c8eb7a48ad72f5f8e09b2477bb147a79f4c1f",
     "native/outputs/shogun2-accuracy90-preview/src/combat_focus125.h": "1b7a6da9e43516740e370a0220d4cb9f789ccf130cfa1517e0dfd25737046dbf",
     "native/outputs/shogun2-accuracy90-preview/src/combat_turn126.h": "5a33b7a5981f82ded4362fb97d8f7e94ff2754b5e6179af7a1fcf7c0fb1badea",
     "native/outputs/shogun2-accuracy90-preview/src/command_input100.h": "a2c77dee4da1d48da9c4495b39119b9bf6c721b1037c1aadb6555fa09db60c9b",
@@ -85,7 +86,7 @@
     "native/outputs/shogun2-accuracy90-preview/src/native_bow.h": "8d73b2fa86bff36727eb1a392b9c069fa14ae6a18d9b3ac9c24baea0632b7b4b",
     "native/outputs/shogun2-accuracy90-preview/src/native_charge139.h": "6458f1fdfa5167923f867e5da9feb897d5654fc376ed2132813f5452f4ebd65d",
     "native/outputs/shogun2-accuracy90-preview/src/native_charge146.h": "e6f00244582adb874b3e4d279ee161a265c0169f721eca23b44a6019ad736b3e",
-    "native/outputs/shogun2-accuracy90-preview/src/native_charge148.h": "81b0eae86bdf9f6ee486cc0daf9419db5098916edc833e2b7eea8225b3fe3457",
+    "native/outputs/shogun2-accuracy90-preview/src/native_charge148.h": "e22a415587eea6323d51d4c9a6358375ccc86b4ee96b481624491380e5991ae4",
     "native/outputs/shogun2-accuracy90-preview/src/native_commands100.h": "e48cc254537f23ab00e93a02d4e362e807773940efe79f8b8ce7a552b5055bd0",
     "native/outputs/shogun2-accuracy90-preview/src/native_context103.h": "ec5784414a41c4fe8320a530260a1af552c9be8f3f018fdeaf8d38121ffb3916",
     "native/outputs/shogun2-accuracy90-preview/src/native_fatigue.h": "f92ef74aa5de201004cb065c972f2928cf343a6d161ae9a12df42237c61c8baf",
@@ -100,13 +101,14 @@
     "native/outputs/shogun2-accuracy90-preview/src/native_wall97.h": "bb6aaee7f82c1151fab552ea7222eebd619eb96b38c726febed5efb64e0b17b3",
     "native/outputs/shogun2-accuracy90-preview/src/order_signatures.h": "ca6c2577d7a5192d8d293ddbc3a940c8b2dccc882064ac185db78f01b4dfcdfa",
     "native/outputs/shogun2-accuracy90-preview/src/orders.h": "8f949ba3cead997f883827596357c5339b57ad14415721e85396605edce5d2ef",
+    "native/outputs/shogun2-accuracy90-preview/src/personal_input199.h": "e167de3eacbb723daed682c4aaf4c7434ac4af8964337c97e2a6ac9f4a7b87e5",
     "native/outputs/shogun2-accuracy90-preview/src/personal_weapon_catalog.h": "632d7731a72178c4380d377ab7e41fc2323256cdbb370c8f9d6e889439dfb168",
     "native/outputs/shogun2-accuracy90-preview/src/personal_weapon_profile.h": "65a34afa3bfbf9fca0d64c7c5d6ef8828d59b6d79cd9773884dcca697a6b62a8",
     "native/outputs/shogun2-accuracy90-preview/src/pose_geometry.h": "75df7d25376a3b072bdd2b53be986b1a8c7c29ef4230f3b9f486b641d443a3a9",
     "native/outputs/shogun2-accuracy90-preview/src/possession_entry125.h": "150f0889a7940e245b52c86bbe2b46b07a2527db184b7ab1a9c1c032439f7548",
     "native/outputs/shogun2-accuracy90-preview/src/possession_lease.h": "24c5a138fb18f54e6341c2a3944e83b77c731c1ac6d28fd6bd1cdb8238b23e1b",
     "native/outputs/shogun2-accuracy90-preview/src/protocol.h": "4491892ab8a40f3aa757258f40c3d2f204ddb2d12b480ac6aae0888a617fb02b",
-    "native/outputs/shogun2-accuracy90-preview/src/proximity147.h": "56a10b4d4eccbbc3ceb96b978c54cdcd8e2ff7c2e777f5d337266a00a0cb88f5",
+    "native/outputs/shogun2-accuracy90-preview/src/proximity147.h": "8382a22c3659708a895e83dfebdea6489691dcc0e72591e5152180fdca6098f3",
     "native/outputs/shogun2-accuracy90-preview/src/ranged_position128.h": "b5285f7cac07b7f54be8a7c02344f64f4168cc6287d4ed8442765eebf07bda32",
     "native/outputs/shogun2-accuracy90-preview/src/ranged_task_completion.h": "94f96b613e34cd8d7ecf401a18422874d94a25a6616c4361d496c187e4999e86",
     "native/outputs/shogun2-accuracy90-preview/src/rapid_advance132.h": "9d2205c518d577754d8d07a4c2325ec9e22d00f4d9107955d29ba0dc8b0113cf",
@@ -123,7 +125,7 @@
     "native/outputs/shogun2-accuracy90-preview/src/third_person152.h": "e3cdc07cb380efd3ed27ebe6dcfe3e846ca51de8efd325b04ecce28be5e98185",
     "native/outputs/shogun2-accuracy90-preview/src/throw_stop_scope83.h": "fad5b532bf29a24cf9c41449c7680b5202e0769e1428c6d0057616a065bf38a6",
     "native/outputs/shogun2-accuracy90-preview/src/unit_detach130.h": "264e3ecf78ac54dde8dffbb311b34dc4bb81b54aee5828d43433114012b43c66",
-    "native/outputs/shogun2-accuracy90-preview/src/unit_detach_combat130.h": "ef299b3b59eed4cd2b7a96d5f34501e604167db911a2e3f4b720350d7c135226",
+    "native/outputs/shogun2-accuracy90-preview/src/unit_detach_combat130.h": "f98c49a9ca04d45f41cf7c0d2b85ae940625af357afc03ca894672340c1d9d4a",
     "native/outputs/shogun2-accuracy90-preview/src/unit_weapon131.h": "8ee8852f1928df14ceeadaf4adf57554b0ac1c50ff22e9bab631f0a5af3dc1c0",
     "native/outputs/shogun2-accuracy90-preview/src/view152.h": "2e882684dae717b808c665ce2380cdd599cc57102a30a41f8007a5350cc48275",
     "native/outputs/shogun2-accuracy90-preview/src/weapon_animation.h": "a34c29287a25dbbf98614aeb5585c66ae5f8a3ee0839124fc4794c6e56302458",
@@ -132,10 +134,10 @@
     "native/outputs/shogun2-ammunition83-preview/hud-src/accuracy_geometry90.h": "5673022f01e4ee9f01c898b684993ef6fc215624f8061f182eb454a0d7cafcad",
     "native/outputs/shogun2-ammunition83-preview/hud-src/accuracy_protocol90.h": "3638afd2116e4f15defaac0259137873fdeee0e801cef4133d373069c2f40c01",
     "native/outputs/shogun2-ammunition83-preview/hud-src/hud.cpp": "436f89cddaa3a4595aa529a8f138f5d540cab2696baccc6b14ee940fda63e26c",
-    "native/outputs/shogun2-ammunition83-preview/hud-src/hud_renderer.h": "529e469cd70f180908f13b2a6ca9f5d8ad088cdb27db5bbdc9ec87b52e98eb8b",
+    "native/outputs/shogun2-ammunition83-preview/hud-src/hud_renderer.h": "49c98d2e1dad175bed0e7d84c0e3be87b95c5aa2b92648cc617ee9762e332b2c",
     "native/outputs/shogun2-ammunition83-preview/hud-src/hud_state89.h": "ded5ed4e2d5d6e73b588093b30ee2dd9b0903ff6560fdc88a715d2b27534d84b",
     "native/outputs/shogun2-ammunition83-preview/hud-src/hud_surface100.h": "c269a2653ab83159db05feaf8d63c1a2963895e33796458d7bf020ee13171fce",
-    "native/outputs/shogun2-ammunition83-preview/hud-src/native_font.h": "3ff606f3120fe28bd24e4eba5280354148fdfcc30d0d5c790a17ee86612c4326",
+    "native/outputs/shogun2-ammunition83-preview/hud-src/native_font.h": "6aebf273f3ceaf8e6a35bdb4a003b4bccdab8cae07482c9b719df6777a119784",
     "native/outputs/shogun2-ammunition83-preview/hud-src/qte-sprites.generated.h": "ac9a240a20e2460bd4a39c59d1687d94fba233b956ac87072533d6abc220b515",
     "native/outputs/shogun2-ammunition83-preview/hud-src/sprites.generated.h": "4250329472eb8d32b2f55d1f56a6bf80b0fc1714aa6902ecda42cfa2bd7d0e24",
     "native/outputs/shogun2-ammunition83-preview/hud-src/unit_art.generated.h": "2006effcd8bf5845756a4517652e7f1f9ae3276ffd83aca180cdc3ece8505b8c",
@@ -172,7 +174,7 @@
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_timeline.h": "1fe289a7a05334b214966e4efd191e1fdd10e92c8c081e47e0907f90cc56acdf",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_transport.h": "6113d64bb6e37df5da4c37c59983a4782ea38b91bf4568ad88514fdd9aa98160",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/strict_melee_gate.h": "bf7796751106b8cacedc5eff25453d1fea6a724e1feec6374488ea5ac70ef650",
-    "native/outputs/shogun2-authentic-hud80-preview/src/hud_renderer.h": "655c4550e6c8e010fe8d8d859301ec62afab42b2e40b7dc62e1f11d4b923000b",
+    "native/outputs/shogun2-authentic-hud80-preview/src/hud_renderer.h": "e277215f93bbe05a68881d4298bf5e31c72c0a0f137971548c25dfd0af6b973e",
     "native/outputs/shogun2-authentic-hud80-preview/src/native_font.h": "33c282577c022bc495b79a9620f9b8057c3a228f82139cb131f18a0c60917d42",
     "native/outputs/shogun2-authentic-hud80-preview/src/qte-sprites.generated.h": "ac9a240a20e2460bd4a39c59d1687d94fba233b956ac87072533d6abc220b515",
     "native/outputs/shogun2-authentic-hud80-preview/src/sprites.generated.h": "4250329472eb8d32b2f55d1f56a6bf80b0fc1714aa6902ecda42cfa2bd7d0e24",
@@ -183,7 +185,7 @@
     "native/outputs/shogun2-possession-cleanup-v46/src/charge_protocol146.h": "fe0aebb2063a345ad7f95ccd33fe665e61fe15d8ea62aa27a91ca0f8504a52f2",
     "native/outputs/shogun2-possession-cleanup-v46/src/friendly_fire_protocol109.h": "6833af8fd53fdcc322981e87f1320b62667d65a739f2a9b65f074691417a9313",
     "native/outputs/shogun2-possession-cleanup-v46/src/game_window105.h": "def0be3e21fd68295d03189cc23c3426059d5f5be7b76cbf6317d83750cc9e84",
-    "native/outputs/shogun2-possession-cleanup-v46/src/hud_layout108.h": "49946414019a08097af25b61eadb3f108501e1ce469d6b257b1fb3270be838bd",
+    "native/outputs/shogun2-possession-cleanup-v46/src/hud_layout108.h": "9fd581199801e1e3456af8646b37041d62dbc848a760d44f279741ec7c6b347c",
     "native/outputs/shogun2-possession-cleanup-v46/src/hud_visibility148.h": "f2a2d079fc6be12a8fa2511cdd1875c4db95b00617666958cdcb42c1e022d6cc",
     "native/outputs/shogun2-possession-cleanup-v46/src/identity.h": "01d37028885c43a0e399278070830ced7df438a3eb26aafff2e75fc21c803bfb",
     "native/outputs/shogun2-possession-cleanup-v46/src/overlay_surface106.h": "cfbfd23555a512032917adc94421bef592f6a98593c323d14d9dce8fba6e3dd0",
@@ -26893,84 +26895,77 @@
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 167,
+      "line": 169,
       "value": "0x8000",
       "function": "0x7fa0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 226,
+      "line": 228,
       "value": "0x281fc",
       "function": "0x28170",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 227,
+      "line": 229,
       "value": "0x15d22e8",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 245,
+      "line": 247,
       "value": "0x2826c",
       "function": "0x28260",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 274,
-      "value": "0x281fc",
-      "function": "0x28170",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
       "line": 276,
+      "value": "0x281fc",
+      "function": "0x28170",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 278,
       "value": "0x15d22e8",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 299,
+      "line": 301,
       "value": "0x2826c",
       "function": "0x28260",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 302,
+      "line": 304,
       "value": "0x15c4da0",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 392,
+      "line": 394,
       "value": "0x281fc",
       "function": "0x28170",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 406,
+      "line": 408,
       "value": "0x8000",
       "function": "0x7fa0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 406,
-      "value": "0x8000",
-      "function": "0x7fa0",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 407,
+      "line": 408,
       "value": "0x8000",
       "function": "0x7fa0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
@@ -26978,440 +26973,454 @@
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
       "line": 409,
-      "value": "0x15d22e8",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 428,
-      "value": "0x15e8524",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 485,
-      "value": "0x3936f0",
-      "function": "0x3936f0",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 501,
-      "value": "0x15b2448",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 517,
-      "value": "0x18b470",
-      "function": "0x18b470",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 525,
-      "value": "0x3936f0",
-      "function": "0x3936f0",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 531,
-      "value": "0x3936f0",
-      "function": "0x3936f0",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 559,
-      "value": "0x15b2448",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 596,
-      "value": "0x2826c",
-      "function": "0x28260",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 599,
-      "value": "0x15c4da0",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 604,
-      "value": "0x281fc",
-      "function": "0x28170",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 605,
-      "value": "0x15d26fc",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 610,
-      "value": "0x15d22e8",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 617,
-      "value": "0x15d1a74",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 650,
-      "value": "0x15d22e8",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 654,
-      "value": "0x15d22e8",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 840,
-      "value": "0x134f1d0",
-      "function": "0x134f1d0",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 849,
-      "value": "0x281fc",
-      "function": "0x28170",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 850,
-      "value": "0x15d22e8",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 884,
-      "value": "0x15b2448",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 964,
       "value": "0x8000",
       "function": "0x7fa0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1057,
+      "line": 411,
+      "value": "0x15d22e8",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 430,
+      "value": "0x15e8524",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 487,
+      "value": "0x3936f0",
+      "function": "0x3936f0",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 503,
+      "value": "0x15b2448",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 519,
+      "value": "0x18b470",
+      "function": "0x18b470",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 527,
+      "value": "0x3936f0",
+      "function": "0x3936f0",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 533,
+      "value": "0x3936f0",
+      "function": "0x3936f0",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 561,
+      "value": "0x15b2448",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 598,
+      "value": "0x2826c",
+      "function": "0x28260",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 601,
+      "value": "0x15c4da0",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 606,
+      "value": "0x281fc",
+      "function": "0x28170",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 607,
+      "value": "0x15d26fc",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 612,
+      "value": "0x15d22e8",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 619,
+      "value": "0x15d1a74",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 652,
+      "value": "0x15d22e8",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 656,
+      "value": "0x15d22e8",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 842,
+      "value": "0x134f1d0",
+      "function": "0x134f1d0",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 851,
+      "value": "0x281fc",
+      "function": "0x28170",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 852,
+      "value": "0x15d22e8",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 886,
+      "value": "0x15b2448",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 966,
+      "value": "0x8000",
+      "function": "0x7fa0",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 1059,
       "value": "0x367600",
       "function": "0x367600",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1059,
+      "line": 1061,
       "value": "0x321310",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1059,
+      "line": 1061,
       "value": "0x319dd0",
       "function": "0x319dd0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1062,
+      "line": 1064,
       "value": "0x134fad0",
       "function": "0x134fad0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1072,
+      "line": 1074,
       "value": "0x2fdcf0",
       "function": "0x2fdcf0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1077,
+      "line": 1079,
       "value": "0x2ac0b0",
       "function": "0x2ac0b0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1078,
+      "line": 1080,
       "value": "0x31f660",
       "function": "0x31f660",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1111,
+      "line": 1113,
       "value": "0x367600",
       "function": "0x367600",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1195,
+      "line": 1197,
       "value": "0xf9c360",
       "function": "0xf9c360",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1195,
+      "line": 1197,
       "value": "0xf9bf20",
       "function": "0xf9bf20",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1195,
+      "line": 1197,
       "value": "0x122f740",
       "function": "0x122f740",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x2fcb10",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x341560",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x2d6210",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x340d30",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x3945c0",
       "function": "0x3945c0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x3cf280",
       "function": "0x3cf280",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
+      "value": "0x3ccd00",
+      "function": "0x3ccd00",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 1198,
       "value": "0x473f80",
       "function": "0x473f80",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x3ca920",
       "function": "0x3ca920",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x3e8b50",
       "function": "0x3e8b50",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x3f0370",
       "function": "0x3f0370",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x3f03d0",
       "function": "0x3f03d0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x3e3f50",
       "function": "0x3e3f50",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x3d3630",
       "function": "0x3d3630",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x3d4320",
       "function": "0x3d4320",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x3e1a20",
       "function": "0x3e1a20",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x4272e0",
       "function": "0x4272e0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1196,
+      "line": 1198,
       "value": "0x4c56d0",
       "function": "0x4c56d0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1197,
+      "line": 1199,
       "value": "0x2ac0b0",
       "function": "0x2ac0b0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1198,
+      "line": 1200,
       "value": "0x3f06e0",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1198,
+      "line": 1200,
       "value": "0x3c73e0",
       "function": "0x3c73e0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1199,
+      "line": 1201,
       "value": "0x3d3ce0",
       "function": "0x3d3ce0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1199,
+      "line": 1201,
       "value": "0x3d33f0",
       "function": "0x3d33f0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1199,
+      "line": 1201,
       "value": "0x3d3d40",
       "function": "0x3d3d40",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1199,
+      "line": 1201,
       "value": "0x3d3de0",
       "function": "0x3d3de0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1199,
+      "line": 1201,
       "value": "0x3d3e90",
       "function": "0x3d3e90",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1199,
+      "line": 1201,
       "value": "0x3d3e60",
       "function": "0x3d3e60",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1199,
+      "line": 1201,
       "value": "0x3d3fc0",
       "function": "0x3d3fc0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1199,
+      "line": 1201,
       "value": "0x3cfa60",
       "function": "0x3cfa60",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1199,
+      "line": 1201,
       "value": "0x3d41d0",
       "function": "0x3d41d0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1199,
+      "line": 1201,
       "value": "0x3cbe40",
       "function": "0x3cbe40",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
-      "line": 1208,
+      "line": 1210,
       "value": "0x4c56d0",
       "function": "0x4c56d0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
@@ -27530,266 +27539,301 @@
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 49,
+      "line": 53,
       "value": "0x15de28c",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 49,
+      "line": 53,
       "value": "0x15de2ac",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 50,
+      "line": 54,
       "value": "0x15de28c",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 50,
+      "line": 54,
       "value": "0x397e40",
       "function": "0x397e40",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 50,
+      "line": 54,
       "value": "0x397e80",
       "function": "0x397e80",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 66,
+      "line": 70,
       "value": "0x3dfe30",
       "function": "0x3dfe30",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 74,
+      "line": 78,
       "value": "0xa0b60",
       "function": "0xa0b60",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 75,
+      "line": 79,
       "value": "0x3a2370",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 85,
+      "line": 89,
       "value": "0x15b2448",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 98,
+      "line": 102,
       "value": "0x3931f0",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 101,
+      "line": 105,
       "value": "0x39a2e0",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 155,
-      "value": "0x3ba540",
-      "function": "0x3ba540",
+      "line": 202,
+      "value": "0x3df380",
+      "function": "0x3df380",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 158,
-      "value": "0x3df290",
-      "function": "0x3df290",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 212,
-      "value": "0xa0b60",
-      "function": "0xa0b60",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 213,
-      "value": "0x2d6210",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 214,
-      "value": "0x340d30",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 215,
-      "value": "0x340cf0",
-      "function": "0x340cf0",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 216,
-      "value": "0x3945c0",
-      "function": "0x3945c0",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 217,
-      "value": "0x3cf280",
-      "function": "0x3cf280",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 218,
-      "value": "0x3c1ba0",
-      "function": "0x3c1ba0",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 219,
-      "value": "0x351e40",
-      "function": "0x351e40",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 220,
-      "value": "0x3ba540",
-      "function": "0x3ba540",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 221,
-      "value": "0x3df290",
-      "function": "0x3df290",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 222,
-      "value": "0x3dfe30",
-      "function": "0x3dfe30",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 223,
-      "value": "0x39a2e0",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 226,
-      "value": "0x2fcb10",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 226,
-      "value": "0x341560",
+      "line": 211,
+      "value": "0x15b2448",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
       "line": 227,
-      "value": "0x2fcb10",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 228,
-      "value": "0x341560",
-      "function": null,
+      "value": "0x3ba540",
+      "function": "0x3ba540",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
       "line": 229,
+      "value": "0x3df290",
+      "function": "0x3df290",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 292,
+      "value": "0xa0b60",
+      "function": "0xa0b60",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 293,
       "value": "0x2d6210",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 230,
+      "line": 294,
       "value": "0x340d30",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 232,
-      "value": "0x325ca0",
-      "function": "0x325ca0",
+      "line": 295,
+      "value": "0x340cf0",
+      "function": "0x340cf0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 233,
-      "value": "0x325ca0",
-      "function": "0x325ca0",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 233,
-      "value": "0x321d70",
-      "function": "0x321d70",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 234,
-      "value": "0x325ca0",
-      "function": "0x325ca0",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 235,
-      "value": "0x321d70",
-      "function": "0x321d70",
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 236,
+      "line": 296,
       "value": "0x3945c0",
       "function": "0x3945c0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
-      "line": 237,
+      "line": 297,
+      "value": "0x3cf280",
+      "function": "0x3cf280",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 298,
+      "value": "0x3c1ba0",
+      "function": "0x3c1ba0",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 299,
+      "value": "0x351e40",
+      "function": "0x351e40",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 300,
+      "value": "0x3ba540",
+      "function": "0x3ba540",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 301,
+      "value": "0x3df290",
+      "function": "0x3df290",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 302,
+      "value": "0x3dfe30",
+      "function": "0x3dfe30",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 303,
+      "value": "0x39a2e0",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 307,
+      "value": "0x3ccd00",
+      "function": "0x3ccd00",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 308,
+      "value": "0x3df380",
+      "function": "0x3df380",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 309,
+      "value": "0x3ccd00",
+      "function": "0x3ccd00",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 311,
+      "value": "0x2fcb10",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 311,
+      "value": "0x341560",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 312,
+      "value": "0x2fcb10",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 313,
+      "value": "0x341560",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 314,
+      "value": "0x2d6210",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 315,
+      "value": "0x340d30",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 317,
+      "value": "0x325ca0",
+      "function": "0x325ca0",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 318,
+      "value": "0x325ca0",
+      "function": "0x325ca0",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 318,
+      "value": "0x321d70",
+      "function": "0x321d70",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 319,
+      "value": "0x325ca0",
+      "function": "0x325ca0",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 320,
+      "value": "0x321d70",
+      "function": "0x321d70",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 321,
+      "value": "0x3945c0",
+      "function": "0x3945c0",
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/climb_control97.h",
+      "line": 322,
       "value": "0x3cf280",
       "function": "0x3cf280",
       "classification": "conservative numeric seed; not a claimed ABI proof"
@@ -29651,28 +29695,28 @@
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/proximity147.h",
-      "line": 142,
+      "line": 147,
       "value": "0x1668e0",
       "function": "0x1668e0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/proximity147.h",
-      "line": 178,
+      "line": 192,
       "value": "0x1679c0",
       "function": "0x1679c0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/proximity147.h",
-      "line": 178,
+      "line": 192,
       "value": "0x1668e0",
       "function": "0x1668e0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
       "source": "native/outputs/shogun2-accuracy90-preview/src/proximity147.h",
-      "line": 179,
+      "line": 193,
       "value": "0x1679c0",
       "function": "0x1679c0",
       "classification": "conservative numeric seed; not a claimed ABI proof"
@@ -30505,14 +30549,7 @@
     },
     {
       "source": "native/outputs/shogun2-ammunition83-preview/hud-src/native_font.h",
-      "line": 44,
-      "value": "0x20020",
-      "function": null,
-      "classification": "conservative numeric seed; not a claimed ABI proof"
-    },
-    {
-      "source": "native/outputs/shogun2-ammunition83-preview/hud-src/native_font.h",
-      "line": 45,
+      "line": 48,
       "value": "0x20020",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
@@ -30520,6 +30557,13 @@
     {
       "source": "native/outputs/shogun2-ammunition83-preview/hud-src/native_font.h",
       "line": 49,
+      "value": "0x20020",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-ammunition83-preview/hud-src/native_font.h",
+      "line": 53,
       "value": "0x20020",
       "function": null,
       "classification": "conservative numeric seed; not a claimed ABI proof"
@@ -33907,5 +33951,25 @@
     "preserved_export_recognized_functions": 65574,
     "private_analysis_reused": true,
     "engine_code_or_assets_included": false
+  },
+  "presentation184_source_review": {
+    "changed": [
+      "native/outputs/shogun2-ammunition83-preview/hud-src/hud_renderer.h",
+      "native/outputs/shogun2-ammunition83-preview/hud-src/native_font.h",
+      "native/outputs/shogun2-authentic-hud80-preview/src/hud_renderer.h",
+      "native/outputs/shogun2-possession-cleanup-v46/src/hud_layout108.h"
+    ],
+    "added": [
+      "native/common/image_fit184.h"
+    ],
+    "engine_guards_exact": true,
+    "scope": "Native portrait fit in both builds; private Deck native-font byte loader and HUD/QTE display size only"
+  },
+  "presentation185_source_review": {
+    "only_baseline_change": "native/outputs/shogun2-possession-cleanup-v46/src/hud_layout108.h",
+    "before": "0810b2c91346f7ea6a24f019ccb1c363f919ce6db660e5aa7358aaa0d8c42f5b",
+    "after": "9fd581199801e1e3456af8646b37041d62dbc848a760d44f279741ec7c6b347c",
+    "scope": "private mod HUD1.15; QTE quarter-height anchor clears requested38px View header; judgement/clock/input code unchanged",
+    "regions_unchanged": true
   }
 }

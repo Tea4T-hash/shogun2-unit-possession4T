@@ -1,10 +1,10 @@
 {
   "schema": 3,
   "product": "Shogun 2 Unit Possession",
-  "version": "0.33",
+  "version": "0.34",
   "branch": "main",
-  "tag": "v0.33",
-  "release_url": "https://github.com/logsam58/shogun2-unit-possession/releases/tag/v0.33",
+  "tag": null,
+  "release_url": null,
   "repository_visibility": "public; owner controls visibility",
   "format": "Steam Workshop; automatic resources from each owned game",
   "workshop": {
@@ -17,10 +17,23 @@
     "steam_manifest": "3194424785911379296",
     "uploaded_and_exact_download_verified": true,
     "last_verified_date": "2026-10-27",
-    "updated_by_this_GitHub_release": false
+    "updated_by_this_GitHub_release": false,
+    "last_known_verified_delivery": {
+      "item": "3825625050",
+      "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3825625050",
+      "candidate": 172,
+      "pack": "shogun2_unit_possession_workshop165.pack",
+      "pack_sha256": "62ec1ac51066ed76fcc8abdf83956c75260c13a16f7aa27030f7bf69eecabc6c",
+      "pack_bytes": 3729730,
+      "steam_manifest": "3194424785911379296",
+      "uploaded_and_exact_download_verified": true,
+      "last_verified_date": "2026-10-27",
+      "updated_by_this_GitHub_release": false
+    },
+    "updated_by_this_GitHub_source_push": false
   },
-  "source_kit": "Shogun2-Unit-Possession-v0.33-Source.zip",
-  "player_archive": "Shogun2-Unit-Possession-v0.33-Workshop.zip",
+  "source_kit": null,
+  "player_archive": null,
   "installer": null,
   "game_resources_shipped": false,
   "startup": {
@@ -39,13 +52,16 @@
     "reference_English_resource_bytes": 56563626
   },
   "acceptance": {
-    "Test172_owner_reports_working": true,
-    "Test172_formal_loaded_hash_hook_gate_completed": false,
-    "Test173_offline_checks_passed": true,
-    "Test173_owner_gameplay_accepted": false,
+    "automatic_PC_Deck_owner_accepted": true,
+    "charge_improvements_owner_accepted": true,
+    "independent_climbing_improved_but_intermittent": true,
+    "PC_K_HUD_cycle_owner_accepted": true,
+    "infantry_cavalry_locomotion_owner_accepted": true,
+    "revision34_loaded_build_verified": true,
+    "revision34_enemy_acquisition_trial": "FAILED: still ignored",
     "full_feature_coverage_or_long_term_stability_proven": false
   },
-  "validation": "docs/public-release/V0_33_VALIDATION.json",
+  "validation": "docs/public-release/V0_34_VALIDATION.json",
   "owner_decisions": {
     "first_party_license": "MIT",
     "resources": "from owned game",
@@ -55,7 +71,8 @@
   "support": {
     "naval_possession": "not supported; planned later",
     "multiplayer": "not implemented; Versus and campaign drop-in under consideration",
-    "expected": "visual/gameplay bugs and occasional crashes"
+    "expected": "visual/gameplay bugs and occasional crashes",
+    "Steam_Deck": "Windows game through Proton; tested Proton 9.0-4; contextual Steam Input/UI; no official Valve verification claim"
   },
   "open": [
     "intermittent attack charging",
@@ -65,17 +82,26 @@
     "first-person clipping",
     "mounted-bow presentation",
     "isolated enemy acquisition",
-    "bow audio follows native animation"
+    "bow audio follows native animation",
+    "small text in fitted Deck campaign panels",
+    "unfinished directional menu highlighting",
+    "campaign-to-battle controller transitions",
+    "enemy acquisition failed revision34 owner test"
   ],
   "history": "Historical tags and release notes remain. Installer downloads were removed; earlier game-resource-containing downloads remain absent.",
   "legal_clearance": "Resource exclusion is not legal clearance for native hooks/reverse engineering; see PROVENANCE.md.",
   "github_runtime": {
-    "candidate": 173,
+    "revision": "acquisition-34",
+    "candidate": 181,
     "pack": "shogun2_unit_possession_workshop165.pack",
-    "pack_sha256": "5a79a2b8de38ee69e0cf104b93e7df24a55d1d71aab3f4bf79a7364ee0b0a6c0",
-    "pack_bytes": 3725889,
-    "native_sha256": "ef404f843ad18f46128dab17e19e5e6b66df49e676d5b6dd1bb28ed611d6b0a1",
-    "embedded_build": "173-c85044f55f448f36",
-    "live_acceptance": false
+    "pack_sha256": "b5760562401201c808ac1f99ae758e27f5474cdae4230b64265495904f4b4f96",
+    "pack_bytes": 4267182,
+    "pack_distributed_by_this_source_push": false,
+    "live_enemy_acquisition_accepted": false
+  },
+  "source_status": "Maintained combined PC/Steam Deck source through revision34; binary/Steam publication separate",
+  "last_tagged_release": {
+    "version": "0.33",
+    "url": "https://github.com/logsam58/shogun2-unit-possession/releases/tag/v0.33"
   }
 }

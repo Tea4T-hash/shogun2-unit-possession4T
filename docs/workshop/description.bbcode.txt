@@ -1,0 +1,44 @@
+[h1]Shogun 2 Unit Possession[/h1]
+[h2]NOW WITH STEAM DECK INTEGRATION[/h2]
+One mod for PC and Steam Deck. Your device is detected automatically: PC keeps normal mouse/keyboard controls and UI sizing; Deck gets its own campaign, battle and possession controls, larger UI and an in-game controls guide.
+
+[b]On Deck:[/b] use the Windows version of Shogun 2 through Proton. Tested with Proton 9.0-4. Hold [b]View[/b] for controls inside the game; use the right trackpad in menus. Steam’s controller settings list the schemes under [b]Unit Possession Layout[/b].
+
+[h2]Fight as one of your soldiers[/h2]
+Select a friendly unit, possess a soldier, and fight in first or third person while the battle carries on around you. Play infantry, cavalry, ranged troops, officers, generals or flag bearers, and keep giving orders to your formation.
+
+[list]
+[*][b]PC:[/b] select a friendly unit and press F9. F10 or Escape returns to RTS. P switches first/third person.
+[*][b]Deck:[/b] select a friendly unit and press Y. Press Y again to return to RTS. Hold R3 to switch first/third person.
+[*]At the closest RTS zoom, point the cursor at the soldier you want to possess. From farther away, a soldier is picked for you.
+[/list]
+
+[h2]Combat and commands[/h2]
+[list]
+[*][b]Melee:[/b] follow the displayed response prompts and time your input as the marker reaches the green zone.
+[*][b]Ranged:[/b] hold RMB / LT to ready your weapon; LMB / RT fires. Hold and release LMB / RT to vary bow strength.
+[*][b]Charge:[/b] run straight toward an enemy while holding W + Shift + LMB on PC, or forward + L3 + RT on Deck. Use melee mode and release aim/ready. When the native charge conditions are met, the game handles the approach and paired attack or defensive outcome.
+[*][b]Climb:[/b] press F / A near a climbable castle wall. Your soldier can request the climb independently of the formation. Press again to cancel a pending approach. Climbing is improved but still intermittent.
+[*][b]Weapons and abilities:[/b] 1 / X toggles the unit’s supported melee/ranged mode. T / D-pad Up cycles abilities or special ammunition; G / D-pad Down uses it. Point at a friendly unit for abilities that need a friendly target.
+[*][b]Unit orders on PC:[/b] Q moves/attacks; hold and drag to place a formation, or double-tap to run/charge. E stops, Z holds here, C follows you, and R cycles fire orders.
+[*][b]Unit orders on Deck:[/b] L1 moves/attacks or places a formation. Hold R1 for the command wheel: Follow Me, Stop, Hold Here and Fire Orders. Choose with the right stick or D-pad and release R1.
+[*][b]Camera:[/b] scroll to change third-person distance. Hold middle mouse on PC, or L4 on Deck, to orbit your soldier.
+[*][b]HUD:[/b] K on PC or a tap of View on Deck cycles through hiding the RTS HUD, hiding both HUDs, and restoring both during possession. Melee prompts remain visible.
+[/list]
+
+[h2]Install and play[/h2]
+Subscribe, enable [b]Shogun 2 Unit Possession[/b] in the launcher, and launch through Steam. Restart after updates and enable only one possession mod. Existing subscribers do not need a separate Deck subscription.
+
+Fonts, unit cards, ability icons, clan mons, artwork and optional “Shameful display!” audio are prepared from your own installed game. No separate installer is needed. No recorder or debugger is included.
+
+[h2]Known issues[/h2]
+[b]Single-player land battles and sieges only. NAVAL BATTLES DO NOT SUPPORT POSSESSION.[/b] Naval support is planned for later. Multiplayer, Versus and campaign drop-in remain under consideration.
+
+Visual/gameplay bugs and crashes are expected. Charging and climbing can still fail; enemies may ignore your soldier when you leave the formation. Some large Deck campaign panels shrink to fit and remain hard to read, and controller transitions can occasionally fail. Ultra unit sizes and several armies can cause severe slowdown. Use the right trackpad for menu navigation; directional menu highlighting remains unfinished.
+
+The original engine and reviewed Bugfix engine are supported, but other engine/UI modifications can still conflict. Bugfix and Shogun2 Loader are not required.
+
+[url=https://steamcommunity.com/workshop/filedetails/discussion/3825625050/564798191048897978/]Report a bug[/url] — include your device, game version, unit/map, other mods and what happened.
+[url=https://github.com/logsam58/shogun2-unit-possession]Source code and full PC/Deck controls on GitHub[/url]
+
+Unofficial community mod; not affiliated with Creative Assembly or SEGA.

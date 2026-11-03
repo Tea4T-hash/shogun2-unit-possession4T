@@ -70,6 +70,7 @@ ROOT_DOCS = {
     'AGENTS.md',
     'README.md',
     'BUILD_AND_TEST.md',
+    'BUILD_STEAM_DECK.md',
     'SOURCE_MAP.md',
     'VALIDATION.md',
     'CONTRIBUTING.md',
@@ -93,7 +94,11 @@ DOCS = {
 def selected(root=ROOT):
     """Select portable source and guides; retain full notebooks only in Git."""
     version = (root / 'VERSION').read_text().strip()
-    for path in source_files(root):
+    paths = list(source_files(root))
+    deck_guide = root / 'BUILD_STEAM_DECK.md'
+    if deck_guide.is_file() and deck_guide not in paths:
+        paths.append(deck_guide)
+    for path in paths:
         rel = path.relative_to(root)
         parts = rel.parts
         if len(parts) == 1:
@@ -111,6 +116,21 @@ def selected(root=ROOT):
                 or rel.as_posix()
                 in {
                     'docs/development/README.md',
+                    'docs/development/SteamDeck174.md',
+                    'docs/development/SteamDeck175.md',
+                    'docs/development/SteamDeck176.md',
+                    'docs/development/SteamDeck177.md',
+                    'docs/development/SteamDeck181.md',
+                    'docs/development/HudVisibility198.md',
+                    'docs/development/WallClimbing200.md',
+                    'docs/development/AimingAndAcquisition201.md',
+                    'docs/development/PossessionLook202.md',
+                    'docs/development/Gameplay203.md',
+                    'docs/development/Locomotion204.md',
+                    'docs/development/Cavalry206.md',
+                    'docs/development/AutomaticDevice192.md',
+                    'docs/development/QoL193.md',
+                    'docs/development/CursorAndBindings194.md',
                     'docs/releases/README.md',
                     'docs/releases/v' + version + '.md',
                 }
@@ -122,6 +142,8 @@ def selected(root=ROOT):
             elif parts[1] == 'installer':
                 yield path
             elif parts[1] == 'workshop' and path.name in WORKSHOP:
+                yield path
+            elif parts[1] == 'deck':
                 yield path
             elif parts[1] in ('data', 'assets'):
                 yield path

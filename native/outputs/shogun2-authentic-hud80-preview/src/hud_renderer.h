@@ -23,6 +23,7 @@
 #endif
 #endif
 #include "unit_art.generated.h"
+#include "../../../common/image_fit184.h"
 #ifdef HUD80_QTE_ONLY
 #include "../qte-src/qte_core.h"
 #else
@@ -92,6 +93,13 @@ public:
             found=tiles.emplace(key,std::move(bitmap)).first;
         }
         return found->second.get();
+    }
+    RectF fitted(const wchar_t* key,RectF slot)const{
+        float w=0,h=0;
+        if(const auto* s=sprite(key)){w=float(s->logical_w);h=float(s->logical_h);}
+        else {auto tile=tiles.find(key);if(tile!=tiles.end()){w=float(tile->second->GetWidth());h=float(tile->second->GetHeight());}}
+        const auto r=imagefit184::within({slot.X,slot.Y,slot.Width,slot.Height},w,h);
+        return RectF(r.x,r.y,r.w,r.h);
     }
     void image(Graphics& g,const wchar_t* key,RectF target,float opacity=1.f,bool isolated=false)const{
         const Sprite* s=sprite(key);if(!s)return;
@@ -182,11 +190,15 @@ inline void render(Graphics& g,const Assets& a,float width,float height,const Vi
     text(g,v.unit?v.unit->name:L"Unit identity unavailable",x+27,y+23,344,32,21,ink(),true);
     text(g,v.faction,x+27,y+55,322,22,14,muted());
     if(!v.mon.empty())a.image(g,v.mon.c_str(),RectF(x+380,y+26,54,54));
-    a.image(g,L"ui/panel_backgrounds/data__unit_card_background.png",RectF(x+28,y+84,146,184));
     const wchar_t* portrait=portrait_for(v.unit,v.owner);
-    if(*portrait)a.image(g,portrait,RectF(x+27,y+81,148,190));
-    else text(g,L"No portrait",x+34,y+154,132,24,15,muted());
-    Pen portrait_rim(Color(255,108,96,72),1.f);g.DrawRectangle(&portrait_rim,x+27,y+83,148.f,188.f);
+    const wchar_t* backing=L"ui/panel_backgrounds/data__unit_card_background.png";
+    const RectF card=a.fitted(*portrait?portrait:backing,RectF(x+27,y+81,148,190));
+    if(card.Width>0&&card.Height>0){
+        a.image(g,backing,card);
+        if(*portrait)a.image(g,portrait,card);
+        else text(g,L"No portrait",card.X+4,card.Y+73,card.Width-8,24,15,muted());
+        Pen portrait_rim(Color(255,108,96,72),1.f);g.DrawRectangle(&portrait_rim,card);
+    }
     text(g,class_name(v.unit),x+192,y+86,245,24,16,ink(),true);
     std::wstring strength=std::to_wstring(v.men)+L" / "+std::to_wstring(v.initial)+L" men";
     text(g,strength,x+192,y+116,244,28,21,ink(),true);
