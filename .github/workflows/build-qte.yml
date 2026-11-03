@@ -1,0 +1,29 @@
+# Builds only the melee QTE program and the HUD program (32-bit, Microsoft C++), using
+# GitHub's free Windows machines. Nothing is installed on your PC. Run it from the Actions tab.
+name: Build QTE and HUD
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
+      - name: Compile MinHook, QTE and HUD
+        shell: cmd
+        run: |
+          mkdir out
+          set V=native\outputs\shogun2-accuracy90-preview\vendor
+          for %%f in (buffer hook trampoline) do (cl /nologo /O2 /MT /W3 /I%V%\include /c %V%\src\%%f.c /Foout\%%f.obj || exit /b 1)
+          cl /nologo /O2 /MT /W3 /I%V%\include /c %V%\src\hde\hde32.c /Foout\hde32.obj || exit /b 1
+          cl /nologo /std:c++17 /EHsc /O2 /MT /W4 /DS2FP_LOCAL_ASSETS /DNOMINMAX /LD native\outputs\shogun2-authentic-hud80-preview\qte-src\playable_runtime.cpp out\buffer.obj out\hook.obj out\trampoline.obj out\hde32.obj /Foout\qte.obj /Feout\qte-playable-v79.dll /link bcrypt.lib user32.lib gdi32.lib gdiplus.lib ole32.lib || exit /b 1
+          cl /nologo /std:c++17 /EHsc /O2 /MT /W4 /DS2FP_LOCAL_ASSETS /DNOMINMAX native\outputs\shogun2-ammunition83-preview\hud-src\hud.cpp /Foout\hud.obj /Feout\possession-hud.exe /link bcrypt.lib user32.lib gdi32.lib gdiplus.lib ole32.lib winmm.lib || exit /b 1
+          certutil -hashfile out\qte-playable-v79.dll SHA256
+          certutil -hashfile out\possession-hud.exe SHA256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qte-and-hud
+          path: |
+            out/qte-playable-v79.dll
+            out/possession-hud.exe
