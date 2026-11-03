@@ -11,56 +11,44 @@ enum class Action:uint32_t {Attack=1,Defend=2,Charge=3};
 inline bool attacking(Action action){return action==Action::Attack||action==Action::Charge;}
 enum class Button:uint32_t {Left=1,Right=2};
 // Success = green zone. Early/Late are no longer produced by the zoned bar.
-enum class Result:uint32_t {Pending=0,Success=1,Early=2,Late=3,WrongButton=4,Timeout=5,Canceled=6,Purple=7,Orange=8,Red=9,Blue=10};
+// PerfectFail = the wrong button while the marker was in green: no one dies.
+enum class Result:uint32_t {Pending=0,Success=1,Early=2,Late=3,WrongButton=4,Timeout=5,Canceled=6,Purple=7,Orange=8,Red=9,Blue=10,PerfectFail=11};
 // ---------------------------------------------------------------------------------------------
-// ZONED BAR (user design). All values are fractions of the bar width, mirrored around the centre.
-//   0.00-0.09  red end zone                 (18% total)
-//   0.09-0.45  orange RNG zone (60% total) holding one moving blue zone and a 1% red strip
-//              blue: 0.06 wide (12% total), moves on every new bar and every time the marker
-//              reaches an end; red strip fixed at 0.295-0.305 (2% total)
-//   0.45-0.47  purple (4% total)
-//   0.47-0.53  green kill zone (6%)
+// ZONED BAR (user design, v157). Fractions of the bar width, mirrored around the centre.
+//   0.00-0.09  red end zone, Critical Fail      (18% total)
+//   0.09-0.48  orange, Resisted, holding a fixed 2% red strip at 0.29-0.31 on each side
+//   ATTACK bar only: purple, Countered, 0.45-0.47 (centre 0.03-0.05) with 1% orange
+//              between it and green; on the GUARD bar that space is orange
+//   0.48-0.52  green, Perfect Strike / Perfect Guard (4%)
+// Blue has been removed.
 // ---------------------------------------------------------------------------------------------
-constexpr float RedEnd=.09f,BlueWidth=.06f,RedStripLow=.295f,RedStripHigh=.305f,PurpleHalf=.05f,GreenHalf=.03f;
+constexpr float RedEnd=.09f,RedStripLow=.29f,RedStripHigh=.31f,PurpleHalf=.05f,PurpleInner=.03f,GreenHalf=.02f;
 constexpr float GreenWidth=2.f*GreenHalf;
 // Marker: 25% faster than the old neutral sweep (1.475 s), 5% faster after every full crossing,
-// 5% slower at the ends and 5% faster in the middle of each crossing.
+// 5% slower at the ends and 5% faster in the middle of each crossing. Guards run twice as fast.
 constexpr float BaseSweepSeconds=1.475f/1.25f;
 constexpr double SweepSpeedup=1.05,EaseAmplitude=.05;
-// Outcome tuning (chances 0-1). "Buffs" are applied as changes to the odds of the game's own roll.
-constexpr float GreenAttackKill=.85f;          // attack in green: 85% kill, never die (no game roll)
-constexpr float OrangeDefendBuff=.25f;          // guard in orange: +25% defence, then the game rolls
-constexpr float PurpleDefendBuff=.50f;          // guard in purple: +50% defence, then the game rolls
-constexpr float PurpleAttackEnemyBuff=.25f;     // attack in purple: +25% enemy attack, then the game rolls
-constexpr float RedDefendSurvive=.15f;          // guard in red: 85% die, 15% survive (no game roll)
+// Outcome tuning (chances 0-1).
+constexpr float OrangeAttackBonus=.25f;         // attack in orange: game's roll, and a missed roll still kills 25% of the time
+constexpr float PurpleAttackSurvive=.10f;       // attack in purple (Countered): the enemy kills you 90% of the time
+constexpr float RedDefendSurvive=.15f;          // guard in red / no guard click: 15% survive
 constexpr float RedAttackDebuff=.85f;           // attack in red: the attack fails, and your NEXT exchange that uses the
-                                                // game's roll is turned against you 85% of the time (stats -85%)
+                                                // game's roll is turned against you 85% of the time
 enum class Zone:uint32_t {Red,Blue,Orange,Purple,Green};
-// Blue reverses the keys: the guard button counts as the attack and the attack button as the guard.
-// Blue has no knockdown: after the reversed key it simply uses the game's roll.
 inline uint64_t mix64(uint64_t v){v+=0x9e3779b97f4a7c15ull;v=(v^(v>>30))*0xbf58476d1ce4e5b9ull;v=(v^(v>>27))*0x94d049bb133111ebull;return v^(v>>31);}
-// Start of a blue zone, measured from its own end of the bar. Never overlaps the red strip.
-inline float blue_start(uint64_t serial,uint32_t sweep,bool right){
-    constexpr float a0=RedEnd,a1=RedStripLow-BlueWidth,b0=RedStripHigh,b1=.5f-PurpleHalf-BlueWidth;
-    const double u=double(mix64(serial*0x2545f4914f6cdd1dull^(uint64_t(sweep)<<1)^uint64_t(right))>>11)*(1./9007199254740992.);
-    const float pick=float(u)*((a1-a0)+(b1-b0));
-    return pick<(a1-a0)?a0+pick:b0+(pick-(a1-a0));
-}
-inline Zone zone_at(float x,uint64_t serial,uint32_t sweep){
+inline Zone zone_at(float x,uint64_t,uint32_t,bool attack){
     x=std::clamp(x,0.f,1.f);
     const float centre=std::abs(x-.5f);
     if(centre<=GreenHalf)return Zone::Green;
-    if(centre<=PurpleHalf)return Zone::Purple;
-    const bool right=x>.5f;const float from_end=right?1.f-x:x;
+    if(attack&&centre>PurpleInner&&centre<=PurpleHalf)return Zone::Purple;
+    const float from_end=std::min(x,1.f-x);
     if(from_end<RedEnd)return Zone::Red;
-    const float b=blue_start(serial,sweep,right);
-    if(from_end>=b&&from_end<b+BlueWidth)return Zone::Blue;
     if(from_end>=RedStripLow&&from_end<RedStripHigh)return Zone::Red;
     return Zone::Orange;
 }
 inline Result zone_result(Zone z){
     switch(z){case Zone::Green:return Result::Success;case Zone::Purple:return Result::Purple;
-        case Zone::Orange:return Result::Orange;case Zone::Blue:return Result::Blue;default:return Result::Red;}
+        case Zone::Orange:return Result::Orange;default:return Result::Red;}
 }
 enum Fact:uint32_t {Fatigue=1,Morale=2,Elevation=4,General=8,Strength=16,Environment=32,EffectiveCombat=64};
 constexpr uint32_t Required=Fatigue|Morale|Elevation|General;
@@ -182,15 +170,17 @@ inline float reticle_position(const Snapshot& s){
     const double pi=3.14159265358979323846,eased=u-EaseAmplitude*std::sin(2.*pi*u)/(2.*pi);
     return float((k&1u)?1.-eased:eased);
 }
-inline Zone current_zone(const Snapshot& s){return zone_at(reticle_position(s),s.serial,sweep_index(s));}
+inline Zone current_zone(const Snapshot& s){return zone_at(reticle_position(s),s.serial,sweep_index(s),attacking(s.action));}
 // At least three active-simulation seconds AND one complete outward/return
 // cycle. Phase is preserved through stat refreshes, so speed changes cannot
 // restart the required cycle or revive an expired event. No protocol field.
 constexpr double ResponseWindowSeconds91=3.; // Retained minimum, not a hard cap.
 constexpr double MaximumResponseSeconds95=4.42; // Existing duration <=2.21.
+// Guards give half the reaction time of attacks.
+inline double response_window(Action a){return attacking(a)?ResponseWindowSeconds91:ResponseWindowSeconds91*.5;}
 inline double response_remaining95(const Snapshot& s){
     if(s.result==Result::Timeout)return 0;
-    return std::max({0.,ResponseWindowSeconds91-s.response_elapsed,
+    return std::max({0.,response_window(s.action)-s.response_elapsed,
         2.*double(s.duration)-double(s.elapsed)});
 }
 inline double response_deadline(const Snapshot& s){return s.response_elapsed+response_remaining95(s);}
@@ -216,7 +206,7 @@ class Event {
     bool active_{},paused_{};
     float placement_{},width_{};
     void geometry(){
-        difficulty_.duration=BaseSweepSeconds;
+        difficulty_.duration=attacking(action_)?BaseSweepSeconds:BaseSweepSeconds*.5f; // guard marker twice as fast
         difficulty_.ideal=.5f*difficulty_.duration;
         difficulty_.tolerance=width_*.5f*difficulty_.duration;
     }
@@ -241,7 +231,7 @@ public:
         difficulty_.advantage=changed.combined.advantage; // fixed bar: speed and zones ignore unit stats
         width_=GreenWidth;geometry();
         // Preserve phase on stat refresh without changing consumed response time.
-        const double remaining=std::max({0.,ResponseWindowSeconds91-response_elapsed_,(2.-phase)*double(difficulty_.duration)});
+        const double remaining=std::max({0.,response_window(action_)-response_elapsed_,(2.-phase)*double(difficulty_.duration)});
         const double step=std::min(simulation_dt,remaining);
         elapsed_=phase*difficulty_.duration+step;response_elapsed_+=step;
         if(simulation_dt>=remaining)result_=Result::Timeout;
@@ -250,9 +240,8 @@ public:
     Result press(uint64_t serial,Button button,bool down_edge){
         if(!active_||paused_||serial!=serial_||!down_edge||result_!=Result::Pending)return result_;
         const Zone zone=current_zone(snapshot());
-        Button expected=attacking(action_)?Button::Left:Button::Right;
-        if(zone==Zone::Blue)expected=expected==Button::Left?Button::Right:Button::Left;
-        result_=button!=expected?Result::WrongButton:zone_result(zone);
+        const Button expected=attacking(action_)?Button::Left:Button::Right;
+        result_=button!=expected?(zone==Zone::Green?Result::PerfectFail:Result::WrongButton):zone_result(zone);
         return result_;
     }
     Result press_visible93(uint64_t serial,Button button,bool edge,const Snapshot& shown){
@@ -268,9 +257,8 @@ public:
            shown.response_elapsed>response_elapsed_+1e-4||response_elapsed_-shown.response_elapsed>1.6)return result_;
         // No delay: judge the live marker at the moment of the click, not the last drawn frame.
         const Zone zone=current_zone(snapshot());
-        Button expected=attacking(action_)?Button::Left:Button::Right;
-        if(zone==Zone::Blue)expected=expected==Button::Left?Button::Right:Button::Left; // reversed keys
-        result_=button!=expected?Result::WrongButton:zone_result(zone);
+        const Button expected=attacking(action_)?Button::Left:Button::Right;
+        result_=button!=expected?(zone==Zone::Green?Result::PerfectFail:Result::WrongButton):zone_result(zone);
         return result_;
     }
     void cancel(){active_=false;paused_=false;result_=Result::Canceled;}
@@ -280,47 +268,48 @@ public:
     }
     Snapshot snapshot()const{return {serial_,action_,result_,float(elapsed_),difficulty_.duration,difficulty_.ideal,difficulty_.tolerance,difficulty_.advantage,pair_.opponent,pair_.opponent_unit,active_,paused_,false,placement_,width_,response_elapsed_};}
 };
-enum class CombatIntent {Stock,Blocked,Hit};
+// Hit = the attacker of this pair kills the defender. Reverse = the defender kills the attacker
+// (the pair's roles are swapped for the native replay). Blocked = no one dies. Stock = game's roll.
+enum class CombatIntent {Stock,Blocked,Hit,Reverse};
 inline float outcome_roll()noexcept{return random_placement();}
-// Hit = the swing in this pair lands (the player's when attacking, the enemy's when guarding).
-// stock_hit = the game's own pre-rolled verdict was a landed swing.
-// Set by an attack in red; used up by the player's next resolved exchange.
+// Set by an attack in red; used up by the player's next exchange that uses the game's roll.
 inline std::atomic<uint32_t> red_attack_debuff{0};
+// Set when an attack is missed (no click or wrong button): the next exchange is forced to be a guard.
+inline std::atomic<uint32_t> force_guard_next{0};
 inline CombatIntent zone_intent(Action action,Result result,bool stock_hit);
 inline CombatIntent combat_intent(Action action,Result result,bool stock_hit=false){
     if(result==Result::Canceled||result==Result::Pending)return CombatIntent::Stock; // interrupted: game's own result, debuff kept
-    const bool debuffed=red_attack_debuff.exchange(0)!=0;
+    const bool attack=attacking(action);
+    if(attack&&(result==Result::Timeout||result==Result::WrongButton||result==Result::PerfectFail))force_guard_next.store(1);
+    const bool game_roll=attack&&(result==Result::Orange||result==Result::Timeout);
+    const bool debuffed=game_roll&&red_attack_debuff.exchange(0)!=0;
     const CombatIntent intent=zone_intent(action,result,stock_hit);
-    if(attacking(action)&&result==Result::Red)red_attack_debuff.store(1);
-    // The debuff only touches results that come from the game's roll (orange, purple, blue, no click).
-    const bool game_roll=result==Result::Orange||result==Result::Purple||result==Result::Blue||result==Result::Timeout;
-    if(debuffed&&game_roll&&outcome_roll()<RedAttackDebuff)
-        return attacking(action)?CombatIntent::Blocked:CombatIntent::Hit;
+    if(attack&&result==Result::Red)red_attack_debuff.store(1);
+    if(debuffed&&outcome_roll()<RedAttackDebuff)return CombatIntent::Blocked; // the debuffed swing fails
     return intent;
 }
 inline CombatIntent zone_intent(Action action,Result result,bool stock_hit){
-    if(result==Result::Timeout)return CombatIntent::Stock; // no click: game's roll
-    const auto stock=[&]{return CombatIntent::Stock;};
     if(attacking(action)){
         switch(result){
-        case Result::Success: return outcome_roll()<GreenAttackKill?CombatIntent::Hit:CombatIntent::Blocked; // never die
-        case Result::Orange:  return stock();
-        case Result::Purple:  return stock_hit&&outcome_roll()<PurpleAttackEnemyBuff?CombatIntent::Blocked:stock();
-        case Result::Blue:    return stock(); // reversed key accepted: game's roll
-        // Red: an attack exchange has no result where the player dies, so the attack fails and the
-        // red-attack debuff above makes the player's next game-roll exchange go against them 85% of the time.
-        default:              return CombatIntent::Blocked; // red / wrong button
+        case Result::Success:     return CombatIntent::Hit;                                   // Perfect Strike: enemy dies
+        case Result::Orange:      return stock_hit||outcome_roll()<OrangeAttackBonus?CombatIntent::Hit:CombatIntent::Blocked; // Resisted: roll +25%
+        case Result::Purple:      return outcome_roll()<PurpleAttackSurvive?CombatIntent::Blocked:CombatIntent::Reverse;      // Countered
+        case Result::Timeout:     return CombatIntent::Stock;                                 // no click: game's roll
+        case Result::PerfectFail: return CombatIntent::Blocked;                               // wrong button in green: no one dies
+        default:                  return CombatIntent::Blocked;                               // Critical Fail / wrong button: attack fails
         }
     }
     switch(result){
-    case Result::Success: return CombatIntent::Blocked; // guaranteed guard
-    case Result::Orange:  return stock_hit&&outcome_roll()<OrangeDefendBuff?CombatIntent::Blocked:stock();
-    case Result::Purple:  return stock_hit&&outcome_roll()<PurpleDefendBuff?CombatIntent::Blocked:stock();
-    case Result::Red:     return outcome_roll()<RedDefendSurvive?CombatIntent::Blocked:CombatIntent::Hit;
-    case Result::Blue:    return stock(); // reversed key accepted: game's roll
-    default:              return CombatIntent::Hit; // wrong button
+    case Result::Success:     return CombatIntent::Reverse;                                   // Perfect Guard: enemy dies
+    case Result::Orange:      return CombatIntent::Blocked;                                   // Resisted: guaranteed survival
+    case Result::PerfectFail: return CombatIntent::Blocked;                                   // wrong button in green: no one dies
+    case Result::Red:
+    case Result::Timeout:     return outcome_roll()<RedDefendSurvive?CombatIntent::Blocked:CombatIntent::Hit; // Critical Fail
+    default:                  return CombatIntent::Hit;                                       // wrong button: you die
     }
 }
+// Native outcome flag: swap attacker/defender for the replay (defender kills attacker).
+constexpr uint32_t ReverseRoles=0x100;
 // Production must supply VERIFIED native animation/result bindings. Fixture
 // codes do not certify real block/hit behavior. In particular, code5 reaches
 // a native fatal path; never guess that it is a harmless hit or use it by default.
@@ -333,7 +322,7 @@ inline bool native_outcome(Action action,Result result,uint32_t original,
     auto intent=combat_intent(action,result,bindings.valid()&&original==bindings.hit);
     if(intent==CombatIntent::Stock){output=original;return true;}
     if(!bindings.valid())return false;
-    output=intent==CombatIntent::Hit?bindings.hit:bindings.blocked;return true;
+    output=intent==CombatIntent::Reverse?(bindings.hit|ReverseRoles):intent==CombatIntent::Hit?bindings.hit:bindings.blocked;return true;
 }
 inline float closing_radius(const Snapshot& s,float target=32.f,float outer=116.f){
     if(s.ideal<=0||!std::isfinite(s.elapsed))return outer;
