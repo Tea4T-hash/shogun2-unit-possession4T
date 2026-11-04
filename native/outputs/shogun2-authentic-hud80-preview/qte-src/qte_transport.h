@@ -45,8 +45,8 @@ inline bool valid(const Payload& value){
     return value.enabled&&value.occupied&&value.lease&&s.serial&&s.opponent_unit&&
         (attacking(s.action)||s.action==Action::Defend)&&uint32_t(s.result)<=uint32_t(Result::PerfectFail)&&
         std::isfinite(s.response_elapsed)&&s.response_elapsed>=0&&s.response_elapsed<=MaximumResponseSeconds95&&s.response_elapsed<=response_deadline(s)+1e-6&&
-        (s.result!=Result::Pending||s.response_elapsed<response_window(s.action)||s.elapsed<2.*s.duration)&&
-        (s.result!=Result::Timeout||(s.response_elapsed+1e-6>=response_window(s.action)&&s.elapsed+1e-5>=2.*s.duration))&&
+        (s.result!=Result::Pending||s.response_elapsed<response_window(s.action,s.advantage)||s.elapsed<2.*s.duration)&&
+        (s.result!=Result::Timeout||(s.response_elapsed+1e-6>=response_window(s.action,s.advantage)&&s.elapsed+1e-5>=2.*s.duration))&&
         std::isfinite(s.elapsed)&&s.elapsed>=0&&std::isfinite(s.duration)&&s.duration>=.30f&&s.duration<=2.21f&&
         std::isfinite(s.ideal)&&s.ideal>0&&s.ideal<s.duration&&
         std::isfinite(s.tolerance)&&s.tolerance>0&&s.tolerance<s.duration*.5f&&
