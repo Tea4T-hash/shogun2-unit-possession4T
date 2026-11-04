@@ -2,7 +2,46 @@
 #include "../../shogun2-melee-qte63-preview/src/melee_commitment.h"
 #include "death_pose_geometry.h"
 #include "animation_view.h"
-#include "../../shogun2-possession-cleanup-v46/src/life_stats173.h"
+// Kit v12: statistics code built in here (no separate file needed).
+#ifndef S2UP_LIFE_STATS173
+#define S2UP_LIFE_STATS173
+// Kill and death statistics for possessed soldiers (kit v10).
+// The possession engine counts deaths; the QTE runtime counts kills and keeps ONE small
+// text file up to date for the campaign script. That file is always replaced in place
+// (CREATE_ALWAYS on a fixed name), so it never grows and no extra files are made.
+#include <windows.h>
+#include <cstdint>
+#include <cstdio>
+#include <string>
+namespace life173 {
+constexpr uint32_t Magic=0x3346494C,Version=173;
+struct Shared {
+    uint32_t magic,version,size,pid;
+    volatile LONG deaths;            // possessed-soldier deaths since the game started
+    volatile LONG last_death_lease;  // possession lease of the latest death
+};
+inline void mapping_name(wchar_t* out,DWORD pid){swprintf_s(out,96,L"Local\\S2UPLife173-%lu",pid);}
+// %APPDATA%\The Creative Assembly\Shogun2\possession_battle_stats.txt
+inline bool stats_path(std::wstring& out){
+    wchar_t base[32768]{};DWORD n=GetEnvironmentVariableW(L"APPDATA",base,32768);
+    if(!n||n>=32768)return false;
+    out=std::wstring(base)+L"\\The Creative Assembly\\Shogun2";
+    DWORD attr=GetFileAttributesW(out.c_str());
+    if(attr==INVALID_FILE_ATTRIBUTES||!(attr&FILE_ATTRIBUTE_DIRECTORY)||(attr&FILE_ATTRIBUTE_REPARSE_POINT))return false;
+    out+=L"\\possession_battle_stats.txt";return true;
+}
+// Whole-file replacement of the single statistics file. Never appends, never makes copies.
+inline bool write_stats(const char* session,unsigned kills,unsigned deaths){
+    std::wstring path;if(!stats_path(path))return false;
+    char text[160];int n=sprintf_s(text,"S2UP_STATS 1\r\nsession %s\r\nkills %u\r\ndeaths %u\r\n",session,kills,deaths);
+    if(n<=0)return false;
+    HANDLE f=CreateFileW(path.c_str(),GENERIC_WRITE,FILE_SHARE_READ,nullptr,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);
+    if(f==INVALID_HANDLE_VALUE)return false;
+    DWORD written=0;bool ok=WriteFile(f,text,DWORD(n),&written,nullptr)&&written==DWORD(n);
+    CloseHandle(f);return ok;
+}
+}
+#endif
 static animationview::Handoff melee_handoff78;
 static animationview::Handoff melee_opponent_motion78;
 static bool animation_view_active78;
