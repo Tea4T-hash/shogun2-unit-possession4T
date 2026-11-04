@@ -20,6 +20,8 @@
 #include "qte_render.h"
 #include "strict_melee_gate.h"
 #include "native_effective_combat.h"
+#include "kill_tally173.h"
+#include "../../shogun2-possession-cleanup-v46/src/life_stats173.h"
 #include "../../shogun2-possession-cleanup-v46/vendor/include/MinHook.h"
 using namespace qte;
 static HMODULE module;
@@ -706,6 +708,61 @@ static bool acknowledged_image106(const overlay106::Ack& ack,overlay106::Key key
     Frame93 image;if(!images113.read(ack,key,battle,serial,wall(),image))return false;
     drawn_prompt106=image.shown;drawn_wall106=image.submitted;return true;
 }
+// ---- Kit v10: kills per life, deaths and the battle statistics file -------------------------
+static const life173::Shared* life_view173=nullptr;static HANDLE life_map173=nullptr;static ULONGLONG life_retry173=0;
+static LONG life_seen_deaths173=-1;static unsigned stats_written_kills173=~0u,stats_written_deaths173=~0u;
+static ULONGLONG banner_until173=0;static wchar_t banner_text173[64]{};static char session173[48]{};
+static void life_poll173(){
+    const ULONGLONG now=GetTickCount64();
+    if(!session173[0]){FILETIME c{},e{},k{},u{};GetProcessTimes(GetCurrentProcess(),&c,&e,&k,&u);
+        sprintf_s(session173,"%lu-%llu",GetCurrentProcessId(),(unsigned long long)((uint64_t(c.dwHighDateTime)<<32)|c.dwLowDateTime));}
+    if(!life_view173&&now>=life_retry173){
+        life_retry173=now+1000;wchar_t name[96];life173::mapping_name(name,GetCurrentProcessId());
+        HANDLE map=OpenFileMappingW(FILE_MAP_READ,FALSE,name);
+        if(map){auto view=static_cast<const life173::Shared*>(MapViewOfFile(map,FILE_MAP_READ,0,0,sizeof(life173::Shared)));
+            if(view&&view->magic==life173::Magic&&view->version==life173::Version&&view->size==sizeof(life173::Shared)&&view->pid==GetCurrentProcessId()){life_view173=view;life_map173=map;}
+            else{if(view)UnmapViewOfFile(view);CloseHandle(map);}}
+    }
+    LONG deaths=0;
+    if(life_view173){
+        deaths=life_view173->deaths;
+        if(life_seen_deaths173<0)life_seen_deaths173=deaths;
+        if(deaths!=life_seen_deaths173){
+            life_seen_deaths173=deaths;
+            const unsigned kills=tally173::end_life(uint64_t(uint32_t(life_view173->last_death_lease)));
+            swprintf_s(banner_text173,L"Kills this life: %u",kills);banner_until173=now+4000;
+        }
+    }
+    const unsigned total=tally173::total(),dead=unsigned(deaths<0?0:deaths);
+    if((total||dead)&&(total!=stats_written_kills173||dead!=stats_written_deaths173)){
+        if(life173::write_stats(session173,total,dead)){stats_written_kills173=total;stats_written_deaths173=dead;}
+    }
+}
+static bool draw_banner173(){
+    if(GetTickCount64()>=banner_until173||!possession)return false;
+    game=gamewindow105::refresh(game,GetCurrentProcessId());
+    if(!focused()||!IsWindow(game)||IsIconic(game))return false;
+    RECT client{};POINT corner{};if(!gamewindow105::client(game,client,corner))return false;
+    const float scale=hudlayout108::scale(float(client.right),float(client.bottom));
+    const int size=int(std::ceil(320.f*scale));if(!surface93.ensure(size))return false;
+    memset(surface93.pixels,0,size_t(size)*size*4);
+    {Gdiplus::Bitmap image(size,size,size*4,PixelFormat32bppPARGB,static_cast<BYTE*>(surface93.pixels));
+     Gdiplus::Graphics graphics(&image);graphics.ScaleTransform(scale,scale);render_banner173(graphics,160,160,banner_text173);}
+    POINT pos={corner.x+client.right/2-size/2,corner.y+int(std::lround(hudlayout108::qte_anchor_y(float(client.bottom))))-size/2},origin{};SIZE extent={size,size};
+    if(pixels106.open(GetCurrentProcessId(),overlay106::QTE)){
+        observation::PossessionPrefix p{};bool stable=false;
+        for(unsigned attempt=0;attempt<3;++attempt){auto s=possession->sequence;if(s&1)continue;MemoryBarrier();memcpy(&p,possession,sizeof p);MemoryBarrier();if(s==possession->sequence){stable=true;break;}}
+        if(stable&&p.lease_generation){
+            overlay106::Frame f{};f.key={unsigned(p.lease_generation),p.actor_id,p.unit_id};f.width=f.height=size;f.view_width=client.right;f.view_height=client.bottom;f.rect_count=1;
+            f.active=2;f.rect[0]={pos.x-corner.x,pos.y-corner.y,size,size};
+            if(pixels106.publish(f,surface93.pixels)){ShowWindow(overlay,SW_HIDE);return true;}
+        }
+    }
+    BLENDFUNCTION alpha={AC_SRC_OVER,0,255,AC_SRC_ALPHA};
+    bool painted=UpdateLayeredWindow(overlay,surface93.screen,&pos,&extent,surface93.dc,&origin,0,&alpha,ULW_ALPHA);
+    bool positioned=SetWindowPos(overlay,HWND_TOPMOST,0,0,0,0,SWP_ASYNCWINDOWPOS|SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_SHOWWINDOW);
+    return painted&&positioned;
+}
 static bool draw(const Snapshot& prompt,uint64_t lease,uint64_t battle){
     game=gamewindow105::refresh(game,GetCurrentProcessId());
     if(InterlockedExchange(&display_reset105,0))surface93.clear();
@@ -767,7 +824,9 @@ static DWORD WINAPI render_worker(void*){
                    frozen.lease==data.lease&&frozen.anchor.battle==data.anchor.battle&&now>=frozen.published_wall&&now-frozen.published_wall<.12){shown=frozen.prompt;click_freeze105=true;}
             }
             render_stage=2;
-            if(!state->stop&&show&&draw(shown,data.lease,data.anchor.battle)){
+            life_poll173();
+            if(!state->stop&&!show&&draw_banner173()){InterlockedExchange64(&presented_tick,0);}
+            else if(!state->stop&&show&&draw(shown,data.lease,data.anchor.battle)){
                 const double submitted=drawn_wall106;const auto& presented=drawn_prompt106;
                 record_presented107(presented,submitted,click_freeze105);
                 AcquireSRWLockExclusive(&frame_lock93);frame93={presented,data.anchor.battle,data.lease,submitted};ReleaseSRWLockExclusive(&frame_lock93);
