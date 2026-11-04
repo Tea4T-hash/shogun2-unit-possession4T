@@ -172,8 +172,8 @@ static bool measure(){
 }
 
 // ---- Kit v13: kill/death panels -----------------------------------------------------------------
-// Top left (while possessing): kills and rounds of combat this life.
-// Top right (in battle, possessing or not): this battle's kills, deaths and K/D ratio.
+// Top left, only while possessing: kills and rounds of combat this life, then this battle's
+// total kills, deaths and K/D ratio (kit v14).
 // Positions are fractions of the screen; move them here if they cover any game UI.
 constexpr float StatsTop174=.085f,StatsSide174=.012f;
 static life173::Shared* life_shared174;static HANDLE life_map174;static uint64_t life_retry174;
@@ -189,52 +189,32 @@ static bool life_read174(life173::Shared& out){
         if(q==life_shared174->sequence)return now>=out.tick&&now-out.tick<1500;}
     return false;
 }
-static void stats_panel174(Gdiplus::Graphics& g,float x,float y,bool right,float height,const wchar_t* a,const wchar_t* b){
+static void stats_panel174(Gdiplus::Graphics& g,float x,float y,float height,const wchar_t* const* lines,unsigned count){
     using namespace Gdiplus;
-    const float font=std::max(13.f,height/56.f),pad=font*.55f;
+    const float font=std::max(13.f,height/56.f),pad=font*.55f,step=font*1.25f;
     FontFamily family(L"Arial");Font bold(&family,font,FontStyleBold,UnitPixel);
-    RectF ma,mb;g.MeasureString(a,-1,&bold,PointF(0,0),&ma);if(b)g.MeasureString(b,-1,&bold,PointF(0,0),&mb);
-    const float w=std::max(ma.Width,b?mb.Width:0.f)+pad*2,h=(b?font*2.5f:font*1.3f)+pad;
-    const RectF box(right?x-w:x,y,w,h);
+    float w=0;for(unsigned i=0;i<count;++i){RectF m;g.MeasureString(lines[i],-1,&bold,PointF(0,0),&m);w=std::max(w,m.Width);}
+    const RectF box(x,y,w+pad*2,step*float(count)+pad);
     SolidBrush back(Color(185,24,18,12));g.FillRectangle(&back,box);
     Pen gold(Color(235,214,176,72),2.f);g.DrawRectangle(&gold,box);
     SolidBrush shadow(Color(220,10,8,6)),text(Color(255,255,246,224));
-    g.DrawString(a,-1,&bold,PointF(box.X+pad+1,box.Y+pad*.5f+1),&shadow);g.DrawString(a,-1,&bold,PointF(box.X+pad,box.Y+pad*.5f),&text);
-    if(b){g.DrawString(b,-1,&bold,PointF(box.X+pad+1,box.Y+pad*.5f+font*1.25f+1),&shadow);g.DrawString(b,-1,&bold,PointF(box.X+pad,box.Y+pad*.5f+font*1.25f),&text);}
+    for(unsigned i=0;i<count;++i){const float ty=box.Y+pad*.5f+step*float(i);
+        g.DrawString(lines[i],-1,&bold,PointF(box.X+pad+1,ty+1),&shadow);g.DrawString(lines[i],-1,&bold,PointF(box.X+pad,ty),&text);}
 }
 static void stats174(Gdiplus::Graphics& g,float width,float height,const life173::Shared& l,bool possessed,unsigned lease){
     g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
+    // Kit v14: one panel, top left, only while possessing (the top-right panel covered the map).
+    if(!possessed)return;
     const float y=height*StatsTop174,side=width*StatsSide174;
-    if(possessed){
-        const bool same=l.life_lease==lease;wchar_t a[64],b[64];
-        swprintf_s(a,L"Kills this life: %u",same?l.life_kills:0u);swprintf_s(b,L"Rounds of combat this life: %u",same?l.life_rounds:0u);
-        stats_panel174(g,side,y,false,height,a,b);
-    }
+    const bool same=l.life_lease==lease;wchar_t a[64]{},b[64]{},c[64]{},d[64]{};
+    swprintf_s(a,L"Kills this life: %u",same?l.life_kills:0u);swprintf_s(b,L"Rounds of combat this life: %u",same?l.life_rounds:0u);
+    unsigned count=2;
     if(l.in_battle){
-        wchar_t a[64],b[64];swprintf_s(a,L"Kills %u  |  Deaths %u",l.battle_kills,l.battle_deaths);
-        if(l.battle_deaths)swprintf_s(b,L"K/D %.2f",double(l.battle_kills)/double(l.battle_deaths));else swprintf_s(b,L"K/D %u.00",l.battle_kills);
-        stats_panel174(g,width-side,y,true,height,a,b);
+        swprintf_s(c,L"Total kills: %u  |  Deaths: %u",l.battle_kills,l.battle_deaths);
+        if(l.battle_deaths)swprintf_s(d,L"K/D: %.2f",double(l.battle_kills)/double(l.battle_deaths));else swprintf_s(d,L"K/D: %u.00",l.battle_kills);
+        count=4;
     }
-}
-static bool in_battle174(){
-    try{uintptr_t env=read<uintptr_t>(read<uintptr_t>(base+0x1bc8180)+0x110);uintptr_t common=read<uintptr_t>(env+8),phase=read<uintptr_t>(common+0xb4);
-        unsigned id=read<unsigned>(phase+0x14);return id>=5&&id<=8;}catch(...){return false;}
-}
-// Out of possession: only the K/D panel, keyed to the last possessed soldier (numeric UI).
-static bool paint_stats_only174(){
-    life173::Shared l{};if(!life_read174(l)||!l.in_battle||!l.key_lease||!in_battle174())return false;
-    RECT client{};POINT pos{};if(!gamewindow105::client(game,client,pos))return false;int width=client.right,height=client.bottom;
-    if(!hud_surface100.ensure(width,height))return false;
-    auto screen=hud_surface100.screen(),dc=hud_surface100.memory();auto pixels=hud_surface100.pixels();memset(pixels,0,size_t(width)*height*4);
-    {Gdiplus::Bitmap surface(width,height,width*4,PixelFormat32bppPARGB,static_cast<BYTE*>(pixels));Gdiplus::Graphics g(&surface);stats174(g,float(width),float(height),l,false,0);}
-    const overlay106::Key key{l.key_lease,l.key_actor,l.key_unit};
-    if(pixels106.open(pid,overlay106::HUD)){
-        overlay106::Frame f{};f.key=key;f.active=2;f.width=f.view_width=width;f.height=f.view_height=height;f.rect_count=1;f.rect[0]={0,0,width,height};
-        if(pixels106.publish(f,pixels)){overlay106::Ack ack;if(pixels106.ack(ack)){ShowWindow(overlay,SW_HIDE);return ack.number&&overlay106::same(ack.key,key);}}
-    }
-    POINT origin{};SIZE size{width,height};BLENDFUNCTION alpha{AC_SRC_OVER,0,255,AC_SRC_ALPHA};
-    bool ok=UpdateLayeredWindow(overlay,screen,&pos,&size,dc,&origin,0,&alpha,ULW_ALPHA)!=0;
-    if(ok)SetWindowPos(overlay,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_SHOWWINDOW);return ok;
+    const wchar_t* lines[4]={a,b,c,d};stats_panel174(g,side,y,height,lines,count);
 }
 static bool paint(){
     RECT client{};POINT pos{};if(!gamewindow105::client(game,client,pos))return false;int width=client.right,height=client.bottom;
@@ -252,10 +232,7 @@ static bool paint(){
 }
 static void update(){game=gamewindow105::refresh(game,pid);bool ok=false;try{ok=measure();}catch(...){ok=false;}DWORD fg=0;GetWindowThreadProcessId(GetForegroundWindow(),&fg);
     bool active=ok&&IsWindow(game)&&!IsIconic(game)&&IsWindowVisible(game)&&fg==pid;
-    if(!active){
-        const bool shown=IsWindow(game)&&!IsIconic(game)&&IsWindowVisible(game)&&fg==pid&&paint_stats_only174(); // kit v13
-        if(shown){visible=true;return;}
-        pixels106.hide();if(visible)ShowWindow(overlay,SW_HIDE);visible=false;return;}
+    if(!active){pixels106.hide();if(visible)ShowWindow(overlay,SW_HIDE);visible=false;return;}
     visible=paint();if(!visible)ShowWindow(overlay,SW_HIDE);}
 static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp){
     if(msg==WM_NCHITTEST)return HTTRANSPARENT;if(msg==WM_MOUSEACTIVATE)return MA_NOACTIVATE;if(msg==WM_ERASEBKGND)return 1;
