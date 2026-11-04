@@ -317,7 +317,10 @@ public:
         }
         if(strict_)own_facts.routing=false; // Morale still carries a severe penalty; an admitted FPS exchange cannot bypass its prompt.
         // A missed attack (no click / wrong button) forces this exchange to be a guard.
-        if(attacks&&force_guard_next.exchange(0)){
+        const int64_t now_ms=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        const int64_t last_ms=last_exchange_ms.exchange(now_ms);
+        const bool rested=last_ms==0||now_ms-last_ms>OutOfCombatMs;
+        if(attacks&&(force_guard_next.exchange(0)||rested)){
             std::swap(selected.attacker_address,selected.defender_address);selected.outcome=0;attacks=false;defends=true;
         }else if(defends)force_guard_next.store(0);
         Pair pair{owner.battle,owner.lease,owned.serial,enemy.serial,owned.unit_serial,enemy.unit_serial};
