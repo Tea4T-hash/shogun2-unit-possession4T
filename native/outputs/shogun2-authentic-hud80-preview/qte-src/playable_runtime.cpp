@@ -21,25 +21,28 @@
 #include "strict_melee_gate.h"
 #include "native_effective_combat.h"
 // Kit v12: kill tally comes with qte_native_bridge.h; statistics code built in here.
-#ifndef S2UP_LIFE_STATS173
-#define S2UP_LIFE_STATS173
-// Kill and death statistics for possessed soldiers (kit v10).
-// The possession engine counts deaths; the QTE runtime counts kills and keeps ONE small
-// text file up to date for the campaign script. That file is always replaced in place
-// (CREATE_ALWAYS on a fixed name), so it never grows and no extra files are made.
+#ifndef S2UP_LIFE_STATS174
+#define S2UP_LIFE_STATS174
+// Kill/death statistics shared by the possession engine (deaths), the QTE runtime (kills,
+// rounds, battle totals) and the HUD (display). Identical copy in each component (kit v13).
+// The single statistics file is replaced in place every time it is written (never grows).
 #include <windows.h>
 #include <cstdint>
 #include <cstdio>
 #include <string>
 namespace life173 {
-constexpr uint32_t Magic=0x3346494C,Version=173;
+constexpr uint32_t Magic=0x3346494C,Version=174;
 struct Shared {
     uint32_t magic,version,size,pid;
-    volatile LONG deaths;            // possessed-soldier deaths since the game started
-    volatile LONG last_death_lease;  // possession lease of the latest death
+    volatile LONG deaths;            // possessed-soldier deaths since the game started (engine)
+    volatile LONG last_death_lease;  // possession lease of the latest death (engine)
+    volatile LONG sequence;          // QTE writer: odd while the fields below change
+    uint32_t in_battle,battle_kills,battle_deaths;      // this battle (QTE)
+    uint32_t life_lease,life_kills,life_rounds;         // current possession (QTE)
+    uint32_t key_lease,key_actor,key_unit;              // last possessed soldier (overlay key)
+    uint64_t tick;                                      // QTE heartbeat
 };
-inline void mapping_name(wchar_t* out,DWORD pid){swprintf_s(out,96,L"Local\\S2UPLife173-%lu",pid);}
-// %APPDATA%\The Creative Assembly\Shogun2\possession_battle_stats.txt
+inline void mapping_name(wchar_t* out,DWORD pid){swprintf_s(out,96,L"Local\\S2UPLife174-%lu",pid);}
 inline bool stats_path(std::wstring& out){
     wchar_t base[32768]{};DWORD n=GetEnvironmentVariableW(L"APPDATA",base,32768);
     if(!n||n>=32768)return false;
@@ -48,7 +51,6 @@ inline bool stats_path(std::wstring& out){
     if(attr==INVALID_FILE_ATTRIBUTES||!(attr&FILE_ATTRIBUTE_DIRECTORY)||(attr&FILE_ATTRIBUTE_REPARSE_POINT))return false;
     out+=L"\\possession_battle_stats.txt";return true;
 }
-// Whole-file replacement of the single statistics file. Never appends, never makes copies.
 inline bool write_stats(const char* session,unsigned kills,unsigned deaths){
     std::wstring path;if(!stats_path(path))return false;
     char text[160];int n=sprintf_s(text,"S2UP_STATS 1\r\nsession %s\r\nkills %u\r\ndeaths %u\r\n",session,kills,deaths);
@@ -747,17 +749,18 @@ static bool acknowledged_image106(const overlay106::Ack& ack,overlay106::Key key
     drawn_prompt106=image.shown;drawn_wall106=image.submitted;return true;
 }
 // ---- Kit v10: kills per life, deaths and the battle statistics file -------------------------
-static const life173::Shared* life_view173=nullptr;static HANDLE life_map173=nullptr;static ULONGLONG life_retry173=0;
+static life173::Shared* life_view173=nullptr;static HANDLE life_map173=nullptr;static ULONGLONG life_retry173=0;
 static LONG life_seen_deaths173=-1;static unsigned stats_written_kills173=~0u,stats_written_deaths173=~0u;
 static ULONGLONG banner_until173=0;static wchar_t banner_text173[64]{};static char session173[48]{};
+static BattleEpoch151 battle_watch174;static uint64_t battle_id174=0;static unsigned battle_kill_base174=0,battle_death_base174=0;
 static void life_poll173(){
     const ULONGLONG now=GetTickCount64();
     if(!session173[0]){FILETIME c{},e{},k{},u{};GetProcessTimes(GetCurrentProcess(),&c,&e,&k,&u);
         sprintf_s(session173,"%lu-%llu",GetCurrentProcessId(),(unsigned long long)((uint64_t(c.dwHighDateTime)<<32)|c.dwLowDateTime));}
     if(!life_view173&&now>=life_retry173){
         life_retry173=now+1000;wchar_t name[96];life173::mapping_name(name,GetCurrentProcessId());
-        HANDLE map=OpenFileMappingW(FILE_MAP_READ,FALSE,name);
-        if(map){auto view=static_cast<const life173::Shared*>(MapViewOfFile(map,FILE_MAP_READ,0,0,sizeof(life173::Shared)));
+        HANDLE map=OpenFileMappingW(FILE_MAP_WRITE,FALSE,name);
+        if(map){auto view=static_cast<life173::Shared*>(MapViewOfFile(map,FILE_MAP_WRITE,0,0,sizeof(life173::Shared)));
             if(view&&view->magic==life173::Magic&&view->version==life173::Version&&view->size==sizeof(life173::Shared)&&view->pid==GetCurrentProcessId()){life_view173=view;life_map173=map;}
             else{if(view)UnmapViewOfFile(view);CloseHandle(map);}}
     }
@@ -774,6 +777,19 @@ static void life_poll173(){
     const unsigned total=tally173::total(),dead=unsigned(deaths<0?0:deaths);
     if((total||dead)&&(total!=stats_written_kills173||dead!=stats_written_deaths173)){
         if(life173::write_stats(session173,total,dead)){stats_written_kills173=total;stats_written_deaths173=dead;}
+    }
+    // Kit v13: battle totals and the current life for the HUD panels.
+    ClockFrame clock{};const bool battle=engine&&battle_watch174.sample(reader(),engine,0,wall(),clock);
+    if(battle&&clock.battle!=battle_id174){battle_id174=clock.battle;battle_kill_base174=total;battle_death_base174=dead;}
+    if(life_view173){
+        uint64_t lease=0;unsigned life_kills=0,life_rounds=0;tally173::life(lease,life_kills,life_rounds);
+        observation::PossessionPrefix p{};bool stable=false;
+        if(possession)for(unsigned attempt=0;attempt<3&&!stable;++attempt){auto q=possession->sequence;if(q&1)continue;MemoryBarrier();memcpy(&p,possession,sizeof p);MemoryBarrier();stable=q==possession->sequence;}
+        auto* v=life_view173;InterlockedIncrement(&v->sequence);MemoryBarrier();
+        v->in_battle=battle?1u:0u;v->battle_kills=total-battle_kill_base174;v->battle_deaths=dead-battle_death_base174;
+        v->life_lease=uint32_t(lease);v->life_kills=life_kills;v->life_rounds=life_rounds;
+        if(stable&&p.lease_generation){v->key_lease=p.lease_generation;v->key_actor=p.actor_id;v->key_unit=p.unit_id;}
+        v->tick=now;MemoryBarrier();InterlockedIncrement(&v->sequence);
     }
 }
 static bool draw_banner173(){
