@@ -21,7 +21,7 @@ inline const wchar_t* result_word(const qte::Snapshot& s){
     switch(s.result){
         case qte::Result::Success:    return attack?L"Perfect Strike":L"Perfect Guard";
         case qte::Result::PerfectFail:return L"Perfect Fail";
-        case qte::Result::Orange:     return attack?L"Attack Resisted":L"Guard Resisted";
+        case qte::Result::Orange:     return attack?L"Attacking":L"Defending";
         case qte::Result::Purple:     return L"Attack Countered";
         case qte::Result::WrongButton:return L"Wrong Button";
         case qte::Result::Timeout:    return attack?L"Attack Missed":L"Guard Critical Fail";
@@ -44,6 +44,16 @@ inline void qte_meter(Graphics& g,const Assets& a,float x,float y,const qte::Sna
         const float pulse=.5f+.5f*std::sin(float(GetTickCount64()%1000ULL)*6.2831853f/1000.f);
         SolidBrush tint(Color(BYTE(70+50*pulse),190,20,20));g.FillRectangle(&tint,RectF(x-150,y-32,300,64));
         Pen frame(Color(BYTE(170+85*pulse),230,30,30),4.f);g.DrawRectangle(&frame,RectF(x-152,y-34,304,68));
+    }else{
+        // Attack: a lighter panel and an ornate gold and ivory frame with corner diamonds (no red: red is the guard's colour).
+        SolidBrush light(Color(70,255,246,214));g.FillRectangle(&light,RectF(x-150,y-32,300,64));
+        Pen gold(Color(255,214,176,72),3.f),ivory(Color(230,250,240,210),1.f);
+        g.DrawRectangle(&gold,RectF(x-152,y-34,304,68));g.DrawRectangle(&ivory,RectF(x-148,y-30,296,60));
+        SolidBrush gem(Color(255,236,200,96));
+        const PointF corners[4]={PointF(x-152,y-34),PointF(x+152,y-34),PointF(x-152,y+34),PointF(x+152,y+34)};
+        for(const auto& c:corners){PointF d[4]={PointF(c.X,c.Y-6),PointF(c.X+6,c.Y),PointF(c.X,c.Y+6),PointF(c.X-6,c.Y)};g.FillPolygon(&gem,d,4);}
+        Pen tick(Color(255,214,176,72),1.5f);
+        for(int i=-2;i<=2;++i){const float tx=x+float(i)*60.f;g.DrawLine(&tick,tx-4,y-34,tx+4,y-34);g.DrawLine(&tick,tx-4,y+34,tx+4,y+34);}
     }
     constexpr float span=hudlayout108::qte_span,height=20.f;
     const float left=x-span*.5f,top=y-10.f;
@@ -56,15 +66,17 @@ inline void qte_meter(Graphics& g,const Assets& a,float x,float y,const qte::Sna
     track.AddBezier(PointF(left+span,top+height),PointF(left+span*.75f,top+height),PointF(mid+span*.15f,top+height-pinch),PointF(mid,top+height-pinch));
     track.AddBezier(PointF(mid,top+height-pinch),PointF(mid-span*.15f,top+height-pinch),PointF(left+span*.25f,top+height),PointF(left,top+height));
     track.CloseFigure();
-    SolidBrush red(Color(255,151,48,37)),orange(Color(255,214,128,40)),
-        purple(Color(255,128,72,160)),green(Color(255,139,153,56));
+    // Brighter zone colours on the attack bar; the guard bar keeps its tones.
+    SolidBrush red(guard?Color(255,151,48,37):Color(255,214,74,58)),orange(guard?Color(255,214,128,40):Color(255,247,170,64)),
+        purple(guard?Color(255,128,72,160):Color(255,170,110,220)),green(guard?Color(255,139,153,56):Color(255,170,206,80));
     auto clipped=g.Save();g.SetClip(&track,CombineModeIntersect);
     const uint32_t sweep=qte::sweep_index(s);
-    float run_start=0;qte::Zone run=qte::zone_at(0.f,s.serial,sweep,!guard);
+    const float press=qte::pressure(s.advantage);
+    float run_start=0;qte::Zone run=qte::zone_at(0.f,s.serial,sweep,!guard,press);
     const int columns=int(span);
     for(int i=1;i<=columns;++i){
         const float x=float(i)/float(columns);
-        const qte::Zone z=i<columns?qte::zone_at(x,s.serial,sweep,!guard):qte::Zone(255);
+        const qte::Zone z=i<columns?qte::zone_at(x,s.serial,sweep,!guard,press):qte::Zone(255);
         if(z==run)continue;
         SolidBrush* brush=run==qte::Zone::Green?&green:run==qte::Zone::Purple?&purple:run==qte::Zone::Orange?&orange:&red;
         g.FillRectangle(brush,RectF(left+run_start*span,top,(x-run_start)*span,height));
