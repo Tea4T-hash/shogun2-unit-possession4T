@@ -8,6 +8,7 @@
 #include "../../common/startup_gate168.h"
 #include <shlobj.h>
 #include <regex>
+#include <filesystem>
 #ifdef S2FP_LOCAL_ASSETS
 #include "../../common/local_assets159.h"
 #endif
@@ -107,6 +108,27 @@ static std::string component_error168(HMODULE module,const char* fallback){
 #if defined(POSSESSION_WORKSHOP_BUILD) && defined(S2FP_LOCAL_ASSETS)
 static void workshop_assets165(HMODULE module,const std::wstring& game);
 #endif
+// Kit v10: every build unpacked into its own cache folder and old folders were never removed.
+// Keep only this build's folder. Only plain files directly inside "workshop-*"/"integrated-*"
+// sibling folders are deleted; a file still in use by another running game is left alone.
+static void retire_old_runtimes173(){
+    try{
+        const std::filesystem::path own(runtime_folder);const auto parent=own.parent_path();const auto mine=own.filename().wstring();
+        WIN32_FIND_DATAW d{};HANDLE f=FindFirstFileW((parent/L"*").c_str(),&d);if(f==INVALID_HANDLE_VALUE)return;
+        do{
+            const std::wstring n=d.cFileName;
+            if(!(d.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)||(d.dwFileAttributes&FILE_ATTRIBUTE_REPARSE_POINT))continue;
+            if(n==mine||(n.rfind(L"workshop-",0)!=0&&n.rfind(L"integrated-",0)!=0))continue;
+            const auto dir=parent/n;WIN32_FIND_DATAW e{};HANDLE g=FindFirstFileW((dir/L"*").c_str(),&e);
+            if(g!=INVALID_HANDLE_VALUE){
+                do{if(!(e.dwFileAttributes&(FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_REPARSE_POINT)))DeleteFileW((dir/e.cFileName).c_str());}while(FindNextFileW(g,&e));
+                FindClose(g);
+            }
+            RemoveDirectoryW(dir.c_str());
+        }while(FindNextFileW(f,&d));
+        FindClose(f);
+    }catch(...){}
+}
 static DWORD WINAPI integrated_worker(void* argument){bool owned_adapter168=false,owned_qte168=false,owned_gate168=false;try{
     wchar_t exe[MAX_PATH];require(GetModuleFileNameW(nullptr,exe,MAX_PATH)>0,"Game path unavailable");
     const wchar_t* name=wcsrchr(exe,L'\\');name=name?name+1:exe;
@@ -119,6 +141,7 @@ static DWORD WINAPI integrated_worker(void* argument){bool owned_adapter168=fals
 #endif
         +EMBEDDED_BUILD;
     require(SHCreateDirectoryExW(nullptr,runtime_folder.c_str(),nullptr)==ERROR_SUCCESS||GetFileAttributesW(runtime_folder.c_str())!=INVALID_FILE_ATTRIBUTES,"Mod cache unavailable");
+    retire_old_runtimes173();
     record(2,"Integrated mod startup; no external installation or PowerShell required");
     if(!selected()){record(3,"Mod unchecked; no gameplay or HUD loaded");return 0;}
     std::wstring game=exe;game=game.substr(0,game.find_last_of(L'\\'));
