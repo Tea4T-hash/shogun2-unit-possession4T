@@ -10,6 +10,47 @@
 #include "../../shogun2-accuracy90-preview/src/climb_protocol97.h"
 #include "../src/equipment_protocol81.h"
 #include "../../shogun2-possession-cleanup-v46/src/hud_visibility148.h"
+#ifndef S2UP_LIFE_STATS174
+#define S2UP_LIFE_STATS174
+// Kill/death statistics shared by the possession engine (deaths), the QTE runtime (kills,
+// rounds, battle totals) and the HUD (display). Identical copy in each component (kit v13).
+// The single statistics file is replaced in place every time it is written (never grows).
+#include <windows.h>
+#include <cstdint>
+#include <cstdio>
+#include <string>
+namespace life173 {
+constexpr uint32_t Magic=0x3346494C,Version=174;
+struct Shared {
+    uint32_t magic,version,size,pid;
+    volatile LONG deaths;            // possessed-soldier deaths since the game started (engine)
+    volatile LONG last_death_lease;  // possession lease of the latest death (engine)
+    volatile LONG sequence;          // QTE writer: odd while the fields below change
+    uint32_t in_battle,battle_kills,battle_deaths;      // this battle (QTE)
+    uint32_t life_lease,life_kills,life_rounds;         // current possession (QTE)
+    uint32_t key_lease,key_actor,key_unit;              // last possessed soldier (overlay key)
+    uint64_t tick;                                      // QTE heartbeat
+};
+inline void mapping_name(wchar_t* out,DWORD pid){swprintf_s(out,96,L"Local\\S2UPLife174-%lu",pid);}
+inline bool stats_path(std::wstring& out){
+    wchar_t base[32768]{};DWORD n=GetEnvironmentVariableW(L"APPDATA",base,32768);
+    if(!n||n>=32768)return false;
+    out=std::wstring(base)+L"\\The Creative Assembly\\Shogun2";
+    DWORD attr=GetFileAttributesW(out.c_str());
+    if(attr==INVALID_FILE_ATTRIBUTES||!(attr&FILE_ATTRIBUTE_DIRECTORY)||(attr&FILE_ATTRIBUTE_REPARSE_POINT))return false;
+    out+=L"\\possession_battle_stats.txt";return true;
+}
+inline bool write_stats(const char* session,unsigned kills,unsigned deaths){
+    std::wstring path;if(!stats_path(path))return false;
+    char text[160];int n=sprintf_s(text,"S2UP_STATS 1\r\nsession %s\r\nkills %u\r\ndeaths %u\r\n",session,kills,deaths);
+    if(n<=0)return false;
+    HANDLE f=CreateFileW(path.c_str(),GENERIC_WRITE,FILE_SHARE_READ,nullptr,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);
+    if(f==INVALID_HANDLE_VALUE)return false;
+    DWORD written=0;bool ok=WriteFile(f,text,DWORD(n),&written,nullptr)&&written==DWORD(n);
+    CloseHandle(f);return ok;
+}
+}
+#endif
 static_assert(sizeof(void*)==4,"Build x86 for the game's telemetry");
 static DWORD pid;static uintptr_t base;static HANDLE process;static Status* shared;
 static EquipmentStatus81* equipment_shared;
@@ -129,11 +170,78 @@ static bool measure(){
     Status final{};if(!snapshot(final)||final.lease_generation!=s.lease_generation||final.actor_id!=s.actor_id||final.unit_id!=s.unit_id||final.mode!=POSSESSED)return false;
     display=d;display_key106={s.lease_generation,s.actor_id,s.unit_id};return true;
 }
+
+// ---- Kit v13: kill/death panels -----------------------------------------------------------------
+// Top left (while possessing): kills and rounds of combat this life.
+// Top right (in battle, possessing or not): this battle's kills, deaths and K/D ratio.
+// Positions are fractions of the screen; move them here if they cover any game UI.
+constexpr float StatsTop174=.085f,StatsSide174=.012f;
+static life173::Shared* life_shared174;static HANDLE life_map174;static uint64_t life_retry174;
+static bool life_read174(life173::Shared& out){
+    uint64_t now=GetTickCount64();
+    if(!life_shared174&&now>=life_retry174){life_retry174=now+1000;wchar_t name[96];life173::mapping_name(name,pid);
+        HANDLE map=OpenFileMappingW(FILE_MAP_READ,FALSE,name);
+        if(map){auto v=static_cast<life173::Shared*>(MapViewOfFile(map,FILE_MAP_READ,0,0,sizeof(life173::Shared)));
+            if(v&&v->magic==life173::Magic&&v->version==life173::Version&&v->size==sizeof(life173::Shared)&&v->pid==pid){life_shared174=v;life_map174=map;}
+            else{if(v)UnmapViewOfFile(v);CloseHandle(map);}}}
+    if(!life_shared174)return false;
+    for(int i=0;i<4;++i){LONG q=life_shared174->sequence;if(q&1)continue;MemoryBarrier();memcpy(&out,life_shared174,sizeof out);MemoryBarrier();
+        if(q==life_shared174->sequence)return now>=out.tick&&now-out.tick<1500;}
+    return false;
+}
+static void stats_panel174(Gdiplus::Graphics& g,float x,float y,bool right,float height,const wchar_t* a,const wchar_t* b){
+    using namespace Gdiplus;
+    const float font=std::max(13.f,height/56.f),pad=font*.55f;
+    FontFamily family(L"Arial");Font bold(&family,font,FontStyleBold,UnitPixel);
+    RectF ma,mb;g.MeasureString(a,-1,&bold,PointF(0,0),&ma);if(b)g.MeasureString(b,-1,&bold,PointF(0,0),&mb);
+    const float w=std::max(ma.Width,b?mb.Width:0.f)+pad*2,h=(b?font*2.5f:font*1.3f)+pad;
+    const RectF box(right?x-w:x,y,w,h);
+    SolidBrush back(Color(185,24,18,12));g.FillRectangle(&back,box);
+    Pen gold(Color(235,214,176,72),2.f);g.DrawRectangle(&gold,box);
+    SolidBrush shadow(Color(220,10,8,6)),text(Color(255,255,246,224));
+    g.DrawString(a,-1,&bold,PointF(box.X+pad+1,box.Y+pad*.5f+1),&shadow);g.DrawString(a,-1,&bold,PointF(box.X+pad,box.Y+pad*.5f),&text);
+    if(b){g.DrawString(b,-1,&bold,PointF(box.X+pad+1,box.Y+pad*.5f+font*1.25f+1),&shadow);g.DrawString(b,-1,&bold,PointF(box.X+pad,box.Y+pad*.5f+font*1.25f),&text);}
+}
+static void stats174(Gdiplus::Graphics& g,float width,float height,const life173::Shared& l,bool possessed,unsigned lease){
+    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
+    const float y=height*StatsTop174,side=width*StatsSide174;
+    if(possessed){
+        const bool same=l.life_lease==lease;wchar_t a[64],b[64];
+        swprintf_s(a,L"Kills this life: %u",same?l.life_kills:0u);swprintf_s(b,L"Rounds of combat this life: %u",same?l.life_rounds:0u);
+        stats_panel174(g,side,y,false,height,a,b);
+    }
+    if(l.in_battle){
+        wchar_t a[64],b[64];swprintf_s(a,L"Kills %u  |  Deaths %u",l.battle_kills,l.battle_deaths);
+        if(l.battle_deaths)swprintf_s(b,L"K/D %.2f",double(l.battle_kills)/double(l.battle_deaths));else swprintf_s(b,L"K/D %u.00",l.battle_kills);
+        stats_panel174(g,width-side,y,true,height,a,b);
+    }
+}
+static bool in_battle174(){
+    try{uintptr_t env=read<uintptr_t>(read<uintptr_t>(base+0x1bc8180)+0x110);uintptr_t common=read<uintptr_t>(env+8),phase=read<uintptr_t>(common+0xb4);
+        unsigned id=read<unsigned>(phase+0x14);return id>=5&&id<=8;}catch(...){return false;}
+}
+// Out of possession: only the K/D panel, keyed to the last possessed soldier (numeric UI).
+static bool paint_stats_only174(){
+    life173::Shared l{};if(!life_read174(l)||!l.in_battle||!l.key_lease||!in_battle174())return false;
+    RECT client{};POINT pos{};if(!gamewindow105::client(game,client,pos))return false;int width=client.right,height=client.bottom;
+    if(!hud_surface100.ensure(width,height))return false;
+    auto screen=hud_surface100.screen(),dc=hud_surface100.memory();auto pixels=hud_surface100.pixels();memset(pixels,0,size_t(width)*height*4);
+    {Gdiplus::Bitmap surface(width,height,width*4,PixelFormat32bppPARGB,static_cast<BYTE*>(pixels));Gdiplus::Graphics g(&surface);stats174(g,float(width),float(height),l,false,0);}
+    const overlay106::Key key{l.key_lease,l.key_actor,l.key_unit};
+    if(pixels106.open(pid,overlay106::HUD)){
+        overlay106::Frame f{};f.key=key;f.active=2;f.width=f.view_width=width;f.height=f.view_height=height;f.rect_count=1;f.rect[0]={0,0,width,height};
+        if(pixels106.publish(f,pixels)){overlay106::Ack ack;if(pixels106.ack(ack)){ShowWindow(overlay,SW_HIDE);return ack.number&&overlay106::same(ack.key,key);}}
+    }
+    POINT origin{};SIZE size{width,height};BLENDFUNCTION alpha{AC_SRC_OVER,0,255,AC_SRC_ALPHA};
+    bool ok=UpdateLayeredWindow(overlay,screen,&pos,&size,dc,&origin,0,&alpha,ULW_ALPHA)!=0;
+    if(ok)SetWindowPos(overlay,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_SHOWWINDOW);return ok;
+}
 static bool paint(){
     RECT client{};POINT pos{};if(!gamewindow105::client(game,client,pos))return false;int width=client.right,height=client.bottom;
     if(!hud_surface100.ensure(width,height))return false;
     auto screen=hud_surface100.screen(),dc=hud_surface100.memory();auto pixels=hud_surface100.pixels();memset(pixels,0,size_t(width)*height*4);
-    {Gdiplus::Bitmap surface(width,height,width*4,PixelFormat32bppPARGB,static_cast<BYTE*>(pixels));Gdiplus::Graphics g(&surface);hud80::render(g,assets,float(width),float(height),display);}
+    {Gdiplus::Bitmap surface(width,height,width*4,PixelFormat32bppPARGB,static_cast<BYTE*>(pixels));Gdiplus::Graphics g(&surface);hud80::render(g,assets,float(width),float(height),display);
+     life173::Shared l{};if(life_read174(l))stats174(g,float(width),float(height),l,true,display_key106.lease);}
     if(pixels106.open(pid,overlay106::HUD)){
         overlay106::Frame f{};f.key=display_key106;f.width=f.view_width=width;f.height=f.view_height=height;f.rect_count=1;f.rect[0]={0,0,width,height};
         if(pixels106.publish(f,pixels)){overlay106::Ack ack;if(pixels106.ack(ack)){ShowWindow(overlay,SW_HIDE);return ack.number&&overlay106::same(ack.key,display_key106);}}
@@ -144,7 +252,10 @@ static bool paint(){
 }
 static void update(){game=gamewindow105::refresh(game,pid);bool ok=false;try{ok=measure();}catch(...){ok=false;}DWORD fg=0;GetWindowThreadProcessId(GetForegroundWindow(),&fg);
     bool active=ok&&IsWindow(game)&&!IsIconic(game)&&IsWindowVisible(game)&&fg==pid;
-    if(!active){pixels106.hide();if(visible)ShowWindow(overlay,SW_HIDE);visible=false;return;}
+    if(!active){
+        const bool shown=IsWindow(game)&&!IsIconic(game)&&IsWindowVisible(game)&&fg==pid&&paint_stats_only174(); // kit v13
+        if(shown){visible=true;return;}
+        pixels106.hide();if(visible)ShowWindow(overlay,SW_HIDE);visible=false;return;}
     visible=paint();if(!visible)ShowWindow(overlay,SW_HIDE);}
 static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp){
     if(msg==WM_NCHITTEST)return HTTRANSPARENT;if(msg==WM_MOUSEACTIVATE)return MA_NOACTIVATE;if(msg==WM_ERASEBKGND)return 1;
