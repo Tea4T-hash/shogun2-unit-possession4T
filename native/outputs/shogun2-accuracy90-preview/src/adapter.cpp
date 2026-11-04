@@ -1117,7 +1117,7 @@ static DWORD WINAPI worker(void*) {
         const unsigned char projectile_camera_sig[8]={0x56,0x8b,0xf1,0x57,0x8d,0xbe,0xec,0x08};
         require(memcmp(projectile_camera_target,projectile_camera_sig,8)==0,"Projectile camera signature differs");
         require(MH_CreateHook(projectile_camera_target,reinterpret_cast<void*>(&projectile_camera),reinterpret_cast<void**>(&original_projectile_camera))==MH_OK,"Projectile camera hook failed");
-        charge_mapping146();create_weapon_hooks();create_formation_arrival129();create_unit_detach130();create_mounted_render_hooks70();create_siege_hooks97();create_context_hooks103();
+        charge_mapping146();life_mapping173_create();create_weapon_hooks();create_formation_arrival129();create_unit_detach130();create_mounted_render_hooks70();create_siege_hooks97();create_context_hooks103();
 
         create_dispersion_hook();create_friendly_hook109();create_follow_voice125();
         create_interface_hooks();
