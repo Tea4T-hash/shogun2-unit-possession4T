@@ -3,25 +3,28 @@
 #include "death_pose_geometry.h"
 #include "animation_view.h"
 // Kit v12: statistics code built in here (no separate file needed).
-#ifndef S2UP_LIFE_STATS173
-#define S2UP_LIFE_STATS173
-// Kill and death statistics for possessed soldiers (kit v10).
-// The possession engine counts deaths; the QTE runtime counts kills and keeps ONE small
-// text file up to date for the campaign script. That file is always replaced in place
-// (CREATE_ALWAYS on a fixed name), so it never grows and no extra files are made.
+#ifndef S2UP_LIFE_STATS174
+#define S2UP_LIFE_STATS174
+// Kill/death statistics shared by the possession engine (deaths), the QTE runtime (kills,
+// rounds, battle totals) and the HUD (display). Identical copy in each component (kit v13).
+// The single statistics file is replaced in place every time it is written (never grows).
 #include <windows.h>
 #include <cstdint>
 #include <cstdio>
 #include <string>
 namespace life173 {
-constexpr uint32_t Magic=0x3346494C,Version=173;
+constexpr uint32_t Magic=0x3346494C,Version=174;
 struct Shared {
     uint32_t magic,version,size,pid;
-    volatile LONG deaths;            // possessed-soldier deaths since the game started
-    volatile LONG last_death_lease;  // possession lease of the latest death
+    volatile LONG deaths;            // possessed-soldier deaths since the game started (engine)
+    volatile LONG last_death_lease;  // possession lease of the latest death (engine)
+    volatile LONG sequence;          // QTE writer: odd while the fields below change
+    uint32_t in_battle,battle_kills,battle_deaths;      // this battle (QTE)
+    uint32_t life_lease,life_kills,life_rounds;         // current possession (QTE)
+    uint32_t key_lease,key_actor,key_unit;              // last possessed soldier (overlay key)
+    uint64_t tick;                                      // QTE heartbeat
 };
-inline void mapping_name(wchar_t* out,DWORD pid){swprintf_s(out,96,L"Local\\S2UPLife173-%lu",pid);}
-// %APPDATA%\The Creative Assembly\Shogun2\possession_battle_stats.txt
+inline void mapping_name(wchar_t* out,DWORD pid){swprintf_s(out,96,L"Local\\S2UPLife174-%lu",pid);}
 inline bool stats_path(std::wstring& out){
     wchar_t base[32768]{};DWORD n=GetEnvironmentVariableW(L"APPDATA",base,32768);
     if(!n||n>=32768)return false;
@@ -30,7 +33,6 @@ inline bool stats_path(std::wstring& out){
     if(attr==INVALID_FILE_ATTRIBUTES||!(attr&FILE_ATTRIBUTE_DIRECTORY)||(attr&FILE_ATTRIBUTE_REPARSE_POINT))return false;
     out+=L"\\possession_battle_stats.txt";return true;
 }
-// Whole-file replacement of the single statistics file. Never appends, never makes copies.
 inline bool write_stats(const char* session,unsigned kills,unsigned deaths){
     std::wstring path;if(!stats_path(path))return false;
     char text[160];int n=sprintf_s(text,"S2UP_STATS 1\r\nsession %s\r\nkills %u\r\ndeaths %u\r\n",session,kills,deaths);
