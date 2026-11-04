@@ -18,6 +18,21 @@ static LuaGetTop165 get_top165=nullptr;
 static workshop165::LiveReceipt166 live_receipt166;
 static std::wstring own165(){wchar_t path[32768]{};DWORD n=GetModuleFileNameW(module165,path,32768);require(n&&n<32768,"Native cache path unavailable");return path;}
 static std::wstring process_stamp165(){FILETIME created{},exited{},kernel{},user{};require(GetProcessTimes(GetCurrentProcess(),&created,&exited,&kernel,&user)!=0,"Process identity unavailable");return std::to_wstring((uint64_t(created.dwHighDateTime)<<32)|created.dwLowDateTime);}
+// Kit v10: each build left its own S2UP-Workshop165-<fingerprint>.dll in LOCALAPPDATA.
+// Delete the other builds' files; this build's DLL (and its own temporary files) stay.
+// A file still loaded by another running game cannot be deleted and is left alone.
+static void retire_old_bridges173(){
+    try{
+        const std::filesystem::path own(own165());const auto folder=own.parent_path();const auto mine=own.filename().wstring();
+        WIN32_FIND_DATAW d{};HANDLE f=FindFirstFileW((folder/L"S2UP-Workshop165-*").c_str(),&d);if(f==INVALID_HANDLE_VALUE)return;
+        do{
+            if(d.dwFileAttributes&(FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_REPARSE_POINT))continue;
+            const std::wstring n=d.cFileName;if(n.rfind(mine,0)==0)continue;
+            DeleteFileW((folder/n).c_str());
+        }while(FindNextFileW(f,&d));
+        FindClose(f);
+    }catch(...){}
+}
 static void failure165(const char* why){DWORD error=GetLastError();startup167::remember(why);InterlockedExchange(&autoload_error,error?LONG(error):ERROR_INVALID_DATA);}
 // Zero Lua results: no engine API or Lua stack access, safe at any arity.
 extern "C" __declspec(dllexport) int __cdecl s2up_workshop_error167(void*){startup167::notify();return 0;}
@@ -94,6 +109,6 @@ extern "C" __declspec(dllexport) int __cdecl s2up_workshop_start165(void* state)
 #else
         "\"fixture\":false,\"worker_requested\":true}\n";
 #endif
-    std::vector<unsigned char> bytes(text.begin(),text.end());live_receipt166.write(path,bytes);return 1;
+    std::vector<unsigned char> bytes(text.begin(),text.end());live_receipt166.write(path,bytes);retire_old_bridges173();return 1;
 }catch(const std::exception& error){failure165(error.what());return 0;}}
 BOOL WINAPI DllMain(HINSTANCE module,DWORD reason,void*){if(reason==DLL_PROCESS_ATTACH)module165=module;return TRUE;}
