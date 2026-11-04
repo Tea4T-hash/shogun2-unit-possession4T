@@ -1,211 +1,175 @@
-# Shogun 2 Unit Possession
+# Shogun 2 Unit Possession – 4T fork: change log and hand-over notes
 
-**NOW WITH STEAM DECK INTEGRATION**
+Fork: `Tea4T-hash/shogun2-unit-possession4T`, forked from **logsam58/shogun2-unit-possession** (MIT licence, commit `86d4b5d`).
+This file lists everything changed in this fork, so you (or another modder) can see what was done and carry on.
 
-One build detects PC or Steam Deck automatically. PC keeps normal keyboard/mouse controls and UI sizing. Deck gets contextual campaign, battle and possession controls, larger UI, a command wheel and an in-game controls guide.
+Status: kits up to **v13** are built. **Kit v14** (marker stops on click, single stats panel) is written but not yet built or tested.
 
-Take control of a soldier in **Total War: SHOGUN 2**, fight in first or third person, and command your unit while the battle continues around you. Select a friendly unit and press **F9** to enter possession. Press **F10** or **Escape** to return to your RTS camera.
+---
 
-**For single-player land battles and sieges.** Naval possession and multiplayer are not implemented. Visual bugs, gameplay bugs and occasional crashes remain.
+## 1. How this fork is built
 
-[Download](#download) · [Requirements](#requirements) · [Installation](#installation) · [Controls](#controls) · [Compatibility](#compatibility) · [Known limitations](#known-limitations) · [Troubleshooting](#troubleshooting)
+- Built on **GitHub Actions**, nothing is compiled on a PC: *Actions > Build QTE and HUD > Run workflow* (always a NEW run, not "Re-run").
+- Added files that make this possible:
+  - `.github/workflows/build-qte.yml` – Windows runner, Python 3.12, MSVC x86, runs the script below, uploads the artifact `possession-pack`.
+  - `tools/workshop/github_build173.py` – compiles MinHook, the four components (`possession-v46.dll`, `possession-hud.exe`, `qte-playable-v79.dll`, `prepare-local-assets159.exe`), the Workshop bridge `s2up-workshop165.dll` with the components embedded, a float Lua 5.1 compiler (official source, fingerprint-checked), `root.luac`, and finally `shogun2_unit_possession_workshop165.pack`. It mirrors `tools/native_build.py` + `tools/workshop/build_workshop165.py` (candidate 173) without the owned-game fixture tests.
+- Output (artifact zip): `package/shogun2_unit_possession_workshop165.pack`, `package/fingerprints.json` (sha256 of pack, bridge and components), `bin/*`.
+- To check a build without running it: every hash in `fingerprints.json` must match its file, all four components must be found inside the bridge, and the bridge must be stored inside `root.luac` (1024-byte string chunks; repeated chunks are stored once).
+- The build script does **not** run the engine-contract source check. `tools/data/engine-contract172.json` still lists sha256 "pins" for 198 engine-facing source files; the pins were kept up to date in the working copy but the JSON was not uploaded with every kit. If you ever run `tools/workshop/check_engine_contract172.py`, regenerate the pins first.
+- Compiler warnings seen in every build (harmless): `C4005 NOMINMAX redefinition` (identity.h), `C4456` in engine_contract172.h.
 
-## Features
+## 2. The main mod pack
 
-- **First- and third-person play:** start in third person, switch with **P**, adjust camera distance, or orbit your soldier.
-- **Soldier selection:** at the closest RTS zoom, point at a soldier in your selected unit and press **F9**. Generals, officers, flag bearers and musicians use their own equipment. From further away, the mod picks a soldier for you.
-- **Ranged combat:** aim and fire bows, guns and thrown weapons. Hold and release bow shots to vary their strength. Unit accuracy affects shot spread; sights help you allow for projectile drop.
-- **Melee combat:** time the displayed mouse-button prompts during the game's combat animations. Personal charges use forward sprint plus the primary attack input, with native charge contact and paired outcomes.
-- **Unit commands:** issue move and attack orders, drag formations, stop, hold position, follow, and choose fire orders. The game's formations, pathfinding, morale and fatigue still apply.
-- **Abilities and ammunition:** select the options available to your unit, including targeted friendly abilities such as Inspire, subject to the game's restrictions and cooldowns.
-- **Cavalry and sieges:** ride cavalry, order supported units to mount or dismount, and attempt castle-wall climbing. Climbing is intermittent.
-- **Possession HUD:** see unit condition, weapon, ammunition, abilities and orders. **K** cycles the RTS and possession HUD visibility while keeping melee timing prompts visible. Direct hits on allies from your tracked shots can trigger the “Shameful display!” voice.
+This fork's pack is merged into the user's main mod `4T-Slow_Combat_Standard_Move_Speed(_Capped).pack` (files `possession\*` and `ui\frontend ui\layout_scripts\root.luac`). It also works on its own as `shogun2_unit_possession_workshop165.pack` in the game's `data` folder. Never load both at once.
 
-## Download
+---
 
-Use the existing [Steam Workshop item](https://steamcommunity.com/sharedfiles/filedetails/?id=3825625050). The combined build uses that same item; a separate Deck subscription is unnecessary.
+## 3. Gameplay changes
 
-**Maintained source: v0.34, PC and Steam Deck.** Public `main` contains the combined implementation through revision36, including the accepted Steam Deck campaign Start Game footer correction. The latest tagged GitHub download remains [v0.33](https://github.com/logsam58/shogun2-unit-possession/releases/tag/v0.33), which predates Deck integration. No new binary release or Steam upload is performed by this source update. [Current source/build identity](docs/current-release.json) records the distinction.
-
-No installer is provided. Fonts, artwork and audio are prepared from your own installed game.
-
-## Requirements
-
-For Steam Deck, use the Windows game through Proton as described below. Desktop resolution alone does not enable the Deck profile.
-
-- An owned installation of the **original Windows Steam version of Total War: SHOGUN 2**, using the supported game build.
-- The installed game's `data.pack` and compatible native fonts from `local_en.pack` or a supported `local_*.pack`. HUD text is English; not every localization has been tested.
-- English advisor audio and the Windows media components are optional. If unavailable, the mod omits the friendly-fire voice.
-
-No compiler or Python installation is needed to play. The mod prepares its resources from your installed game on first launch and caches them for reuse; those resources are not bundled in the download.
-
-The original engine and the reviewed Shogun 2 Bugfix DLL are supported. Neither the Bugfix mod nor Shogun2 Loader is required. Other modified engines are checked against the functions and layouts this mod needs; a conflicting change can still be refused. See [engine compatibility](docs/public-release/WORKSHOP172.md) for the technical limits.
-
-
-## Installation
-
-1. Close the game. If you used an older setup.exe release, follow the upgrade instructions below first.
-2. [Subscribe to Shogun 2 Unit Possession on Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3825625050).
-3. Enable **Shogun 2 Unit Possession** in the launcher and start the game through Steam.
-4. In a single-player land battle or siege, select a living friendly unit and press **F9**.
-5. Possession starts in **third person**. Press **P** for first person; **F10** or **Escape** returns to RTS control.
-
-The Workshop version needs no setup program, external script, camera chooser or Steam launch-option edit. **Restart the game after enabling, disabling or updating the mod.**
-
-### Upgrading from an older setup.exe release
-
-Close the game, uninstall the older version, and remove its old camera-helper Steam launch option before enabling Workshop. Do not run the older DInput mod loader alongside the Workshop version.
-
-### Disabling or uninstalling
-
-To stop loading the mod, close the game and disable it in the launcher or unsubscribe from the Workshop item.
-
-Local resource caches and rollback backups may remain. Do not delete unfamiliar files blindly.
-
-## Controls
-
-These controls apply during possession unless stated otherwise. **LMB** means left mouse button; **RMB** means right mouse button.
-
-### Your soldier and camera
-
+### 3.1 Controls (while possessing)
 | Key | Action |
-| --- | --- |
-| **F9** | Possess a soldier in the selected unit; at closest RTS zoom, point the mouse cursor at who you want |
-| **F10 / Escape** | Return to your previous RTS camera |
-| **WASD** | Move |
-| **Shift** | Run; hold **W + Shift + LMB** toward an eligible enemy to request a charge. Use melee mode; release RMB. |
-| **Mouse** | Look around |
-| **P** | Switch first/third person |
-| **Mouse wheel** in third person | Move the camera closer or further away |
-| **Hold middle mouse** in third person | Orbit your soldier while keeping your movement direction |
-| **M** | Order the unit to mount/dismount, where supported |
-| **Hold RMB** | Ready your ranged weapon |
-| **LMB** | Fire guns or thrown weapons; hold and release for bow draw strength |
-| **1** | Toggle the whole unit's native melee/ranged mode, where supported |
-| **T / G** | Select an ability or special ammunition / use or end it; aim at friendlies for targeted abilities |
-| **Hold Ctrl** | Crouch to fire, where supported |
-| **Shown LMB / RMB prompt** | Click the indicated button as the marker reaches the highlighted zone |
-| **F** near a wall | Request an independent climb; press again to cancel a pending approach |
-| **W / S** while climbing | Climb up / down; release both to hold position |
-| **K** | During possession: hide RTS HUD → hide both HUDs → restore both. In RTS: ordinary HUD toggle. Melee prompts remain visible. |
-
-### Your unit
-
-| Key | Order |
-| --- | --- |
-| **Q — Move / Attack** | Point at the ground to move, or an enemy or supported breakable target to attack. Tap to walk; double-tap to run or charge. Hold Q and drag left to right to set the formation, then release. |
-| **E — Stop** | Stop the unit. |
-| **Z — Hold Here** | Form up at your current position, facing the direction you're looking when you press Z. Tap to walk there; double-tap to run. |
-| **C — Follow Me** | Form up beside you. Run to catch up when needed, then match your pace. When you stop, your men finish forming up around you. |
-| **R — Fire orders** | Cycle **Hold Fire → Fire at Will → Fire on Command**. Fire on Command tells the unit to fire when you fire. |
-
-Unit orders are unavailable while you're locked in a melee animation, climbing or landing.
-
-## Steam Deck controls
-
-Use the **Windows** Steam game through Proton; **Proton 9.0-4** is the tested version. The native Linux build is not supported by these Windows hooks. Use the right trackpad in menus; RT selects and B backs out. Directional menu highlighting is unfinished.
-
-Steam controller settings label the action sets as **Unit Possession Layout**. Hold **View** for the in-game guide; L1/R1 change pages and B closes it. Tap View in battle RTS to toggle the HUD; in possession it shares K’s three-step cycle.
-
-Left stick pans the map or moves your soldier. Right stick turns/zooms in campaign, turns/tilts in battle and looks around during possession. Hold R3 while possessed to switch first/third person. Cursor position does not drive map movement on Deck. Right-trackpad click is unassigned.
-
-To charge, hold **forward + L3 + RT**, with your unit in melee mode and LT released. Sprinting alone does not request a charge. Hold R1 for the four-section command wheel and release to issue the selected order.
-
-### Campaign
-
-| Input | Action |
 |---|---|
-| R2 / L2 | Select or interact / move or attack |
-| R1 / L1 | Next / previous selection; in a panel, hold L1 and swipe right pad to scroll |
-| A / B | Toggle movement speed (Space) / cancel or back |
-| X | Zoom home |
-| Y held | End turn, once after600ms |
-| D-pad up / down / left / right | Mastery of Arts / Finances / Diplomacy / Clan Management |
-| L3 held | Faster map pan; Ctrl add/remove selection |
-| L5 held / L4 held | Ctrl add/remove selection / Shift range selection |
-| R4 held | Quick-save, once after600ms; native CanSave required |
-| R5 | Toggle character movement speed |
-| View / Menu | Hold: in-game controls / game menu |
+| F1 / F2 / F3 / F4 | Unit orders: move-attack / stop / hold here / follow me (hidden from the game while possessing) |
+| G | Next ability |
+| F | Use ability (End when active) |
+| E | Interact, in order: dismount → climb wall → mount |
+| P or V | Switch first / third person (third person is the default) |
+| F10, Esc, Insert | Release (unchanged) |
 
-### Battle RTS, including deployment
+Files: `adapter.cpp` (key remap, interact201), `native_keyboard84.h` (hides F1–F4, M; P/V), `view152.h` (P 0x19 / V 0x2F), `ability_input141.h` (G/F), `hud_renderer.h` (key prompts "G Next", "F Use", F1–F4 labels).
+Note: the comment block "Player key layout" near the top of `adapter.cpp` still describes an older arrow-key layout. The code below it (F1–F4 cases) is the current behaviour.
 
-| Input | Action |
+### 3.2 Melee quick-time bar (QTE) – the zoned bar
+File: `native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_core.h` (all tuning values are named constants at the top).
+**The same file must also be copied to** `native/outputs/shogun2-melee-meter79-preview/src/qte_core.h` (the HUD build uses that copy). Keep both identical.
+
+Bar layout (fractions of the bar width, mirrored around the centre):
+- 0.00–0.09 red end zone (Critical Fail)
+- 0.09–0.48 orange (Resisted), with a fixed red strip at 0.29–0.31 on each side
+- Attack bar only: purple (Countered) 0.04–0.06 from the centre, with 1% orange between it and green
+- 0.48–0.52 green (Perfect Strike / Perfect Guard)
+- The blue zone of earlier versions was removed.
+
+Timing:
+- Marker 25% faster than the original neutral sweep (1.18 s per crossing), 5% faster each full crossing, constant speed (no easing). Attack marker 2% faster.
+- Guard bars run twice as fast and give half the reaction time.
+- Pressure (enemy stronger or you debuffed, 0–1): at full pressure green 25% smaller, red zones 50% larger, marker 30% faster, 30% less reaction time.
+- Forced guard: after a missed attack (no click / wrong button), and on the first exchange after 30 s out of combat.
+
+Outcomes (game's roll = the game's own result with all its factors):
+| Zone | Attack | Guard |
+|---|---|---|
+| Green | enemy dies | enemy dies (Perfect Guard) |
+| Wrong button in green | Perfect Fail: no one dies | Perfect Fail: no one dies |
+| Orange | game's roll; a missed roll still kills 25% of the time | guaranteed survival |
+| Purple | enemy kills you 90% of the time | (no purple on guard bar) |
+| Red | attack fails; your next game-roll exchange goes against you 85% of the time | 15% survive |
+| No click | game's roll | 15% survive |
+| Wrong button | attack fails | you die |
+
+- Normal game rolls are kept: only the game's own kill result (code 5) survives; any other special outcome becomes a surviving exchange.
+- `ReverseRoles = 0x100` swaps attacker and defender for the replay (defender kills attacker); the rebuild runs with route152 = true.
+- Broken/shattered: an engaged broken player loses; otherwise an engaged broken enemy loses (no prompt).
+
+Presentation (`qte_meter108.h`, `hud_layout108.h`, `qte_transport.h`, `playable_runtime.cpp`):
+- No label above the bar; bar anchored at 33.125% of the screen height (closer to the crosshair).
+- After a click the bar fills with the landed colour from the click point (0.25 s) and shows the result word in bold white for 3 s: Perfect Strike / Perfect Guard / Perfect Fail / Attacking / Defending / Attack Countered / Wrong Button / Attack Missed / Attack Critical Fail / Guard Critical Fail.
+- Guard bar: red-tinted panel with a pulsing red frame. Attack bar: lighter panel with a gold and ivory frame, brighter zone colours.
+
+### 3.3 Death view
+`animation_view.h`: eyes close 3.0–4.5 s after death, then the view returns to the RTS camera.
+
+### 3.4 Kill and death statistics (kit v10–v12)
+- Possession engine counts deaths of the possessed soldier (shared memory channel, see 4.2).
+- QTE runtime counts kills by the possessed soldier: QTE exchanges it wins (outcome 5 with the player as attacker) and broken enemies it cuts down. Arrow, gun and charge-impact kills are not reported to possession and are not counted.
+- On death, a banner "Kills this life: N" is shown for 4 s.
+- Statistics file: `%APPDATA%\The Creative Assembly\Shogun2\possession_battle_stats.txt` (4 lines: `S2UP_STATS 1`, `session <pid>-<process start>`, `kills N`, `deaths N`, totals since the game started). It is **replaced in place** every time it is written (CREATE_ALWAYS on one fixed name) – it never grows and no copies are made. It was written for a campaign loot script; that script was removed (it crashed the game after battles), so nothing reads the file at the moment.
+
+### 3.5 HUD kill/death panel (kit v13, changed in v14)
+- One panel, top left, **only while possessing** (v14; the v13 top-right panel covered the map and was removed):
+  - Kills this life: N
+  - Rounds of combat this life: N (a round = one QTE exchange of the possessed soldier)
+  - Total kills: N | Deaths: N (this battle, reset each battle)
+  - K/D: x.xx
+- Position constants `StatsTop174` (8.5% down) and `StatsSide174` (1.2% in from the side) in `hud.cpp`.
+- v13 also let the HUD publish numeric-only frames (`active = 2`) out of possession: `overlay_surface106.h` (`valid_frame`) and `adapter.cpp` (`overlay_key106`) accept `active = 2` on the HUD layer. Since v14 the HUD no longer uses this; the change is harmless and was left in place.
+
+### 3.5b Marker stops on click (kit v14)
+`playable_runtime.cpp`: when you click, the marker freezes where it was (the freeze used to last only 0.12 s, so the marker kept moving until the game resolved the exchange). It stays frozen until the result appears, and the result fill starts at that point.
+
+### 3.6 Disk clean-up (kit v10)
+Every build used to leave its own copy in `%LOCALAPPDATA%`:
+- `S2UP-Workshop165-<fingerprint>.dll` (the bridge) – `entry165.cpp` `retire_old_bridges173()` now deletes the other builds' copies after start-up.
+- `Shogun2PossessionCheckpoint45\workshop-<build>\` (the components and asset caches) – `integrated.h` `retire_old_runtimes173()` deletes the other `workshop-*` / `integrated-*` folders.
+Only plain files directly inside those folders are deleted; a file still in use by another running game is left alone. The shared asset cache `resources159-locale167-*` is kept.
+Already clean in the original: logging is discarded in player builds (`runtime_storage166.h`), temporary handoff and receipt files are delete-on-close.
+
+---
+
+## 4. Files changed or added (relative to the original repository)
+
+### 4.1 Changed
+| File | What changed |
 |---|---|
-| R2 | Select; hold and drag for box selection; double-tap a unit to focus it |
-| L2 | Move or attack; hold and drag formation; double-tap for run or charge |
-| R1 / L1 | Zoom out / zoom in |
-| A / B / X / Y | Hold: formations and range / cancel or deselect / toggle run-walk / possess |
-| D-pad up / down / left / right | Tap: select group1 /2 /3 /4; hold: assign current selection |
-| L4 held | Select card range or queue orders |
-| L3 or L5 held + R2 | Add/remove one unit at the cursor; the point is held still until R2 releases |
-| L5 + D-pad | Assign selected units to corresponding native group |
-| R4 / R5 | Toggle melee mode / group or ungroup |
-| L4 + R4 | Select all units |
-| L5 + R5 | Lock or unlock group formation |
-| View / Menu | Tap: hide/show HUD; hold: controls / game menu |
+| `native/outputs/shogun2-accuracy90-preview/src/adapter.cpp` | key remap (F1–F4, E interact), `life_mapping173_create()` call, HUD `active=2` overlay gate (v13) |
+| `.../shogun2-accuracy90-preview/src/melee_control.h` | death counter channel (`life173::Shared`, increment in `begin_death_view`); the statistics code is built into this file (v12) |
+| `.../shogun2-accuracy90-preview/src/native_keyboard84.h` | hides F1–F4 and M from the game, P/V view keys |
+| `.../shogun2-accuracy90-preview/src/view152.h` | P or V switches view |
+| `.../shogun2-accuracy90-preview/src/ability_input141.h` | G next / F use |
+| `.../shogun2-accuracy90-preview/src/animation_view.h` | death view timing (and a fixed comment that once swallowed code: build error C4716) |
+| `.../shogun2-accuracy90-preview/src/soldier_pose.h` | death pose ends after 4.5 s (was 15 s), matching the death view |
+| `.../shogun2-ammunition83-preview/hud-src/hud_renderer.h` | key prompts: F1–F4 order keys, "E Climb wall", "G Next", "F Use/End" |
+| `.../shogun2-ammunition83-preview/hud-src/hud.cpp` | kill/death panel (v13, single top-left panel in v14) |
+| `.../shogun2-authentic-hud80-preview/qte-src/qte_core.h` | zoned bar, timing, outcomes (see 3.2) |
+| `.../shogun2-melee-meter79-preview/src/qte_core.h` | identical copy of the file above |
+| `.../shogun2-authentic-hud80-preview/qte-src/qte_transport.h` | new results; `response_window(action, advantage)`; results stay 3.05 s |
+| `.../shogun2-authentic-hud80-preview/qte-src/qte_native_bridge.h` | normal rolls, forced guard, ReverseRoles replay, kill/round tally (built in since v12) |
+| `.../shogun2-authentic-hud80-preview/qte-src/playable_runtime.cpp` | 3 s feedback, rebuild with route152, kills-this-life banner, statistics file, battle totals (v13), marker stops on click (v14) |
+| `.../shogun2-authentic-hud80-preview/qte-src/qte_render.h` | `render_banner173()` for the death banner |
+| `.../shogun2-possession-cleanup-v46/src/qte_meter108.h` | bar drawing, colours, result words, guard/attack frames |
+| `.../shogun2-possession-cleanup-v46/src/hud_layout108.h` | QTE anchor 0.33125 |
+| `.../shogun2-possession-cleanup-v46/src/overlay_surface106.h` | accepts `active=2` HUD frames (v13) |
+| `native/work/autoload99-preview/integrated.h` | old runtime folders clean-up |
+| `tools/workshop/entry165.cpp` | old bridge DLL clean-up |
+| `tools/data/engine-contract172.json` | source pins (working copy only, see section 1) |
 
-### Possession
-
-| Input | Action |
+### 4.2 Added
+| File | Purpose |
 |---|---|
-| R2 | Fire; hold/release bow; primary melee or QTE response |
-| L2 | Ready ranged weapon; secondary melee or QTE response |
-| R1 held | Command wheel: right stick or D-pad chooses; release commits |
-| Wheel up / down / left / right | Follow Me / Stop / Hold Here / Cycle Fire Orders |
-| L1 | Unit move/attack; hold for formation; double-tap for run/charge |
-| A / B | Climb/interact / mount or dismount unit |
-| X / Y | Native unit melee/ranged toggle / return to RTS |
-| D-pad up / down | Cycle available ability/ammunition / use or end selected ability |
-| D-pad left / right | Third-person distance closer / farther |
-| L3 held / L5 held | Run / crouch |
-| L4 held | Orbit the third-person camera |
-| R4 / R5 | Stop unit / Follow Me |
-| View / Menu | Tap: cycle HUD; hold: controls / game menu while remaining possessed |
+| `.github/workflows/build-qte.yml` | GitHub build |
+| `tools/workshop/github_build173.py` | GitHub build script |
+| `FORK_CHANGES.md` | this file |
 
+### 4.3 Deprecated / unused (safe to delete)
+| File | Why it is there |
+|---|---|
+| `native/outputs/shogun2-possession-cleanup-v46/src/life_stats173.h` | Added in kit v10/v11. The first kill-count build failed with "Cannot open include file" for this header, so in kit v12 its code was built into `melee_control.h` and `playable_runtime.cpp`. Nothing includes it any more, and it describes the old v173 layout of the shared channel. |
+| `native/outputs/shogun2-authentic-hud80-preview/qte-src/kill_tally173.h` | Same story: built into `qte_native_bridge.h` in kit v12; nothing includes it. |
 
-Large campaign panels currently reduce their scale to fit. Fully enlarged, reflowed layouts remain unfinished. Occasional campaign-to-battle controller failures remain under investigation.
+### 4.4 Shared memory channels added
+| Name | Writer | Readers | Contents |
+|---|---|---|---|
+| `Local\S2UPLife174-<pid>` (v13; was `S2UPLife173` in v10–v12) | engine creates it, counts deaths; QTE runtime writes kills, rounds, battle totals, last possession key | QTE runtime, HUD | `life173::Shared`, magic `0x3346494C`, version 174 |
+The struct is copied identically into `melee_control.h`, `playable_runtime.cpp` and `hud.cpp` (guard `S2UP_LIFE_STATS174`). If you change it, change all three and bump `Version`.
 
-## Compatibility
+---
 
-| Game mode or mod | Status |
-| --- | --- |
-| Single-player land battles and sieges | Intended use; bugs and crashes remain |
-| Shogun 2, Rise of the Samurai and Fall of the Samurai weapons | Recognised, but not every unit, weapon or ammunition combination has been tested |
-| Artillery | Uses the game's existing first-person mode |
-| Naval battles | Possession and ship commands are not available |
-| Multiplayer, Versus and campaign drop-in | Not implemented |
-| Unit and overhaul mods | Missing stock unit artwork no longer hides the entire HUD; individual combinations still need testing |
-| Shogun 2 Bugfix engine / Shogun2 Loader | Reviewed compatibility checks and an owner-accepted Test172 combination; neither mod is required |
-| Mods replacing the front-end root script entry | Can preserve one enabled root when our bootstrap runs; different competing roots can still conflict |
-| Older DInput installation of this mod | Do not combine with Workshop |
+## 5. Kit history (what was uploaded, in order)
+| Kit | Contents |
+|---|---|
+| v1–v2 | workflow + build script (first GitHub builds) |
+| v3–v6 | controls, zoned bar, presentation (partial kits; v3/v4 were found not uploaded, so later kits are complete) |
+| v7 | discarded (missing adapter.cpp) |
+| Fix kit v1 | `ability_catalog141.h` had been overwritten with `ability_input141.h`; both restored |
+| Fix kit v2 | `animation_view.h` comment swallowed code (C4716) |
+| v8 | complete kit of every changed file |
+| v9 | zoned bar v9 (pressure, purple on attack only, forced guard, normal rolls) |
+| v10 / v11 | kill/death statistics, death banner, stats file, cache clean-up (v11 = only the changed files) |
+| v12 | fix: statistics code built into existing files (the two new headers were not found by the build) |
+| v13 | HUD panels: kills/rounds this life (top left), battle K/D (top right) |
+| v14 | marker stops on click; one top-left panel only while possessing (K/D moved under the life block) – not yet built |
 
-## Known limitations
-
-- **Crashes remain unresolved**, including crashes with blood turned off.
-- **Large battles can slow down severely**, especially with Ultra unit size, several armies or dense fighting. Lower graphics settings do not necessarily prevent this.
-- **Charging was improved and accepted in owner testing; intermittent failures remain possible. Castle-wall climbing is better and independent of unit orders, but remains intermittent.**
-- **First-person arms and weapons can clip.** Mounted bows also have presentation problems.
-- **Bow draw sound follows the native animation**, which begins with RMB, rather than the variable LMB draw input.
-- **Enemies can still ignore your soldier away from the formation.** Revision34’s targeting changes failed the latest owner test; this is unresolved.
-- Not every unit, ability, castle layout or display configuration has been tested.
-
-See [known issues and reporting details](docs/KNOWN_ISSUES.md) for additional combat, camera and targeting limitations.
-
-## Troubleshooting
-
-| Problem | What to check |
-| --- | --- |
-| **F9 does nothing** | Select a living friendly unit in a single-player land battle or siege. Check that the mod is enabled, restart after enabling/updating, and confirm you have the supported Windows Steam game build. |
-| **HUD or resources fail to load** | Check `data.pack` and the installed language pack. Compatible native fonts are required; English audio is optional. Include the exact startup warning. Changed or unfamiliar cache files are preserved; do not delete them blindly. |
-| **Problems after upgrading** | Check that the older setup.exe version is uninstalled and its camera-helper launch option removed. Do not run both loaders. |
-| **Shots or volleys do not fire** | Note the exact unit, weapon and ammunition, and whether the problem affects your soldier, the rest of the unit, or both. Not all combinations have been tested. |
-| **Missing HUD or unusual timing** | Report resolution, fullscreen/windowed mode, Windows scaling, monitor refresh rate, battle speed and whether the whole game slowed down. |
-| **Crashes or severe slowdown** | Report the map, unit size, army count and nearby fighting. Leaving and re-entering possession is not a confirmed fix. |
-
-To [report a problem](https://steamcommunity.com/workshop/filedetails/discussion/3825625050/564798191048897978/), include the mod version, game/expansion, battle type, map, unit, weapon, ammunition, other mods, and what you did before the problem occurred. Add graphics settings for visual issues and any error message for crashes.
-
-## Credits and license
-
-This is an unofficial mod and is not affiliated with or endorsed by Creative Assembly or SEGA. Total War: SHOGUN 2 and its game material belong to their respective rights holders.
-
-First-party code is available under the [MIT license](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md) for other components. Community contributions are welcome; ongoing maintenance, updates and individual support are not promised.
+## 6. Ideas not done / limits
+- Army-wide kill tracking (every unit that dies per side) needs the battle's unit list in game memory; not found in this code base. Would need reverse engineering (Ghidra) of `Empire.Retail.dll`.
+- Disabling the sword stance for spear units in code was not done: possession cannot tell a spear unit from a sword unit without engine data. The user's mod uses the NoAshigaruMCA animation fix instead (pike units fight with the yari).
+- Restoring the soldier's weapon stance on release (low-risk option) was proposed but not built.
