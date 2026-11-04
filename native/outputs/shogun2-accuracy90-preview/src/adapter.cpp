@@ -46,7 +46,8 @@ static bool overlay_key106(const overlay106::Frame& frame,unsigned layer){
     auto key=frame.key;
     // Retained cancellation/result feedback is immutable numeric UI, never an
     // ownership permission. It may survive the matching possession's release.
-    if(layer==overlay106::QTE&&frame.active==2&&state&&enabled&&state->ready&&!state->stop&&
+    // Kit v13: the HUD's kill/death panel (active=2) is numeric UI only, like the QTE result.
+    if((layer==overlay106::QTE||layer==overlay106::HUD)&&frame.active==2&&state&&enabled&&state->ready&&!state->stop&&
        key.lease==state->lease_generation&&key.actor==state->actor_id&&key.unit==state->unit_id)return true;
     if(!state||!enabled||!state->ready||state->stop||state->release||state->mode!=POSSESSED||
        GetTickCount64()-state->heartbeat>500||!possession_lease.active)return false;
