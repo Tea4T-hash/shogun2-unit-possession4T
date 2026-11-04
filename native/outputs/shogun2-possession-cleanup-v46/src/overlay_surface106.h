@@ -26,7 +26,7 @@ static_assert(sizeof(Header)<=HeaderBytes,"Overlay header capacity");
 inline void name(wchar_t* out,DWORD pid,unsigned layer){swprintf_s(out,100,L"Local\\Shogun2Overlay106-%lu-%u",pid,layer);}
 inline bool valid_header(const Header& h,DWORD pid,unsigned layer){return h.magic==Magic&&h.version==Version&&h.bytes==sizeof(Header)&&h.pid==pid&&h.layer==layer&&h.capacity==capacity(layer);}
 inline bool valid_frame(const Frame& f,unsigned layer,uint64_t now){
- if((f.active!=1&&!(layer==QTE&&f.active==2))||!f.key.lease||!f.number||now<f.tick||now-f.tick>(layer==HUD?750u:200u)||
+ if((f.active!=1&&!((layer==QTE||layer==HUD)&&f.active==2))||!f.key.lease||!f.number||now<f.tick||now-f.tick>(layer==HUD?750u:200u)||
     !f.width||!f.height||f.width>3840||f.height>2160||uint64_t(f.width)*f.height*4>capacity(layer)||
     f.view_width<640||f.view_height<360||f.view_width>16384||f.view_height>16384||!f.rect_count||f.rect_count>2)return false;
  for(unsigned i=0;i<f.rect_count;++i){auto q=f.rect[i];if(q.width<=0||q.height<=0||q.width>16384||q.height>16384||
