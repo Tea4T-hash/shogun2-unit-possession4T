@@ -2,7 +2,33 @@
 #include "native_selection_prefix.h"
 #include "native_combat_actor.h"
 #include "qte_pair_gate.h"
-#include "kill_tally173.h"
+// Kit v12: kill tally built in here (no separate file needed).
+#ifndef S2UP_KILL_TALLY173
+#define S2UP_KILL_TALLY173
+// Kills made by the possessed soldier in matched melee (QTE exchanges and routed exchanges).
+// Arrows, gunfire and charge impacts are not reported to this runtime and are not counted.
+#include <windows.h>
+#include <cstdint>
+namespace tally173 {
+inline SRWLOCK lock=SRWLOCK_INIT;
+inline uint64_t current_lease=0;
+inline unsigned current_kills=0,total_kills=0;
+inline void kill(uint64_t lease){
+    AcquireSRWLockExclusive(&lock);
+    if(lease!=current_lease){current_lease=lease;current_kills=0;}
+    ++current_kills;++total_kills;
+    ReleaseSRWLockExclusive(&lock);
+}
+// Kills of the life that just ended; the count for that life starts again from zero.
+inline unsigned end_life(uint64_t lease){
+    AcquireSRWLockExclusive(&lock);
+    unsigned kills=(lease&&(lease&0xffffffffull)==(current_lease&0xffffffffull))?current_kills:0;
+    current_kills=0;current_lease=0;
+    ReleaseSRWLockExclusive(&lock);return kills;
+}
+inline unsigned total(){AcquireSRWLockShared(&lock);unsigned t=total_kills;ReleaseSRWLockShared(&lock);return t;}
+}
+#endif
 
 namespace qte {
 inline bool actor_identity(const Reader& r,uint32_t actor,uint32_t witness,
