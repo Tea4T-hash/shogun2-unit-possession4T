@@ -22,12 +22,17 @@ enum class Result:uint32_t {Pending=0,Success=1,Early=2,Late=3,WrongButton=4,Tim
 //   0.48-0.52  green, Perfect Strike / Perfect Guard (4%)
 // Blue has been removed.
 // ---------------------------------------------------------------------------------------------
-constexpr float RedEnd=.09f,RedStripLow=.29f,RedStripHigh=.31f,PurpleHalf=.05f,PurpleInner=.03f,GreenHalf=.02f;
+constexpr float RedEnd=.09f,RedStripLow=.29f,RedStripHigh=.31f,PurpleHalf=.06f,PurpleInner=.04f,GreenHalf=.02f; // purple 1% further from green
+// Pressure 0-1: how much stronger the enemy is, or how debuffed you are (the original mod's advantage, negative side).
+// At full pressure: green 25% smaller, red zones 50% larger, marker 30% faster, 30% less time to react.
+inline float pressure(float advantage){return std::isfinite(advantage)?std::clamp(-advantage,0.f,1.f):0.f;}
+inline float green_half(float p){return GreenHalf*(1.f-.25f*p);}
 constexpr float GreenWidth=2.f*GreenHalf;
 // Marker: 25% faster than the old neutral sweep (1.475 s), 5% faster after every full crossing,
 // 5% slower at the ends and 5% faster in the middle of each crossing. Guards run twice as fast.
 constexpr float BaseSweepSeconds=1.475f/1.25f;
-constexpr double SweepSpeedup=1.05,EaseAmplitude=.05;
+constexpr double SweepSpeedup=1.05,EaseAmplitude=0.; // no easing: constant speed along each crossing
+constexpr float AttackSpeedup=1.02f;                 // attack marker 2% faster
 // Outcome tuning (chances 0-1).
 constexpr float OrangeAttackBonus=.25f;         // attack in orange: game's roll, and a missed roll still kills 25% of the time
 constexpr float PurpleAttackSurvive=.10f;       // attack in purple (Countered): the enemy kills you 90% of the time
@@ -36,14 +41,15 @@ constexpr float RedAttackDebuff=.85f;           // attack in red: the attack fai
                                                 // game's roll is turned against you 85% of the time
 enum class Zone:uint32_t {Red,Blue,Orange,Purple,Green};
 inline uint64_t mix64(uint64_t v){v+=0x9e3779b97f4a7c15ull;v=(v^(v>>30))*0xbf58476d1ce4e5b9ull;v=(v^(v>>27))*0x94d049bb133111ebull;return v^(v>>31);}
-inline Zone zone_at(float x,uint64_t,uint32_t,bool attack){
+inline Zone zone_at(float x,uint64_t,uint32_t,bool attack,float p=0.f){
     x=std::clamp(x,0.f,1.f);
     const float centre=std::abs(x-.5f);
-    if(centre<=GreenHalf)return Zone::Green;
+    if(centre<=green_half(p))return Zone::Green;
     if(attack&&centre>PurpleInner&&centre<=PurpleHalf)return Zone::Purple;
-    const float from_end=std::min(x,1.f-x);
-    if(from_end<RedEnd)return Zone::Red;
-    if(from_end>=RedStripLow&&from_end<RedStripHigh)return Zone::Red;
+    const float from_end=std::min(x,1.f-x),grow=1.f+.5f*p;
+    const float strip=.5f*(RedStripLow+RedStripHigh),half=.5f*(RedStripHigh-RedStripLow)*grow;
+    if(from_end<RedEnd*grow)return Zone::Red;
+    if(from_end>=strip-half&&from_end<strip+half)return Zone::Red;
     return Zone::Orange;
 }
 inline Result zone_result(Zone z){
@@ -170,17 +176,17 @@ inline float reticle_position(const Snapshot& s){
     const double pi=3.14159265358979323846,eased=u-EaseAmplitude*std::sin(2.*pi*u)/(2.*pi);
     return float((k&1u)?1.-eased:eased);
 }
-inline Zone current_zone(const Snapshot& s){return zone_at(reticle_position(s),s.serial,sweep_index(s),attacking(s.action));}
+inline Zone current_zone(const Snapshot& s){return zone_at(reticle_position(s),s.serial,sweep_index(s),attacking(s.action),pressure(s.advantage));}
 // At least three active-simulation seconds AND one complete outward/return
 // cycle. Phase is preserved through stat refreshes, so speed changes cannot
 // restart the required cycle or revive an expired event. No protocol field.
 constexpr double ResponseWindowSeconds91=3.; // Retained minimum, not a hard cap.
 constexpr double MaximumResponseSeconds95=4.42; // Existing duration <=2.21.
 // Guards give half the reaction time of attacks.
-inline double response_window(Action a){return attacking(a)?ResponseWindowSeconds91:ResponseWindowSeconds91*.5;}
+inline double response_window(Action a,float advantage=0.f){return (attacking(a)?ResponseWindowSeconds91:ResponseWindowSeconds91*.5)*(1.-.3*pressure(advantage));}
 inline double response_remaining95(const Snapshot& s){
     if(s.result==Result::Timeout)return 0;
-    return std::max({0.,response_window(s.action)-s.response_elapsed,
+    return std::max({0.,response_window(s.action,s.advantage)-s.response_elapsed,
         2.*double(s.duration)-double(s.elapsed)});
 }
 inline double response_deadline(const Snapshot& s){return s.response_elapsed+response_remaining95(s);}
@@ -206,7 +212,9 @@ class Event {
     bool active_{},paused_{};
     float placement_{},width_{};
     void geometry(){
-        difficulty_.duration=attacking(action_)?BaseSweepSeconds:BaseSweepSeconds*.5f; // guard marker twice as fast
+        const float p=pressure(difficulty_.advantage);
+        difficulty_.duration=(attacking(action_)?BaseSweepSeconds/AttackSpeedup:BaseSweepSeconds*.5f)/(1.f+.3f*p); // guard twice as fast; faster under pressure
+        width_=2.f*green_half(p);
         difficulty_.ideal=.5f*difficulty_.duration;
         difficulty_.tolerance=width_*.5f*difficulty_.duration;
     }
@@ -231,7 +239,7 @@ public:
         difficulty_.advantage=changed.combined.advantage; // fixed bar: speed and zones ignore unit stats
         width_=GreenWidth;geometry();
         // Preserve phase on stat refresh without changing consumed response time.
-        const double remaining=std::max({0.,response_window(action_)-response_elapsed_,(2.-phase)*double(difficulty_.duration)});
+        const double remaining=std::max({0.,response_window(action_,difficulty_.advantage)-response_elapsed_,(2.-phase)*double(difficulty_.duration)});
         const double step=std::min(simulation_dt,remaining);
         elapsed_=phase*difficulty_.duration+step;response_elapsed_+=step;
         if(simulation_dt>=remaining)result_=Result::Timeout;
@@ -276,6 +284,9 @@ inline float outcome_roll()noexcept{return random_placement();}
 inline std::atomic<uint32_t> red_attack_debuff{0};
 // Set when an attack is missed (no click or wrong button): the next exchange is forced to be a guard.
 inline std::atomic<uint32_t> force_guard_next{0};
+// The first matched exchange after 30 s out of combat is always a guard.
+inline std::atomic<int64_t> last_exchange_ms{0};
+constexpr int64_t OutOfCombatMs=30000;
 inline CombatIntent zone_intent(Action action,Result result,bool stock_hit);
 inline CombatIntent combat_intent(Action action,Result result,bool stock_hit=false){
     if(result==Result::Canceled||result==Result::Pending)return CombatIntent::Stock; // interrupted: game's own result, debuff kept
