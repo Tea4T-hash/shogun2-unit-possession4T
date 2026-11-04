@@ -873,9 +873,14 @@ static DWORD WINAPI render_worker(void*){
                    now-done.published_wall<(done.prompt.result==Result::Canceled?1.1:3.0)){show=transport::presentation(done,now,shown);if(show)data=done;}
             }
             bool click_freeze105=false;
-            if(show&&shown.result==Result::Pending&&!shown.paused){transport::Payload frozen;
+            // Kit v14: the marker stops where it was clicked and stays there until the result is shown
+            // (was: frozen for only 0.12 s, then it kept moving until the native exchange resolved).
+            if(show&&!shown.paused){transport::Payload frozen;
                 if(transport::read(freeze_publication93,frozen)&&frozen.prompt.serial==shown.serial&&
-                   frozen.lease==data.lease&&frozen.anchor.battle==data.anchor.battle&&now>=frozen.published_wall&&now-frozen.published_wall<.12){shown=frozen.prompt;click_freeze105=true;}
+                   frozen.lease==data.lease&&frozen.anchor.battle==data.anchor.battle&&now>=frozen.published_wall&&now-frozen.published_wall<4.){
+                    if(shown.result==Result::Pending){shown=frozen.prompt;click_freeze105=true;}
+                    else{shown.elapsed=frozen.prompt.elapsed;shown.response_elapsed=frozen.prompt.response_elapsed;} // result fill starts at the click point
+                }
             }
             render_stage=2;
             life_poll173();
