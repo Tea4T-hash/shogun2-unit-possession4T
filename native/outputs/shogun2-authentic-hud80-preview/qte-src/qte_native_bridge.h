@@ -3,29 +3,27 @@
 #include "native_combat_actor.h"
 #include "qte_pair_gate.h"
 // Kit v12: kill tally built in here (no separate file needed).
-#ifndef S2UP_KILL_TALLY173
-#define S2UP_KILL_TALLY173
-// Kills made by the possessed soldier in matched melee (QTE exchanges and routed exchanges).
-// Arrows, gunfire and charge impacts are not reported to this runtime and are not counted.
+#ifndef S2UP_KILL_TALLY174
+#define S2UP_KILL_TALLY174
+// Kills and combat rounds of the possessed soldier in matched melee (QTE exchanges and routed
+// enemies). Arrow, gun and charge-impact kills are not reported to this runtime.
 #include <windows.h>
 #include <cstdint>
 namespace tally173 {
 inline SRWLOCK lock=SRWLOCK_INIT;
 inline uint64_t current_lease=0;
-inline unsigned current_kills=0,total_kills=0;
-inline void kill(uint64_t lease){
-    AcquireSRWLockExclusive(&lock);
-    if(lease!=current_lease){current_lease=lease;current_kills=0;}
-    ++current_kills;++total_kills;
-    ReleaseSRWLockExclusive(&lock);
-}
-// Kills of the life that just ended; the count for that life starts again from zero.
+inline unsigned current_kills=0,current_rounds=0,total_kills=0;
+inline void follow(uint64_t lease){if(lease!=current_lease){current_lease=lease;current_kills=0;current_rounds=0;}}
+inline void kill(uint64_t lease){AcquireSRWLockExclusive(&lock);follow(lease);++current_kills;++total_kills;ReleaseSRWLockExclusive(&lock);}
+inline void round(uint64_t lease){AcquireSRWLockExclusive(&lock);follow(lease);++current_rounds;ReleaseSRWLockExclusive(&lock);}
+// Kills of the life that just ended; that life's counts start again from zero.
 inline unsigned end_life(uint64_t lease){
     AcquireSRWLockExclusive(&lock);
     unsigned kills=(lease&&(lease&0xffffffffull)==(current_lease&0xffffffffull))?current_kills:0;
-    current_kills=0;current_lease=0;
+    current_kills=0;current_rounds=0;current_lease=0;
     ReleaseSRWLockExclusive(&lock);return kills;
 }
+inline void life(uint64_t& lease,unsigned& kills,unsigned& rounds){AcquireSRWLockShared(&lock);lease=current_lease;kills=current_kills;rounds=current_rounds;ReleaseSRWLockShared(&lock);}
 inline unsigned total(){AcquireSRWLockShared(&lock);unsigned t=total_kills;ReleaseSRWLockShared(&lock);return t;}
 }
 #endif
@@ -248,6 +246,7 @@ public:
                 if(!gate_.begin_replay(key_,true,verdict))return 1;
                 auto result=native_;result.outcome=verdict.outcome&0xff;
                 if(verdict.outcome&ReverseRoles)std::swap(result.attacker_address,result.defender_address);
+                tally173::round(key_.pair.lease); // kit v13: one round of combat
                 if(result.outcome==5&&result.attacker_address==player_.address)tally173::kill(key_.pair.lease); // kit v10: kill by the possessed soldier
                 uint32_t returned;
                 if(prepared_mode_){
