@@ -2,6 +2,7 @@
 #include "native_selection_prefix.h"
 #include "native_combat_actor.h"
 #include "qte_pair_gate.h"
+#include "kill_tally173.h"
 
 namespace qte {
 inline bool actor_identity(const Reader& r,uint32_t actor,uint32_t witness,
@@ -221,6 +222,7 @@ public:
                 if(!gate_.begin_replay(key_,true,verdict))return 1;
                 auto result=native_;result.outcome=verdict.outcome&0xff;
                 if(verdict.outcome&ReverseRoles)std::swap(result.attacker_address,result.defender_address);
+                if(result.outcome==5&&result.attacker_address==player_.address)tally173::kill(key_.pair.lease); // kit v10: kill by the possessed soldier
                 uint32_t returned;
                 if(prepared_mode_){
                     if(!replay_.arm(input_,result)){++replay_errors_;return 1;}
@@ -307,6 +309,7 @@ public:
             selected.outcome=5;selected.attacker_address=own_facts.routing?enemy.address:owned.address;
             selected.defender_address=own_facts.routing?owned.address:enemy.address;
             if(!replay_.arm(input,selected)){++replay_errors_;return 1;}
+            if(!own_facts.routing)tally173::kill(owner.lease); // kit v10: routed enemy killed by the possessed soldier
             uint32_t returned=calls_.routed152(calls_.context,witness,owned,enemy,selected,nullptr);
             if(!replay_.finish())++replay_errors_;return returned;
         }
@@ -397,6 +400,7 @@ public:
         if(!paused&&focused&&calls_.routed152&&(own_facts.routing||enemy_facts.routing)){
             NativeVerdict desired{5,own_facts.routing?enemy.address:player.address,own_facts.routing?player.address:enemy.address};
             if(!replay_.arm(input_,desired)){release(CancelReason92::Facts);return;}
+            if(!own_facts.routing)tally173::kill(key_.pair.lease); // kit v10: routed enemy killed by the possessed soldier
             gate_.removed(key_.address,key_.generation);
             routed_answer152_=calls_.routed152(calls_.context,key_.address,player,enemy,desired,prepared_mode_?plans_:nullptr);routed_frame152_=true;
             if(!replay_.finish())++replay_errors_;return;
