@@ -2,6 +2,7 @@
 #include "../../shogun2-melee-qte63-preview/src/melee_commitment.h"
 #include "death_pose_geometry.h"
 #include "animation_view.h"
+#include "../../shogun2-possession-cleanup-v46/src/life_stats173.h"
 static animationview::Handoff melee_handoff78;
 static animationview::Handoff melee_opponent_motion78;
 static bool animation_view_active78;
@@ -41,8 +42,20 @@ static void update_death_model_view(){
     if(!start||!read_model_eye(model_eye_channel,sample)||!leased_model_eye(sample)||sample.tick+500<start||sample.tick>GetTickCount64())return;
     memcpy(death_eye,sample.eye.view,sizeof death_eye);memcpy(death_up,sample.eye.up,sizeof death_up);death_eye_valid=death_model_valid=true;
 }
+// Kit v10: death counter for the kills-per-life display and battle statistics. Never required.
+static HANDLE life_mapping173=nullptr;static life173::Shared* life_shared173=nullptr;
+static void life_mapping173_create(){
+    if(life_shared173)return;wchar_t name[96];life173::mapping_name(name,GetCurrentProcessId());
+    HANDLE map=CreateFileMappingW(INVALID_HANDLE_VALUE,nullptr,PAGE_READWRITE,0,sizeof(life173::Shared),name);
+    if(!map)return;if(GetLastError()==ERROR_ALREADY_EXISTS){CloseHandle(map);return;}
+    auto view=static_cast<life173::Shared*>(MapViewOfFile(map,FILE_MAP_ALL_ACCESS,0,0,sizeof(life173::Shared)));
+    if(!view){CloseHandle(map);return;}
+    memset(view,0,sizeof *view);view->magic=life173::Magic;view->version=life173::Version;view->size=sizeof *view;view->pid=GetCurrentProcessId();
+    life_mapping173=map;life_shared173=view;
+}
 static void begin_death_view(){
     if(!InterlockedCompareExchange64(&death_started,LONG64(GetTickCount64()),0)){
+        if(life_shared173){InterlockedExchange(&life_shared173->last_death_lease,LONG(possession_lease.generation));InterlockedIncrement(&life_shared173->deaths);}
         death_third_person156=third_person152!=0;
         if(!last_owned_eye_valid)remember_owned_eye(possession_lease.identity.camera);
         death_eye_valid=last_owned_eye_valid;if(death_eye_valid)memcpy(death_eye,last_owned_eye,sizeof death_eye);
