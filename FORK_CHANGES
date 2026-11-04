@@ -1,0 +1,168 @@
+# Shogun 2 Unit Possession – 4T fork: change log and hand-over notes
+
+Fork: `Tea4T-hash/shogun2-unit-possession4T`, forked from **logsam58/shogun2-unit-possession** (MIT licence, commit `86d4b5d`).
+This file lists everything changed in this fork, so you (or another modder) can see what was done and carry on.
+
+Status when written: everything up to **kit v12** is built and tested in game. **Kit v13** (HUD kill/death panels) is written but not yet built or tested.
+
+---
+
+## 1. How this fork is built
+
+- Built on **GitHub Actions**, nothing is compiled on a PC: *Actions > Build QTE and HUD > Run workflow* (always a NEW run, not "Re-run").
+- Added files that make this possible:
+  - `.github/workflows/build-qte.yml` – Windows runner, Python 3.12, MSVC x86, runs the script below, uploads the artifact `possession-pack`.
+  - `tools/workshop/github_build173.py` – compiles MinHook, the four components (`possession-v46.dll`, `possession-hud.exe`, `qte-playable-v79.dll`, `prepare-local-assets159.exe`), the Workshop bridge `s2up-workshop165.dll` with the components embedded, a float Lua 5.1 compiler (official source, fingerprint-checked), `root.luac`, and finally `shogun2_unit_possession_workshop165.pack`. It mirrors `tools/native_build.py` + `tools/workshop/build_workshop165.py` (candidate 173) without the owned-game fixture tests.
+- Output (artifact zip): `package/shogun2_unit_possession_workshop165.pack`, `package/fingerprints.json` (sha256 of pack, bridge and components), `bin/*`.
+- To check a build without running it: every hash in `fingerprints.json` must match its file, all four components must be found inside the bridge, and the bridge must be stored inside `root.luac` (1024-byte string chunks; repeated chunks are stored once).
+- The build script does **not** run the engine-contract source check. `tools/data/engine-contract172.json` still lists sha256 "pins" for 198 engine-facing source files; the pins were kept up to date in the working copy but the JSON was not uploaded with every kit. If you ever run `tools/workshop/check_engine_contract172.py`, regenerate the pins first.
+- Compiler warnings seen in every build (harmless): `C4005 NOMINMAX redefinition` (identity.h), `C4456` in engine_contract172.h.
+
+## 2. The main mod pack
+
+This fork's pack is merged into the user's main mod `4T-Slow_Combat_Standard_Move_Speed(_Capped).pack` (files `possession\*` and `ui\frontend ui\layout_scripts\root.luac`). It also works on its own as `shogun2_unit_possession_workshop165.pack` in the game's `data` folder. Never load both at once.
+
+---
+
+## 3. Gameplay changes
+
+### 3.1 Controls (while possessing)
+| Key | Action |
+|---|---|
+| F1 / F2 / F3 / F4 | Unit orders: move-attack / stop / hold here / follow me (hidden from the game while possessing) |
+| G | Next ability |
+| F | Use ability (End when active) |
+| E | Interact, in order: dismount → climb wall → mount |
+| P or V | Switch first / third person (third person is the default) |
+| F10, Esc, Insert | Release (unchanged) |
+
+Files: `adapter.cpp` (key remap, interact201), `native_keyboard84.h` (hides F1–F4, M; P/V), `view152.h` (P 0x19 / V 0x2F), `ability_input141.h` (G/F), `hud_renderer.h` (key prompts "G Next", "F Use", F1–F4 labels).
+Note: the comment block "Player key layout" near the top of `adapter.cpp` still describes an older arrow-key layout. The code below it (F1–F4 cases) is the current behaviour.
+
+### 3.2 Melee quick-time bar (QTE) – the zoned bar
+File: `native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_core.h` (all tuning values are named constants at the top).
+**The same file must also be copied to** `native/outputs/shogun2-melee-meter79-preview/src/qte_core.h` (the HUD build uses that copy). Keep both identical.
+
+Bar layout (fractions of the bar width, mirrored around the centre):
+- 0.00–0.09 red end zone (Critical Fail)
+- 0.09–0.48 orange (Resisted), with a fixed red strip at 0.29–0.31 on each side
+- Attack bar only: purple (Countered) 0.04–0.06 from the centre, with 1% orange between it and green
+- 0.48–0.52 green (Perfect Strike / Perfect Guard)
+- The blue zone of earlier versions was removed.
+
+Timing:
+- Marker 25% faster than the original neutral sweep (1.18 s per crossing), 5% faster each full crossing, constant speed (no easing). Attack marker 2% faster.
+- Guard bars run twice as fast and give half the reaction time.
+- Pressure (enemy stronger or you debuffed, 0–1): at full pressure green 25% smaller, red zones 50% larger, marker 30% faster, 30% less reaction time.
+- Forced guard: after a missed attack (no click / wrong button), and on the first exchange after 30 s out of combat.
+
+Outcomes (game's roll = the game's own result with all its factors):
+| Zone | Attack | Guard |
+|---|---|---|
+| Green | enemy dies | enemy dies (Perfect Guard) |
+| Wrong button in green | Perfect Fail: no one dies | Perfect Fail: no one dies |
+| Orange | game's roll; a missed roll still kills 25% of the time | guaranteed survival |
+| Purple | enemy kills you 90% of the time | (no purple on guard bar) |
+| Red | attack fails; your next game-roll exchange goes against you 85% of the time | 15% survive |
+| No click | game's roll | 15% survive |
+| Wrong button | attack fails | you die |
+
+- Normal game rolls are kept: only the game's own kill result (code 5) survives; any other special outcome becomes a surviving exchange.
+- `ReverseRoles = 0x100` swaps attacker and defender for the replay (defender kills attacker); the rebuild runs with route152 = true.
+- Broken/shattered: an engaged broken player loses; otherwise an engaged broken enemy loses (no prompt).
+
+Presentation (`qte_meter108.h`, `hud_layout108.h`, `qte_transport.h`, `playable_runtime.cpp`):
+- No label above the bar; bar anchored at 33.125% of the screen height (closer to the crosshair).
+- After a click the bar fills with the landed colour from the click point (0.25 s) and shows the result word in bold white for 3 s: Perfect Strike / Perfect Guard / Perfect Fail / Attacking / Defending / Attack Countered / Wrong Button / Attack Missed / Attack Critical Fail / Guard Critical Fail.
+- Guard bar: red-tinted panel with a pulsing red frame. Attack bar: lighter panel with a gold and ivory frame, brighter zone colours.
+
+### 3.3 Death view
+`animation_view.h`: eyes close 3.0–4.5 s after death, then the view returns to the RTS camera.
+
+### 3.4 Kill and death statistics (kit v10–v12)
+- Possession engine counts deaths of the possessed soldier (shared memory channel, see 4.2).
+- QTE runtime counts kills by the possessed soldier: QTE exchanges it wins (outcome 5 with the player as attacker) and broken enemies it cuts down. Arrow, gun and charge-impact kills are not reported to possession and are not counted.
+- On death, a banner "Kills this life: N" is shown for 4 s.
+- Statistics file: `%APPDATA%\The Creative Assembly\Shogun2\possession_battle_stats.txt` (4 lines: `S2UP_STATS 1`, `session <pid>-<process start>`, `kills N`, `deaths N`, totals since the game started). It is **replaced in place** every time it is written (CREATE_ALWAYS on one fixed name) – it never grows and no copies are made. It was written for a campaign loot script; that script was removed (it crashed the game after battles), so nothing reads the file at the moment.
+
+### 3.5 HUD kill/death panels (kit v13 – NOT YET BUILT/TESTED)
+- Top left, while possessing: "Kills this life: N" and "Rounds of combat this life: N" (a round = one QTE exchange of the possessed soldier).
+- Top right, during a battle (possessed or not): "Kills N | Deaths N" and "K/D x.xx" for the current battle (reset each battle).
+- Position constants `StatsTop174` (8.5% down) and `StatsSide174` (1.2% in from the side) in `hud.cpp`.
+- To show the top-right panel out of possession, the HUD publishes a numeric-only frame with `active = 2` keyed to the last possessed soldier; `overlay_surface106.h` (`valid_frame`) and `adapter.cpp` (`overlay_key106`) were changed to accept `active = 2` on the HUD layer, as they already did on the QTE layer.
+
+### 3.6 Disk clean-up (kit v10)
+Every build used to leave its own copy in `%LOCALAPPDATA%`:
+- `S2UP-Workshop165-<fingerprint>.dll` (the bridge) – `entry165.cpp` `retire_old_bridges173()` now deletes the other builds' copies after start-up.
+- `Shogun2PossessionCheckpoint45\workshop-<build>\` (the components and asset caches) – `integrated.h` `retire_old_runtimes173()` deletes the other `workshop-*` / `integrated-*` folders.
+Only plain files directly inside those folders are deleted; a file still in use by another running game is left alone. The shared asset cache `resources159-locale167-*` is kept.
+Already clean in the original: logging is discarded in player builds (`runtime_storage166.h`), temporary handoff and receipt files are delete-on-close.
+
+---
+
+## 4. Files changed or added (relative to the original repository)
+
+### 4.1 Changed
+| File | What changed |
+|---|---|
+| `native/outputs/shogun2-accuracy90-preview/src/adapter.cpp` | key remap (F1–F4, E interact), `life_mapping173_create()` call, HUD `active=2` overlay gate (v13) |
+| `.../shogun2-accuracy90-preview/src/melee_control.h` | death counter channel (`life173::Shared`, increment in `begin_death_view`); the statistics code is built into this file (v12) |
+| `.../shogun2-accuracy90-preview/src/native_keyboard84.h` | hides F1–F4 and M from the game, P/V view keys |
+| `.../shogun2-accuracy90-preview/src/view152.h` | P or V switches view |
+| `.../shogun2-accuracy90-preview/src/ability_input141.h` | G next / F use |
+| `.../shogun2-accuracy90-preview/src/animation_view.h` | death view timing (and a fixed comment that once swallowed code: build error C4716) |
+| `.../shogun2-accuracy90-preview/src/soldier_pose.h` | death pose ends after 4.5 s (was 15 s), matching the death view |
+| `.../shogun2-ammunition83-preview/hud-src/hud_renderer.h` | key prompts: F1–F4 order keys, "E Climb wall", "G Next", "F Use/End" |
+| `.../shogun2-ammunition83-preview/hud-src/hud.cpp` | kill/death panels (v13) |
+| `.../shogun2-authentic-hud80-preview/qte-src/qte_core.h` | zoned bar, timing, outcomes (see 3.2) |
+| `.../shogun2-melee-meter79-preview/src/qte_core.h` | identical copy of the file above |
+| `.../shogun2-authentic-hud80-preview/qte-src/qte_transport.h` | new results; `response_window(action, advantage)`; results stay 3.05 s |
+| `.../shogun2-authentic-hud80-preview/qte-src/qte_native_bridge.h` | normal rolls, forced guard, ReverseRoles replay, kill/round tally (built in since v12) |
+| `.../shogun2-authentic-hud80-preview/qte-src/playable_runtime.cpp` | 3 s feedback, rebuild with route152, kills-this-life banner, statistics file, battle totals (v13) |
+| `.../shogun2-authentic-hud80-preview/qte-src/qte_render.h` | `render_banner173()` for the death banner |
+| `.../shogun2-possession-cleanup-v46/src/qte_meter108.h` | bar drawing, colours, result words, guard/attack frames |
+| `.../shogun2-possession-cleanup-v46/src/hud_layout108.h` | QTE anchor 0.33125 |
+| `.../shogun2-possession-cleanup-v46/src/overlay_surface106.h` | accepts `active=2` HUD frames (v13) |
+| `native/work/autoload99-preview/integrated.h` | old runtime folders clean-up |
+| `tools/workshop/entry165.cpp` | old bridge DLL clean-up |
+| `tools/data/engine-contract172.json` | source pins (working copy only, see section 1) |
+
+### 4.2 Added
+| File | Purpose |
+|---|---|
+| `.github/workflows/build-qte.yml` | GitHub build |
+| `tools/workshop/github_build173.py` | GitHub build script |
+| `FORK_CHANGES.md` | this file |
+
+### 4.3 Deprecated / unused (safe to delete)
+| File | Why it is there |
+|---|---|
+| `native/outputs/shogun2-possession-cleanup-v46/src/life_stats173.h` | Added in kit v10/v11. The first kill-count build failed with "Cannot open include file" for this header, so in kit v12 its code was built into `melee_control.h` and `playable_runtime.cpp`. Nothing includes it any more, and it describes the old v173 layout of the shared channel. |
+| `native/outputs/shogun2-authentic-hud80-preview/qte-src/kill_tally173.h` | Same story: built into `qte_native_bridge.h` in kit v12; nothing includes it. |
+
+### 4.4 Shared memory channels added
+| Name | Writer | Readers | Contents |
+|---|---|---|---|
+| `Local\S2UPLife174-<pid>` (v13; was `S2UPLife173` in v10–v12) | engine creates it, counts deaths; QTE runtime writes kills, rounds, battle totals, last possession key | QTE runtime, HUD | `life173::Shared`, magic `0x3346494C`, version 174 |
+The struct is copied identically into `melee_control.h`, `playable_runtime.cpp` and `hud.cpp` (guard `S2UP_LIFE_STATS174`). If you change it, change all three and bump `Version`.
+
+---
+
+## 5. Kit history (what was uploaded, in order)
+| Kit | Contents |
+|---|---|
+| v1–v2 | workflow + build script (first GitHub builds) |
+| v3–v6 | controls, zoned bar, presentation (partial kits; v3/v4 were found not uploaded, so later kits are complete) |
+| v7 | discarded (missing adapter.cpp) |
+| Fix kit v1 | `ability_catalog141.h` had been overwritten with `ability_input141.h`; both restored |
+| Fix kit v2 | `animation_view.h` comment swallowed code (C4716) |
+| v8 | complete kit of every changed file |
+| v9 | zoned bar v9 (pressure, purple on attack only, forced guard, normal rolls) |
+| v10 / v11 | kill/death statistics, death banner, stats file, cache clean-up (v11 = only the changed files) |
+| v12 | fix: statistics code built into existing files (the two new headers were not found by the build) |
+| v13 | HUD panels: kills/rounds this life (top left), battle K/D (top right) – not yet built |
+
+## 6. Ideas not done / limits
+- Army-wide kill tracking (every unit that dies per side) needs the battle's unit list in game memory; not found in this code base. Would need reverse engineering (Ghidra) of `Empire.Retail.dll`.
+- Disabling the sword stance for spear units in code was not done: possession cannot tell a spear unit from a sword unit without engine data. The user's mod uses the NoAshigaruMCA animation fix instead (pike units fight with the yari).
+- Restoring the soldier's weapon stance on release (low-risk option) was proposed but not built.
