@@ -6,7 +6,7 @@ shogun2_unit_possession_workshop165.pack. It needs no game files and installs no
 Mirrors tools/native_build.py and tools/workshop/build_workshop165.py (candidate 173),
 without the fixture tests that need an owned game.
 """
-import hashlib, io, json, struct, subprocess, tarfile, urllib.request
+import hashlib, io, json, struct, subprocess, tarfile, time, urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -58,8 +58,24 @@ sh(['cl', '/nologo', '/std:c++17', '/EHsc', '/O2', '/MT', '/W4', '/DNOMINMAX', '
     '/link', 'bcrypt.lib', 'shell32.lib', 'user32.lib', 'winmm.lib'])
 
 # 4. Float Lua 5.1 compiler (official source, fingerprint-checked)
-data = urllib.request.urlopen('https://www.lua.org/ftp/lua-5.1.5.tar.gz', timeout=60).read()
-assert hashlib.sha256(data).hexdigest() == '2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333', 'Lua source fingerprint'
+# The official site sometimes times out on GitHub runners: retry, then use the official mirror.
+# The fingerprint check below guarantees the exact same file whichever source answers.
+LUA_SHA = '2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333'
+LUA_URLS = ['https://www.lua.org/ftp/lua-5.1.5.tar.gz',
+            'https://www.tecgraf.puc-rio.br/lua/mirror/ftp/lua-5.1.5.tar.gz']
+data = None
+for attempt in range(3):
+    for url in LUA_URLS:
+        try:
+            got = urllib.request.urlopen(url, timeout=60).read()
+            if hashlib.sha256(got).hexdigest() == LUA_SHA:
+                data = got; print('Lua source from', url, flush=True); break
+            print('Fingerprint mismatch from', url, flush=True)
+        except Exception as error:
+            print('Lua download failed from', url, '-', error, flush=True)
+    if data: break
+    time.sleep(20)
+assert data is not None and hashlib.sha256(data).hexdigest() == LUA_SHA, 'Lua source fingerprint'
 with tarfile.open(fileobj=io.BytesIO(data)) as t: t.extractall(OUT / 'lua', filter='data')
 src = OUT / 'lua/lua-5.1.5/src'; conf = src / 'luaconf.h'; text = conf.read_text()
 assert '#define LUA_NUMBER_DOUBLE' in text and '#define LUA_NUMBER\tdouble' in text
