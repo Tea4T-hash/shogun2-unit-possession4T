@@ -171,7 +171,10 @@ The struct is copied identically into `melee_control.h`, `playable_runtime.cpp` 
 | v12 | fix: statistics code built into existing files (the two new headers were not found by the build) |
 | v13 | HUD panels: kills/rounds this life (top left), battle K/D (top right) |
 | v14 | marker stops on click; one top-left panel only while possessing (K/D moved under the life block) |
-| v15 | no QTE in naval battles (boarding crash) – not yet built |
+| v15 | naval guard in `owner()` and `dispatch_current()` (`naval_battle175`: army+0x12c ship count). Built OK, but boarding still crashed while only watching: 8 of the 10 QTE hooks were not guarded |
+| v16 | build script: Lua download retries + tecgraf mirror (mirror later found to 404) |
+| v17 | build script: uses `tools/workshop/lua-5.1.5.tar.gz` from the repo first, then lua.org + 4 mirrors; sha256 check unchanged. Optional (v15 build succeeded) |
+| v18 | **QTE listen-only gate** in `playable_runtime.cpp`: hooks created but OFF at load; F9/F10 in a land battle enable them (`gate176`), battle end (no battle clock for 3 s) disables them (`disarm176`); naval battles never enable; `naval_now175` treats failed reads as naval; stats file gains `qte on/off` and `naval unchecked/yes/no` lines (`write_stats176`, still replaced in place) |
 
 ## 6. Ideas not done / limits
 - Army-wide kill tracking (every unit that dies per side) needs the battle's unit list in game memory; not found in this code base. Would need reverse engineering (Ghidra) of `Empire.Retail.dll`.
