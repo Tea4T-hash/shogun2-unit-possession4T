@@ -29,6 +29,26 @@ static HANDLE mapping;
 static volatile LONG enabled;
 static uintptr_t possessed,environment,unit;
 static PossessionLease possession_lease;
+// ---- Kit v19: possession gate (declarations) --------------------------------------------------
+// Every possession hook starts OFF (created, not enabled), so battles run the game's own code.
+// First F9 in a land battle: "Pre-load" (hooks on + warm-up, ring at the cursor), then "Done",
+// then READY. The second F9 possesses as before. Battle end switches every hook off again.
+// Naval battles never switch on (a failed memory read counts as naval).
+#ifndef S2UP_GATE176
+#define S2UP_GATE176
+namespace gate176 {
+constexpr uint32_t Magic=0x47505553,Version=176;
+enum Stage:uint32_t{Off=0,Preload=1,Done=2,Ready=3,Naval=4};
+struct Shared{uint32_t magic,version,size,pid;volatile LONG sequence;uint32_t stage;float progress;uint32_t reserved;uint64_t stage_tick,tick;};
+inline void name(wchar_t* out,DWORD pid){swprintf_s(out,96,L"Local\\S2UPGate176-%lu",pid);}
+constexpr uint64_t WarmupMs=2500,DoneMs=1500,NavalMs=2500,BattleLostMs=3000;
+constexpr unsigned DisplayLease=0xFFFFFFFFu; // overlay key of the gate display (never a real lease)
+}
+#endif
+static gate176::Shared* gate_shared176=nullptr;static HANDLE gate_mapping176=nullptr;
+static volatile LONG gate_stage176=gate176::Off,gate_press176=0;
+static bool gate_ready176(){return InterlockedCompareExchange(&gate_stage176,0,0)==LONG(gate176::Ready);}
+static bool gate_display176(){const LONG g=InterlockedCompareExchange(&gate_stage176,0,0);return g==LONG(gate176::Preload)||g==LONG(gate176::Done);}
 static volatile LONG charge_input_generation146;
 static volatile LONG charge_physical_input148;
 static bool charge_input_locked146(){return enabled&&state&&!state->stop&&!state->release&&state->mode==POSSESSED&&state->lease_generation&&unsigned(InterlockedCompareExchange(&charge_input_generation146,0,0))==state->lease_generation&&GetTickCount64()-state->heartbeat<=500;}
@@ -47,6 +67,7 @@ static bool overlay_key106(const overlay106::Frame& frame,unsigned layer){
     // Retained cancellation/result feedback is immutable numeric UI, never an
     // ownership permission. It may survive the matching possession's release.
     // Kit v13: the HUD's kill/death panel (active=2) is numeric UI only, like the QTE result.
+    if(layer==overlay106::HUD&&frame.active==3&&key.lease==gate176::DisplayLease&&state&&state->ready&&!state->stop&&gate_display176())return true; // kit v19
     if((layer==overlay106::QTE||layer==overlay106::HUD)&&frame.active==2&&state&&enabled&&state->ready&&!state->stop&&
        key.lease==state->lease_generation&&key.actor==state->actor_id&&key.unit==state->unit_id)return true;
     if(!state||!enabled||!state->ready||state->stop||state->release||state->mode!=POSSESSED||
@@ -115,6 +136,7 @@ static void climb_observe98(uintptr_t actor);
 static bool climb_pending153(uintptr_t actor);
 static bool climb_independent200(uintptr_t actor);
 static void request_possession(){
+    if(!gate_ready176()){InterlockedExchange(&gate_press176,1);return;} // kit v19: first F9 = pre-load
     if(!startup168::can_possess())return;
     if(!enabled||!state||state->stop||state->release||state->mode==POSSESSED||state->mode==ARMED)return;
     InterlockedExchange(&entry_attempted,0);
@@ -156,6 +178,10 @@ static bool remap_keys201(UINT message,WPARAM& w,LPARAM l){
     return false;
 }
 static LRESULT CALLBACK weapon_window_proc(HWND window,UINT message,WPARAM w,LPARAM l){
+    if(!gate_ready176()&&message!=RETURN_RTS_MESSAGE90&&message!=RESTORE_INTERFACE_MESSAGE){ // kit v19: listen-only
+        if(message==WM_KEYDOWN&&w==VK_F9&&!(l&(1L<<30))){InterlockedExchange(&gate_press176,1);return 0;}
+        return native_window_proc?CallWindowProcW(native_window_proc,window,message,w,l):DefWindowProcW(window,message,w,l);
+    }
     if(remap_keys201(message,w,l))return 0;
     if(charge_input_locked146()){
         // Drain command key releases without dispatching an order. Keys held
@@ -1070,6 +1096,97 @@ static void mouse_look101(int dx,int dy,unsigned input,float elapsed){
     }
 }
 
+// ---- Kit v19: possession gate (service, worker thread only) -----------------------------------
+static uint64_t gate_stage_tick176=0,gate_lost176=0;static uintptr_t gate_env176=0,gate_common176=0;
+static bool gate_f9_176=false,gate_bow_pending176=false;
+template<class T> static bool gate_get176(uintptr_t a,T& v){SIZE_T n=0;return a&&ReadProcessMemory(GetCurrentProcess(),reinterpret_cast<void*>(a),&v,sizeof v,&n)&&n==sizeof v;}
+static bool gate_battle176(uintptr_t& env,uintptr_t& common,uintptr_t& phase){
+    uint32_t root{},e{},c{},p{},id{};
+    if(!gate_get176(base+0x1bc8180,root)||!root||!gate_get176(uintptr_t(root)+0x110,e)||!e||!gate_get176(uintptr_t(e)+8,c)||!c||
+       !gate_get176(uintptr_t(c)+0xb4,p)||!p||!gate_get176(uintptr_t(p)+0x14,id)||id<5||id>8)return false;
+    env=e;common=c;phase=p;return true;
+}
+static bool gate_naval176(uintptr_t phase){ // any army with ships = naval; unknown = naval
+    uint32_t count{},alliances{};
+    if(!gate_get176(phase+0x88,count)||count>256||!gate_get176(phase+0x8c,alliances)||(count&&!alliances))return true;
+    for(uint32_t i=0;i<count;++i){uint32_t alliance{},armies{},n{};
+        if(!gate_get176(uintptr_t(alliances)+i*4,alliance)||!alliance||!gate_get176(uintptr_t(alliance)+0x20,n)||n>256||
+           !gate_get176(uintptr_t(alliance)+0x24,armies)||(n&&!armies))return true;
+        for(uint32_t j=0;j<n;++j){uint32_t army{},ships{};
+            if(!gate_get176(uintptr_t(armies)+j*4,army)||!army||!gate_get176(uintptr_t(army)+0x12c,ships)||ships>4096)return true;
+            if(ships)return true;}}
+    return false;
+}
+static void gate_publish176(gate176::Stage stage,float progress){
+    InterlockedExchange(&gate_stage176,LONG(stage));
+    if(!gate_shared176)return;
+    InterlockedIncrement(&gate_shared176->sequence);MemoryBarrier();
+    gate_shared176->stage=stage;gate_shared176->progress=progress;gate_shared176->stage_tick=gate_stage_tick176;gate_shared176->tick=GetTickCount64();
+    MemoryBarrier();InterlockedIncrement(&gate_shared176->sequence);
+}
+static void gate_create176(){
+    wchar_t name[96];gate176::name(name,GetCurrentProcessId());
+    gate_mapping176=CreateFileMappingW(INVALID_HANDLE_VALUE,nullptr,PAGE_READWRITE,0,sizeof(gate176::Shared),name);
+    if(!gate_mapping176)return;
+    gate_shared176=static_cast<gate176::Shared*>(MapViewOfFile(gate_mapping176,FILE_MAP_ALL_ACCESS,0,0,sizeof(gate176::Shared)));
+    if(!gate_shared176)return;
+    memset(gate_shared176,0,sizeof *gate_shared176);gate_shared176->version=gate176::Version;gate_shared176->size=sizeof(gate176::Shared);
+    gate_shared176->pid=GetCurrentProcessId();MemoryBarrier();gate_shared176->magic=gate176::Magic;
+}
+static void gate_off176(){
+    // Release any possession while the hooks still run, so the game's own camera and UI come back.
+    if(state&&(state->mode==POSSESSED||state->mode==ARMED||possessed)){
+        InterlockedExchange(&state->release,1);
+        if(input_window)PostMessageW(input_window,RESTORE_INTERFACE_MESSAGE,0,0);
+        for(unsigned i=0;i<40&&state->release;++i)Sleep(50);
+    }
+    for(unsigned i=0;i<20&&state&&state->fire_ticket;++i)Sleep(50);
+    InterlockedExchange(&enabled,0);
+    MH_DisableHook(MH_ALL_HOOKS);
+    // A queued manual shot must be dropped by its own hook, never forwarded: keep that one hook
+    // until the ticket clears (same rule as the explicit shutdown).
+    gate_bow_pending176=state&&state->fire_ticket;
+    if(gate_bow_pending176)MH_EnableHook(reinterpret_cast<void*>(base+0x2ac0b0));
+    if(state){if(state->mode!=IDLE||possessed)relinquish();
+        InterlockedExchange(&state->release,0);InterlockedExchange(&state->acquire,0);InterlockedExchange(&state->input,0);InterlockedExchange(&state->aiming,0);}
+    gate_env176=gate_common176=0;gate_lost176=0;gate_stage_tick176=GetTickCount64();
+    gate_publish176(gate176::Off,0);
+}
+static void gate_service176(bool focus){
+    const uint64_t now=GetTickCount64();
+    const bool f9=focus&&(GetAsyncKeyState(VK_F9)&0x8000);
+    if(f9&&!gate_f9_176)InterlockedExchange(&gate_press176,1);
+    gate_f9_176=f9;
+    if(gate_bow_pending176&&state&&!state->fire_ticket&&InterlockedCompareExchange(&gate_stage176,0,0)==LONG(gate176::Off)){
+        MH_DisableHook(reinterpret_cast<void*>(base+0x2ac0b0));gate_bow_pending176=false;}
+    uintptr_t env=0,common=0,phase=0;const bool battle=gate_battle176(env,common,phase);
+    const auto stage=gate176::Stage(InterlockedCompareExchange(&gate_stage176,0,0));
+    const bool pressed=InterlockedExchange(&gate_press176,0)!=0;
+    if(stage==gate176::Off||stage==gate176::Naval){
+        if(stage==gate176::Naval&&now-gate_stage_tick176>=gate176::NavalMs){gate_stage_tick176=now;gate_publish176(gate176::Off,0);}
+        else gate_publish176(stage,0); // keeps the HUD's view fresh
+        if(!pressed||!battle||!focus||!state||state->stop)return;
+        gate_stage_tick176=now;
+        if(gate_naval176(phase)){gate_publish176(gate176::Naval,0);return;}
+        gate_env176=env;gate_common176=common;gate_lost176=0;
+        if(gate_bow_pending176)gate_bow_pending176=false; // enabled again with all hooks below
+        state->heartbeat=now;InterlockedExchange(&enabled,1);
+        if(MH_EnableHook(MH_ALL_HOOKS)!=MH_OK){InterlockedExchange(&enabled,0);MH_DisableHook(MH_ALL_HOOKS);gate_publish176(gate176::Off,0);return;}
+        (void)mileszero123::install(); // first time only: creates and enables the audio guard
+        gate_publish176(gate176::Preload,0);return;
+    }
+    // On: the battle must stay the same one (environment); 3 s without a battle = battle over.
+    if(battle&&env==gate_env176)gate_lost176=0; // same battle environment
+    else if(battle){gate_off176();return;}
+    else if(!gate_lost176)gate_lost176=now;
+    else if(now-gate_lost176>=gate176::BattleLostMs){gate_off176();return;}
+    if(stage==gate176::Preload){
+        const float p=std::min(1.f,float(now-gate_stage_tick176)/float(gate176::WarmupMs));
+        if(p>=1.f){gate_stage_tick176=now;gate_publish176(gate176::Done,1);}else gate_publish176(gate176::Preload,p);
+    }else if(stage==gate176::Done){
+        if(now-gate_stage_tick176>=gate176::DoneMs){gate_stage_tick176=now;gate_publish176(gate176::Ready,1);}else gate_publish176(gate176::Done,1);
+    }else gate_publish176(gate176::Ready,1);
+}
 static DWORD WINAPI worker(void*) {
     storage166::DiscardLog log;
     try {
@@ -1142,10 +1259,8 @@ static DWORD WINAPI worker(void*) {
                 UnmapViewOfFile(prior_state);
             }
         }
-        state->heartbeat=GetTickCount64();InterlockedExchange(&enabled,1);
-        require(MH_EnableHook(MH_ALL_HOOKS)==MH_OK,"Hook enable failed");
-        const auto audio_guard123=mileszero123::install();
-        log<<"{\"event\":\"miles_zero123\",\"status\":"<<audio_guard123<<"}\n";log.flush();
+        // Kit v19: hooks stay OFF (listen-only) until the first F9 in a land battle.
+        state->heartbeat=GetTickCount64();InterlockedExchange(&enabled,0);gate_create176();gate_publish176(gate176::Off,0);
         InterlockedExchange(&state->ready,1);
         log<<"{\"event\":\"hook_ready\",\"pid\":"<<GetCurrentProcessId()<<",\"sha256\":\""<<engine_sha170<<"\",\"motion_rva\":\"0x367600\"}\n";log.flush();
         bool f9=false,f10=false,was_focus=false,mouse_captured=false,left_mouse=false;uint64_t next=0,last_mouse=GetTickCount64();
@@ -1153,6 +1268,8 @@ static DWORD WINAPI worker(void*) {
         while(!state->stop) {
             DWORD foreground_pid=0;DWORD foreground_thread=GetWindowThreadProcessId(GetForegroundWindow(),&foreground_pid);bool focus=foreground_pid==GetCurrentProcessId();
             state->heartbeat=GetTickCount64();unsigned input=0;
+            gate_service176(focus);
+            if(!gate_ready176()){f9=f10=false;was_focus=focus;left_mouse=false;mouse_captured=false;Sleep(10);continue;} // kit v19: listen-only
             bool charge_locked146=charge_input_locked146();
             if(!focus||!down(VK_MBUTTON)||!third_person152)orbit_button154(false);
             equipment_sample_input81(focus&&!charge_locked146);ability_sample141(focus&&!charge_locked146);
