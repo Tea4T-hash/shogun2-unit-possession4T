@@ -368,9 +368,26 @@ static int __fastcall score_hook(void* self,void*,void* a,void* b,void* pair,uin
         }
     }__finally{InterlockedDecrement(&active_callbacks);}return answer;
 }
+// Kit v15: no QTE in naval battles (boarding melee crashed the game). A battle is naval when any
+// army in it has ships. Same read-only army fields as battle_clock(): army+0x12c = ship count.
+static volatile LONG naval_rejected175;
+static bool naval_battle175(uint32_t env){
+    auto r=reader();uint32_t common{},phase{},count{},alliances{};
+    if(!r.get(env+8,common)||!common||!r.get(common+0xb4,phase)||!phase||
+       !r.get(phase+0x88,count)||count>256||!r.get(phase+0x8c,alliances)||(count&&!alliances))return true; // unknown: no QTE
+    for(uint32_t i=0;i<count;++i){uint32_t alliance{},armies{},n{};
+        if(!r.get(alliances+i*4,alliance)||!alliance||!r.get(alliance+0x20,n)||n>256||!r.get(alliance+0x24,armies)||(n&&!armies))return true;
+        for(uint32_t j=0;j<n;++j){uint32_t army{},ships{};
+            if(!r.get(armies+j*4,army)||!army||!r.get(army+0x12c,ships)||ships>4096)return true;
+            if(ships)return true;
+        }
+    }
+    return false;
+}
 static Owner owner(uint32_t env,uint32_t witness){Owner result;ClockFrame clock;
     if(!clock_frame(env,clock)){InterlockedIncrement(owner_rejected+1);return result;}
     result.battle=clock.battle;result.environment=env;
+    if(naval_battle175(env)){InterlockedIncrement(&naval_rejected175);return result;} // no verified melee: the game's own combat runs
     if(!possession||state->stop){InterlockedIncrement(owner_rejected+2);return result;}
     observation::PossessionPrefix p{};
     if(!possession_snapshot93(p)){result.observation_busy93=true;InterlockedIncrement(owner_rejected+3);return result;}
@@ -570,8 +587,21 @@ static uint32_t __fastcall avoid_pair_hook(void* self,void*,void* other){
         answer=native_avoid_pair(self,other);
     }__finally{InterlockedDecrement(&active_callbacks);}return answer;
 }
+// Kit v15: in a naval battle every melee witness goes straight to the game's own code, before any
+// QTE session, reservation or coordinator logic. Cached per battle (environment, common, phase).
+static uint32_t naval_env175,naval_common175,naval_phase175;static bool naval_cached175;
+static bool naval_now175(uint32_t address){
+    auto r=reader();uint32_t env{},common{},phase{};
+    if(!r.get(address+4,env)||!env||!r.get(env+8,common)||!common||!r.get(common+0xb4,phase)||!phase)return false;
+    if(env!=naval_env175||common!=naval_common175||phase!=naval_phase175){
+        naval_cached175=naval_battle175(env);naval_env175=env;naval_common175=common;naval_phase175=phase;
+    }
+    return naval_cached175;
+}
 static uint32_t dispatch_current(uint32_t address,uint64_t generation,bool updating){
     if(!enabled)return updating?native_update(reinterpret_cast<void*>(address)):native_prepare(reinterpret_cast<void*>(address));
+    if(naval_now175(address)){InterlockedIncrement(&naval_rejected175);
+        return updating?native_update(reinterpret_cast<void*>(address)):native_prepare(reinterpret_cast<void*>(address));}
     if(reservation::overlaps(reader(),engine,uint32_t(InterlockedCompareExchange(&delivery_address,0,0)),address,committed_player,committed_enemy)){
         InterlockedIncrement(&conflicts_blocked);return 1;
     }
