@@ -216,6 +216,67 @@ static void stats174(Gdiplus::Graphics& g,float width,float height,const life173
     }
     const wchar_t* lines[4]={a,b,c,d};stats_panel174(g,side,y,height,lines,count);
 }
+// ---- Kit v19: possession gate display ----------------------------------------------------------
+// While possession pre-loads after the first F9: top-left "Pre-load" with a ring loading bar at the
+// mouse cursor, then "Done"; both vanish when possession is ready. Naval: a short notice instead.
+#ifndef S2UP_GATE176
+#define S2UP_GATE176
+namespace gate176 {
+constexpr uint32_t Magic=0x47505553,Version=176;
+enum Stage:uint32_t{Off=0,Preload=1,Done=2,Ready=3,Naval=4};
+struct Shared{uint32_t magic,version,size,pid;volatile LONG sequence;uint32_t stage;float progress;uint32_t reserved;uint64_t stage_tick,tick;};
+inline void name(wchar_t* out,DWORD pid){swprintf_s(out,96,L"Local\\S2UPGate176-%lu",pid);}
+constexpr uint64_t WarmupMs=2500,DoneMs=1500,NavalMs=2500,BattleLostMs=3000;
+constexpr unsigned DisplayLease=0xFFFFFFFFu;
+}
+#endif
+static gate176::Shared* gate_view176;static HANDLE gate_map176;static uint64_t gate_retry176;static bool gate_fast176;
+static bool gate_read176(gate176::Shared& out){
+    const uint64_t now=GetTickCount64();
+    if(!gate_view176&&now>=gate_retry176){gate_retry176=now+1000;wchar_t name[96];gate176::name(name,pid);
+        HANDLE map=OpenFileMappingW(FILE_MAP_READ,FALSE,name);
+        if(map){auto v=static_cast<gate176::Shared*>(MapViewOfFile(map,FILE_MAP_READ,0,0,sizeof(gate176::Shared)));
+            if(v&&v->magic==gate176::Magic&&v->version==gate176::Version&&v->size==sizeof(gate176::Shared)&&v->pid==pid){gate_view176=v;gate_map176=map;}
+            else{if(v)UnmapViewOfFile(v);CloseHandle(map);}}}
+    if(!gate_view176)return false;
+    for(int i=0;i<4;++i){LONG q=gate_view176->sequence;if(q&1)continue;MemoryBarrier();memcpy(&out,gate_view176,sizeof out);MemoryBarrier();
+        if(q==gate_view176->sequence)return now>=out.tick&&now-out.tick<1000;}
+    return false;
+}
+static bool gate_paint176(const gate176::Shared& gs){
+    using namespace Gdiplus;
+    RECT client{};POINT pos{};if(!gamewindow105::client(game,client,pos))return false;int width=client.right,height=client.bottom;
+    if(!hud_surface100.ensure(width,height))return false;
+    auto screen=hud_surface100.screen(),dc=hud_surface100.memory();auto pixels=hud_surface100.pixels();memset(pixels,0,size_t(width)*height*4);
+    {Bitmap surface(width,height,width*4,PixelFormat32bppPARGB,static_cast<BYTE*>(pixels));Graphics g(&surface);
+     g.SetSmoothingMode(SmoothingModeAntiAlias);g.SetTextRenderingHint(TextRenderingHintAntiAlias);
+     const wchar_t* text=gs.stage==gate176::Preload?L"Pre-load":gs.stage==gate176::Done?L"Done":L"Possession unavailable at sea";
+     const wchar_t* lines[1]={text};stats_panel174(g,float(width)*StatsSide174,float(height)*StatsTop174,float(height),lines,1);
+     POINT cursor{};
+     if(gs.stage!=gate176::Naval&&GetCursorPos(&cursor)){
+        const float x=float(cursor.x-pos.x),y=float(cursor.y-pos.y),r=std::max(16.f,float(height)/40.f),w=r*.32f;
+        const float progress=std::min(1.f,std::max(0.f,gs.progress));
+        Pen back(Color(170,24,18,12),w);g.DrawEllipse(&back,x-r,y-r,r*2,r*2);
+        if(progress>0){Pen gold(Color(240,214,176,72),w);g.DrawArc(&gold,x-r,y-r,r*2,r*2,-90.f,360.f*progress);}
+     }}
+    const overlay106::Key key{gate176::DisplayLease,0,0};
+    if(gs.stage!=gate176::Naval&&pixels106.open(pid,overlay106::HUD)){
+        overlay106::Frame f{};f.key=key;f.active=3;f.width=f.view_width=width;f.height=f.view_height=height;f.rect_count=1;f.rect[0]={0,0,width,height};
+        if(pixels106.publish(f,pixels)){overlay106::Ack ack;if(pixels106.ack(ack)&&ack.number&&overlay106::same(ack.key,key)){ShowWindow(overlay,SW_HIDE);return true;}}
+    }
+    POINT origin{};SIZE size{width,height};BLENDFUNCTION alpha{AC_SRC_OVER,0,255,AC_SRC_ALPHA};
+    bool ok=UpdateLayeredWindow(overlay,screen,&pos,&size,dc,&origin,0,&alpha,ULW_ALPHA)!=0;
+    if(ok)SetWindowPos(overlay,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_SHOWWINDOW);return ok;
+}
+static bool gate_update176(bool focused){
+    gate176::Shared gs{};const bool show=gate_read176(gs)&&(gs.stage==gate176::Preload||gs.stage==gate176::Done||
+        (gs.stage==gate176::Naval&&GetTickCount64()-gs.stage_tick<gate176::NavalMs));
+    if(show!=gate_fast176){gate_fast176=show;SetTimer(overlay,1,show?50:150,nullptr);} // smooth ring while shown
+    if(!show)return false;
+    if(!focused||!IsWindow(game)||IsIconic(game)||!IsWindowVisible(game)){pixels106.hide();if(visible)ShowWindow(overlay,SW_HIDE);visible=false;return true;}
+    visible=gate_paint176(gs);if(!visible){pixels106.hide();ShowWindow(overlay,SW_HIDE);}
+    return true;
+}
 static bool paint(){
     RECT client{};POINT pos{};if(!gamewindow105::client(game,client,pos))return false;int width=client.right,height=client.bottom;
     if(!hud_surface100.ensure(width,height))return false;
@@ -230,7 +291,9 @@ static bool paint(){
     bool ok=UpdateLayeredWindow(overlay,screen,&pos,&size,dc,&origin,0,&alpha,ULW_ALPHA)!=0;
     if(ok)SetWindowPos(overlay,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_SHOWWINDOW);return ok;
 }
-static void update(){game=gamewindow105::refresh(game,pid);bool ok=false;try{ok=measure();}catch(...){ok=false;}DWORD fg=0;GetWindowThreadProcessId(GetForegroundWindow(),&fg);
+static void update(){game=gamewindow105::refresh(game,pid);
+    {DWORD gfg=0;GetWindowThreadProcessId(GetForegroundWindow(),&gfg);if(gate_update176(gfg==pid))return;} // kit v19
+    bool ok=false;try{ok=measure();}catch(...){ok=false;}DWORD fg=0;GetWindowThreadProcessId(GetForegroundWindow(),&fg);
     bool active=ok&&IsWindow(game)&&!IsIconic(game)&&IsWindowVisible(game)&&fg==pid;
     if(!active){pixels106.hide();if(visible)ShowWindow(overlay,SW_HIDE);visible=false;return;}
     visible=paint();if(!visible)ShowWindow(overlay,SW_HIDE);}
