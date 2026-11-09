@@ -26,7 +26,8 @@ static_assert(sizeof(Header)<=HeaderBytes,"Overlay header capacity");
 inline void name(wchar_t* out,DWORD pid,unsigned layer){swprintf_s(out,100,L"Local\\Shogun2Overlay106-%lu-%u",pid,layer);}
 inline bool valid_header(const Header& h,DWORD pid,unsigned layer){return h.magic==Magic&&h.version==Version&&h.bytes==sizeof(Header)&&h.pid==pid&&h.layer==layer&&h.capacity==capacity(layer);}
 inline bool valid_frame(const Frame& f,unsigned layer,uint64_t now){
- if((f.active!=1&&!((layer==QTE||layer==HUD)&&f.active==2))||!f.key.lease||!f.number||now<f.tick||now-f.tick>(layer==HUD?750u:200u)||
+ // Kit v19: HUD active==3 = possession gate display (pre-load / done), accepted only by the adapter's gate rule.
+ if((f.active!=1&&!((layer==QTE||layer==HUD)&&f.active==2)&&!(layer==HUD&&f.active==3))||!f.key.lease||!f.number||now<f.tick||now-f.tick>(layer==HUD?750u:200u)||
     !f.width||!f.height||f.width>3840||f.height>2160||uint64_t(f.width)*f.height*4>capacity(layer)||
     f.view_width<640||f.view_height<360||f.view_width>16384||f.view_height>16384||!f.rect_count||f.rect_count>2)return false;
  for(unsigned i=0;i<f.rect_count;++i){auto q=f.rect[i];if(q.width<=0||q.height<=0||q.width>16384||q.height>16384||
@@ -58,7 +59,7 @@ public:
  bool open(DWORD pid,unsigned layer){if(header_)return pid_==pid&&layer_==layer;if(!map(pid,layer,true))return false;next_=header_->frame.number;return true;}
  void hide(){if(!header_)return;InterlockedIncrement(&header_->sequence);header_->frame.active=0;MemoryBarrier();InterlockedIncrement(&header_->sequence);}
  uint64_t publish(Frame f,const void* pixels){
-  if(!header_||!pixels)return 0;f.active=f.active==2?2:1;f.tick=GetTickCount64();f.number=++next_;if(!valid_frame(f,layer_,f.tick))return 0;
+  if(!header_||!pixels)return 0;f.active=f.active==2?2:(f.active==3&&layer_==HUD?3:1);f.tick=GetTickCount64();f.number=++next_;if(!valid_frame(f,layer_,f.tick))return 0;
   InterlockedIncrement(&header_->sequence);MemoryBarrier();memcpy(reinterpret_cast<unsigned char*>(header_)+HeaderBytes,pixels,size_t(f.width)*f.height*4);header_->frame=f;MemoryBarrier();InterlockedIncrement(&header_->sequence);return f.number;
  }
 };
