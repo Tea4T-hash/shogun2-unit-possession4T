@@ -3,7 +3,7 @@
 Fork: `Tea4T-hash/shogun2-unit-possession4T`, forked from **logsam58/shogun2-unit-possession** (MIT licence, commit `86d4b5d`).
 This file lists everything changed in this fork, so you (or another modder) can see what was done and carry on.
 
-Status when written: everything up to **kit v12** is built and tested in game. **Kit v13** (HUD kill/death panels) is written but not yet built or tested.
+Status: kits up to **v14** are built and tested. **Kit v15** (no QTE in naval battles) is written but not yet built or tested.
 
 ---
 
@@ -85,11 +85,20 @@ Presentation (`qte_meter108.h`, `hud_layout108.h`, `qte_transport.h`, `playable_
 - On death, a banner "Kills this life: N" is shown for 4 s.
 - Statistics file: `%APPDATA%\The Creative Assembly\Shogun2\possession_battle_stats.txt` (4 lines: `S2UP_STATS 1`, `session <pid>-<process start>`, `kills N`, `deaths N`, totals since the game started). It is **replaced in place** every time it is written (CREATE_ALWAYS on one fixed name) – it never grows and no copies are made. It was written for a campaign loot script; that script was removed (it crashed the game after battles), so nothing reads the file at the moment.
 
-### 3.5 HUD kill/death panels (kit v13 – NOT YET BUILT/TESTED)
-- Top left, while possessing: "Kills this life: N" and "Rounds of combat this life: N" (a round = one QTE exchange of the possessed soldier).
-- Top right, during a battle (possessed or not): "Kills N | Deaths N" and "K/D x.xx" for the current battle (reset each battle).
+### 3.5 HUD kill/death panel (kit v13, changed in v14)
+- One panel, top left, **only while possessing** (v14; the v13 top-right panel covered the map and was removed):
+  - Kills this life: N
+  - Rounds of combat this life: N (a round = one QTE exchange of the possessed soldier)
+  - Total kills: N | Deaths: N (this battle, reset each battle)
+  - K/D: x.xx
 - Position constants `StatsTop174` (8.5% down) and `StatsSide174` (1.2% in from the side) in `hud.cpp`.
-- To show the top-right panel out of possession, the HUD publishes a numeric-only frame with `active = 2` keyed to the last possessed soldier; `overlay_surface106.h` (`valid_frame`) and `adapter.cpp` (`overlay_key106`) were changed to accept `active = 2` on the HUD layer, as they already did on the QTE layer.
+- v13 also let the HUD publish numeric-only frames (`active = 2`) out of possession: `overlay_surface106.h` (`valid_frame`) and `adapter.cpp` (`overlay_key106`) accept `active = 2` on the HUD layer. Since v14 the HUD no longer uses this; the change is harmless and was left in place.
+
+### 3.5c No QTE in naval battles (kit v15)
+`playable_runtime.cpp`: boarding melee with the QTE crashed the game (Sengoku and RotS). `naval_battle175()` reads each army's ship count (army+0x12c, the same field the battle clock already reads); if any army has ships, `dispatch_current()` sends every melee witness straight to the game's own prepare/update before any QTE code runs, and `owner()` refuses to verify melee. Result is cached per battle.
+
+### 3.5b Marker stops on click (kit v14)
+`playable_runtime.cpp`: when you click, the marker freezes where it was (the freeze used to last only 0.12 s, so the marker kept moving until the game resolved the exchange). It stays frozen until the result appears, and the result fill starts at that point.
 
 ### 3.6 Disk clean-up (kit v10)
 Every build used to leave its own copy in `%LOCALAPPDATA%`:
@@ -113,12 +122,12 @@ Already clean in the original: logging is discarded in player builds (`runtime_s
 | `.../shogun2-accuracy90-preview/src/animation_view.h` | death view timing (and a fixed comment that once swallowed code: build error C4716) |
 | `.../shogun2-accuracy90-preview/src/soldier_pose.h` | death pose ends after 4.5 s (was 15 s), matching the death view |
 | `.../shogun2-ammunition83-preview/hud-src/hud_renderer.h` | key prompts: F1–F4 order keys, "E Climb wall", "G Next", "F Use/End" |
-| `.../shogun2-ammunition83-preview/hud-src/hud.cpp` | kill/death panels (v13) |
+| `.../shogun2-ammunition83-preview/hud-src/hud.cpp` | kill/death panel (v13, single top-left panel in v14) |
 | `.../shogun2-authentic-hud80-preview/qte-src/qte_core.h` | zoned bar, timing, outcomes (see 3.2) |
 | `.../shogun2-melee-meter79-preview/src/qte_core.h` | identical copy of the file above |
 | `.../shogun2-authentic-hud80-preview/qte-src/qte_transport.h` | new results; `response_window(action, advantage)`; results stay 3.05 s |
 | `.../shogun2-authentic-hud80-preview/qte-src/qte_native_bridge.h` | normal rolls, forced guard, ReverseRoles replay, kill/round tally (built in since v12) |
-| `.../shogun2-authentic-hud80-preview/qte-src/playable_runtime.cpp` | 3 s feedback, rebuild with route152, kills-this-life banner, statistics file, battle totals (v13) |
+| `.../shogun2-authentic-hud80-preview/qte-src/playable_runtime.cpp` | 3 s feedback, rebuild with route152, kills-this-life banner, statistics file, battle totals (v13), marker stops on click (v14), no QTE in naval battles (v15) |
 | `.../shogun2-authentic-hud80-preview/qte-src/qte_render.h` | `render_banner173()` for the death banner |
 | `.../shogun2-possession-cleanup-v46/src/qte_meter108.h` | bar drawing, colours, result words, guard/attack frames |
 | `.../shogun2-possession-cleanup-v46/src/hud_layout108.h` | QTE anchor 0.33125 |
@@ -160,7 +169,9 @@ The struct is copied identically into `melee_control.h`, `playable_runtime.cpp` 
 | v9 | zoned bar v9 (pressure, purple on attack only, forced guard, normal rolls) |
 | v10 / v11 | kill/death statistics, death banner, stats file, cache clean-up (v11 = only the changed files) |
 | v12 | fix: statistics code built into existing files (the two new headers were not found by the build) |
-| v13 | HUD panels: kills/rounds this life (top left), battle K/D (top right) – not yet built |
+| v13 | HUD panels: kills/rounds this life (top left), battle K/D (top right) |
+| v14 | marker stops on click; one top-left panel only while possessing (K/D moved under the life block) |
+| v15 | no QTE in naval battles (boarding crash) – not yet built |
 
 ## 6. Ideas not done / limits
 - Army-wide kill tracking (every unit that dies per side) needs the battle's unit list in game memory; not found in this code base. Would need reverse engineering (Ghidra) of `Empire.Retail.dll`.
