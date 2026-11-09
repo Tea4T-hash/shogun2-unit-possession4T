@@ -592,7 +592,7 @@ static uint32_t __fastcall avoid_pair_hook(void* self,void*,void* other){
 static uint32_t naval_env175,naval_common175,naval_phase175;static bool naval_cached175;
 static bool naval_now175(uint32_t address){
     auto r=reader();uint32_t env{},common{},phase{};
-    if(!r.get(address+4,env)||!env||!r.get(env+8,common)||!common||!r.get(common+0xb4,phase)||!phase)return false;
+    if(!r.get(address+4,env)||!env||!r.get(env+8,common)||!common||!r.get(common+0xb4,phase)||!phase)return true; // kit v18: unknown = naval
     if(env!=naval_env175||common!=naval_common175||phase!=naval_phase175){
         naval_cached175=naval_battle175(env);naval_env175=env;naval_common175=common;naval_phase175=phase;
     }
@@ -782,6 +782,25 @@ static bool acknowledged_image106(const overlay106::Ack& ack,overlay106::Key key
 static life173::Shared* life_view173=nullptr;static HANDLE life_map173=nullptr;static ULONGLONG life_retry173=0;
 static LONG life_seen_deaths173=-1;static unsigned stats_written_kills173=~0u,stats_written_deaths173=~0u;
 static ULONGLONG banner_until173=0;static wchar_t banner_text173[64]{};static char session173[48]{};
+// ---- Kit v18: listen-only gate ---------------------------------------------------------------
+// The QTE always starts OFF: its 10 engine hooks are created but not enabled, so the game runs its
+// own unmodified code and the QTE only watches for F9 / F10. Either key (game focused, in a land
+// battle) enables the hooks. There is no off key: when the battle ends (no battle clock for 3 s)
+// the hooks are disabled again and the gate returns to listen-only. A naval battle never turns on.
+static volatile LONG armed176=0;static int naval176=-1;   // -1 not checked, 0 land, 1 naval
+static BattleEpoch151 gate_watch176;static ULONGLONG gate_lost176=0;static bool gate_f9_176=false,gate_f10_176=false;
+static SRWLOCK stats_lock176=SRWLOCK_INIT;static unsigned gate_kills176=0,gate_deaths176=0;
+static void write_stats176(const char* id,unsigned kills,unsigned deaths){
+    std::wstring path;if(!life173::stats_path(path))return;
+    char text[224];int n=sprintf_s(text,"S2UP_STATS 1\r\nsession %s\r\nkills %u\r\ndeaths %u\r\nqte %s\r\nnaval %s\r\n",
+        id[0]?id:"-",kills,deaths,InterlockedCompareExchange(&armed176,0,0)?"on":"off",naval176<0?"unchecked":naval176?"yes":"no");
+    if(n<=0)return;
+    AcquireSRWLockExclusive(&stats_lock176);gate_kills176=kills;gate_deaths176=deaths;
+    HANDLE f=CreateFileW(path.c_str(),GENERIC_WRITE,FILE_SHARE_READ,nullptr,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr); // replaces itself
+    if(f!=INVALID_HANDLE_VALUE){DWORD written=0;WriteFile(f,text,DWORD(n),&written,nullptr);CloseHandle(f);}
+    ReleaseSRWLockExclusive(&stats_lock176);
+}
+
 static BattleEpoch151 battle_watch174;static uint64_t battle_id174=0;static unsigned battle_kill_base174=0,battle_death_base174=0;
 static void life_poll173(){
     const ULONGLONG now=GetTickCount64();
@@ -806,7 +825,7 @@ static void life_poll173(){
     }
     const unsigned total=tally173::total(),dead=unsigned(deaths<0?0:deaths);
     if((total||dead)&&(total!=stats_written_kills173||dead!=stats_written_deaths173)){
-        if(life173::write_stats(session173,total,dead)){stats_written_kills173=total;stats_written_deaths173=dead;}
+        write_stats176(session173,total,dead);stats_written_kills173=total;stats_written_deaths173=dead;
     }
     // Kit v13: battle totals and the current life for the HUD panels.
     ClockFrame clock{};const bool battle=engine&&battle_watch174.sample(reader(),engine,0,wall(),clock);
@@ -821,6 +840,38 @@ static void life_poll173(){
         if(stable&&p.lease_generation){v->key_lease=p.lease_generation;v->key_actor=p.actor_id;v->key_unit=p.unit_id;}
         v->tick=now;MemoryBarrier();InterlockedIncrement(&v->sequence);
     }
+}
+static void disarm176(){
+    if(!InterlockedCompareExchange(&armed176,0,0))return;
+    while(InterlockedCompareExchange(&coordinator,1,0))Sleep(0);
+    session->release();clear_commitment();enabled=0;
+    if(MH_DisableHook(MH_ALL_HOOKS)!=MH_OK)InterlockedIncrement(&state->faults);
+    InterlockedExchange(&coordinator,0);
+    while(active_callbacks)Sleep(1);
+    InterlockedExchange(&pending_address,0);InterlockedExchange(&delivery_address,0);
+    InterlockedExchange(&armed176,0);naval176=-1;gate_lost176=0;
+    write_stats176(session173,gate_kills176,gate_deaths176);
+}
+static void gate176(bool focus){
+    const bool f9=focus&&(GetAsyncKeyState(VK_F9)&0x8000),f10=focus&&(GetAsyncKeyState(VK_F10)&0x8000);
+    const bool pressed=(f9&&!gate_f9_176)||(f10&&!gate_f10_176);gate_f9_176=f9;gate_f10_176=f10;
+    ClockFrame clock{};const bool battle=engine&&gate_watch176.sample(reader(),engine,0,wall(),clock);
+    const ULONGLONG now=GetTickCount64();
+    if(InterlockedCompareExchange(&armed176,0,0)){
+        if(battle)gate_lost176=0;
+        else if(!gate_lost176)gate_lost176=now;
+        else if(now-gate_lost176>=3000)disarm176();             // battle over: back to listen-only
+        return;
+    }
+    if(!pressed||!battle)return;
+    auto r=reader();uint32_t root{},env{};
+    const bool naval=!(r.get(engine+0x1bc8180,root)&&root&&r.get(root+0x110,env)&&env)||naval_battle175(env);
+    naval176=naval?1:0;
+    if(!naval){enabled=1;
+        if(MH_EnableHook(MH_ALL_HOOKS)==MH_OK){InterlockedExchange(&armed176,1);gate_lost176=0;}
+        else{enabled=0;MH_DisableHook(MH_ALL_HOOKS);InterlockedIncrement(&state->faults);}}
+    else InterlockedIncrement(&naval_rejected175);
+    write_stats176(session173,gate_kills176,gate_deaths176);
 }
 static bool draw_banner173(){
     if(GetTickCount64()>=banner_until173||!possession)return false;
@@ -913,8 +964,9 @@ static DWORD WINAPI render_worker(void*){
                 }
             }
             render_stage=2;
-            life_poll173();
-            if(!state->stop&&!show&&draw_banner173()){InterlockedExchange64(&presented_tick,0);}
+            const bool armed176_now=InterlockedCompareExchange(&armed176,0,0)!=0;
+            if(armed176_now)life_poll173();
+            if(!state->stop&&!show&&armed176_now&&draw_banner173()){InterlockedExchange64(&presented_tick,0);}
             else if(!state->stop&&show&&draw(shown,data.lease,data.anchor.battle)){
                 const double submitted=drawn_wall106;const auto& presented=drawn_prompt106;
                 record_presented107(presented,submitted,click_freeze105);
@@ -995,7 +1047,7 @@ static DWORD WINAPI worker(void*){void* targets[10]{};bool hooked=false;HANDLE r
         render_initialized=CreateEventW(nullptr,TRUE,FALSE,nullptr);require(render_initialized!=nullptr,"Renderer event failed");
         renderer=CreateThread(nullptr,0,render_worker,nullptr,0,nullptr);require(renderer!=nullptr,"Renderer thread failed");
         require(WaitForSingleObject(render_initialized,5000)==WAIT_OBJECT_0&&render_ready,"Renderer initialization failed");
-        enabled=1;require(MH_EnableHook(MH_ALL_HOOKS)==MH_OK,"QTE hook enable failed");state->ready=1;
+        enabled=0;InterlockedExchange(&armed176,0);naval176=-1;state->ready=1; // kit v18: listen-only until F9 / F10
         bool previous_left=false,previous_right=false,previous_focus=false;uint64_t next_log=0,logged_serial=0,logged_acquisitions=0,logged_resolutions=0,logged_playback=0;
         PlaybackWatch recorded_playback;
         uint32_t recorded_phase=melee60::Off,logged_phase=melee60::Off;
@@ -1006,6 +1058,9 @@ static DWORD WINAPI worker(void*){void* targets[10]{};bool hooked=false;HANDLE r
         while(true){const double poll93=wall();LONG64 poll_us93=LONG64((poll93-previous_poll93)*1e6);previous_poll93=poll93;InterlockedExchange64(&last_input_us93,poll_us93);if(poll_us93>max_input_us93)InterlockedExchange64(&max_input_us93,poll_us93);state->heartbeat=GetTickCount64();
             ++input_polls94;
             bool focus=focused(),left=focus&&(GetAsyncKeyState(VK_LBUTTON)&0x8000),right=focus&&(GetAsyncKeyState(VK_RBUTTON)&0x8000);
+            gate176(focus);
+            if(!InterlockedCompareExchange(&armed176,0,0)){previous_left=left;previous_right=right;previous_focus=focus;
+                if(state->stop)break;input_wait93.seconds(.01);continue;}
             if(cadence94.due(poll93,focus!=previous_focus||state->stop||stale_press93)){
                 ++service_runs94;
             uint32_t root=0,env=0,manager=0,camera=0,actor=0;
