@@ -784,11 +784,11 @@ static LONG life_seen_deaths173=-1;static unsigned stats_written_kills173=~0u,st
 static ULONGLONG banner_until173=0;static wchar_t banner_text173[64]{};static char session173[48]{};
 // ---- Kit v18: listen-only gate ---------------------------------------------------------------
 // The QTE always starts OFF: its 10 engine hooks are created but not enabled, so the game runs its
-// own unmodified code and the QTE only watches for F9 / F10. Either key (game focused, in a land
-// battle) enables the hooks. There is no off key: when the battle ends (no battle clock for 3 s)
-// the hooks are disabled again and the gate returns to listen-only. A naval battle never turns on.
+// own unmodified code. Kit v19: it switches on when possession actually takes a soldier (the second
+// F9, after possession's own pre-load), in a land battle. There is no off key: when the battle ends
+// (no battle clock for 3 s) the hooks are disabled again. A naval battle never turns on.
 static volatile LONG armed176=0;static int naval176=-1;   // -1 not checked, 0 land, 1 naval
-static BattleEpoch151 gate_watch176;static ULONGLONG gate_lost176=0;static bool gate_f9_176=false,gate_f10_176=false;
+static BattleEpoch151 gate_watch176;static ULONGLONG gate_lost176=0,gate_attempt176=0;
 static SRWLOCK stats_lock176=SRWLOCK_INIT;static unsigned gate_kills176=0,gate_deaths176=0;
 static void write_stats176(const char* id,unsigned kills,unsigned deaths){
     std::wstring path;if(!life173::stats_path(path))return;
@@ -853,8 +853,7 @@ static void disarm176(){
     write_stats176(session173,gate_kills176,gate_deaths176);
 }
 static void gate176(bool focus){
-    const bool f9=focus&&(GetAsyncKeyState(VK_F9)&0x8000),f10=focus&&(GetAsyncKeyState(VK_F10)&0x8000);
-    const bool pressed=(f9&&!gate_f9_176)||(f10&&!gate_f10_176);gate_f9_176=f9;gate_f10_176=f10;
+    (void)focus;
     ClockFrame clock{};const bool battle=engine&&gate_watch176.sample(reader(),engine,0,wall(),clock);
     const ULONGLONG now=GetTickCount64();
     if(InterlockedCompareExchange(&armed176,0,0)){
@@ -863,7 +862,11 @@ static void gate176(bool focus){
         else if(now-gate_lost176>=3000)disarm176();             // battle over: back to listen-only
         return;
     }
-    if(!pressed||!battle)return;
+    // Kit v19: on when possession holds a soldier (mode 2), checked at most once a second.
+    observation::PossessionPrefix p176{};
+    const bool possessed=possession_snapshot93(p176)&&p176.ready&&!p176.stop&&!p176.release&&p176.mode==2;
+    if(!possessed||!battle||now-gate_attempt176<1000)return;
+    gate_attempt176=now;
     auto r=reader();uint32_t root{},env{};
     const bool naval=!(r.get(engine+0x1bc8180,root)&&root&&r.get(root+0x110,env)&&env)||naval_battle175(env);
     naval176=naval?1:0;
