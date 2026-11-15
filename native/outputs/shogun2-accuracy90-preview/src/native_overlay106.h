@@ -21,7 +21,7 @@ class Renderer11 {
  ComPtr<ID3D11VertexShader> vs_;ComPtr<ID3D11PixelShader> ps_;ComPtr<ID3D11InputLayout> layout_;
  ComPtr<ID3D11Buffer> vertices_;ComPtr<ID3D11SamplerState> sampler_;ComPtr<ID3D11BlendState> blend_;
  ComPtr<ID3D11RasterizerState> raster_;ComPtr<ID3D11DepthStencilState> depth_;
- struct Texture {ComPtr<ID3D11Texture2D> texture;ComPtr<ID3D11ShaderResourceView> view;unsigned w{},h{};uint64_t number{};Key key{};} textures_[3];
+ struct Texture {ComPtr<ID3D11Texture2D> texture;ComPtr<ID3D11ShaderResourceView> view;unsigned w{},h{};uint64_t number{};Key key{};} textures_[overlay106::Wheel];
  unsigned width_{},height_{};
 public:
  bool owns(IDXGISwapChain* chain)const{return chain_==chain;}
@@ -53,7 +53,7 @@ public:
   chain_=chain;return true;
  }
  bool draw(const Snapshot& s,unsigned layer){
-  if(!target_||layer<1||layer>3)return false;auto& t=textures_[layer-1];auto& f=s.frame;
+  if(!target_||layer<1||layer>overlay106::Wheel)return false;auto& t=textures_[layer-1];auto& f=s.frame;
   ComPtr<ID3DDeviceContextState> previous;context_->SwapDeviceContextState(own_.Get(),&previous);
   struct Restore {ID3D11DeviceContext1* c;ID3DDeviceContextState* s;~Restore(){c->SwapDeviceContextState(s,nullptr);}} restore{context_.Get(),previous.Get()};
   if(t.w!=f.width||t.h!=f.height){t={};D3D11_TEXTURE2D_DESC d{};d.Width=f.width;d.Height=f.height;d.MipLevels=d.ArraySize=1;d.Format=DXGI_FORMAT_B8G8R8A8_UNORM;d.SampleDesc.Count=1;d.Usage=D3D11_USAGE_DEFAULT;d.BindFlags=D3D11_BIND_SHADER_RESOURCE;
@@ -71,12 +71,12 @@ public:
  }
 };
 class Renderer9 {
- IDirect3DDevice9* device_{};struct Texture {ComPtr<IDirect3DTexture9> texture;unsigned w{},h{};uint64_t number{};Key key{};} textures_[3];
+ IDirect3DDevice9* device_{};struct Texture {ComPtr<IDirect3DTexture9> texture;unsigned w{},h{};uint64_t number{};Key key{};} textures_[overlay106::Wheel];
 public:
  bool owns(IDirect3DDevice9* device)const{return device_==device;}
  void clear(){for(auto& t:textures_)t={};device_=nullptr;}
  bool draw(IDirect3DDevice9* device,const Snapshot& s,unsigned layer){
-  if(layer<1||layer>3)return false;if(device_!=device){clear();device_=device;}auto& t=textures_[layer-1];const auto& f=s.frame;
+  if(layer<1||layer>overlay106::Wheel)return false;if(device_!=device){clear();device_=device;}auto& t=textures_[layer-1];const auto& f=s.frame;
   ComPtr<IDirect3DStateBlock9> state;ComPtr<IDirect3DSurface9> targets[4],depth,back;D3DVIEWPORT9 viewport{};
   if(!ok(device->CreateStateBlock(D3DSBT_ALL,&state))||!ok(state->Capture())||!ok(device->GetViewport(&viewport)))return false;
   for(unsigned i=0;i<4;++i)device->GetRenderTarget(i,&targets[i]);device->GetDepthStencilSurface(&depth);
@@ -103,23 +103,23 @@ using Gate=bool(*)(const Frame&,unsigned);static Gate gate;
 // process termination must not call a graphics driver from CRT loader-lock
 // destructors after its render threads have already been terminated.
 static Renderer11& renderer11=*new Renderer11;static Renderer9& renderer9=*new Renderer9;
-static overlay106::Reader readers[3];static uint64_t retry[3];
+static overlay106::Reader readers[overlay106::Wheel];static uint64_t retry[overlay106::Wheel];
 static SRWLOCK lock=SRWLOCK_INIT;static volatile LONG stopping;
 using Present11=HRESULT(STDMETHODCALLTYPE*)(IDXGISwapChain*,UINT,UINT);using Resize11=HRESULT(STDMETHODCALLTYPE*)(IDXGISwapChain*,UINT,UINT,UINT,DXGI_FORMAT,UINT);
 using Present9=HRESULT(STDMETHODCALLTYPE*)(IDirect3DDevice9*,const RECT*,const RECT*,HWND,const RGNDATA*);using Reset9=HRESULT(STDMETHODCALLTYPE*)(IDirect3DDevice9*,D3DPRESENT_PARAMETERS*);
 static Present11 original11;static Resize11 resize11;static Present9 original9;static Reset9 reset9;static void* hooks[4]{};
 // Acknowledgement follows successful native Present. Record the call time,
 // never claim physical scanout; TEST/occluded/lost presents cannot hide fallback.
-struct Submission {unsigned backend[3]{};Frame frame[3]{};bool has[3]{};double wall{};};
+struct Submission {unsigned backend[overlay106::Wheel]{};Frame frame[overlay106::Wheel]{};bool has[overlay106::Wheel]{};double wall{};};
 template<class Draw>inline Submission surfaces(unsigned backend,Draw draw){
- Submission submitted;auto now=GetTickCount64();for(unsigned i=0;i<3;++i){if(now<retry[i])continue;if(!readers[i].open(GetCurrentProcessId(),i+1)){retry[i]=now+250;continue;}
-  submitted.has[i]=true;auto image=readers[i].read(now);
+ Submission submitted;auto now=GetTickCount64();for(unsigned layer:{overlay106::HUD,overlay106::Wheel,overlay106::QTE,overlay106::Death,overlay106::Help}){const unsigned i=layer-1;if(now<retry[i])continue;if(!readers[i].open(GetCurrentProcessId(),i+1)){retry[i]=now+250;continue;}
+  submitted.has[i]=true;auto image=readers[i].read();
   if(image&&gate&&gate(image->frame,i+1)){if(draw(*image,i+1)){submitted.backend[i]=backend;submitted.frame[i]=image->frame;}}
   else submitted.backend[i]=backend;
  }submitted.wall=overlay106::wall();return submitted;
 }
 inline void acknowledge(const Submission& s,HRESULT result){
- AcquireSRWLockExclusive(&lock);if(!stopping)for(unsigned i=0;i<3;++i)if(s.has[i])readers[i].acknowledge(result==S_OK?s.backend[i]:0,s.frame[i].number?&s.frame[i]:nullptr,s.wall);ReleaseSRWLockExclusive(&lock);
+ AcquireSRWLockExclusive(&lock);if(!stopping)for(unsigned i=0;i<overlay106::Wheel;++i)if(s.has[i])readers[i].acknowledge(result==S_OK?s.backend[i]:0,s.frame[i].number?&s.frame[i]:nullptr,s.wall);ReleaseSRWLockExclusive(&lock);
 }
 static __declspec(thread) bool presenting;
 struct PresentScope {PresentScope(){presenting=true;}~PresentScope(){presenting=false;}};
