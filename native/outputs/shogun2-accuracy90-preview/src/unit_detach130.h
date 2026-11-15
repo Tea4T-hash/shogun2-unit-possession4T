@@ -101,6 +101,31 @@ static __declspec(naked) void regroup_gate130(){
     }
 }
 static void forget_member130(Detached130& r){InterlockedDecrement(&detached_buckets130[detached_bucket130(r.actor)]);r={};InterlockedDecrement(&detached_count130);}
+// Original 3e1780 -> 3da190 -> 3dbd70 gives each member its own slot
+// request. 14bc50 only restores membership and clears the old task. The
+// actor's native update consumes +648 only when its +665 flag is clear.
+static void reissue_officer_slot68(uintptr_t actor,uintptr_t squad,uintptr_t native_unit,uintptr_t env){
+    if(field<uintptr_t>(actor,0)!=base+0x15dbfb4||field<uintptr_t>(actor,0x210)||
+       field<uintptr_t>(actor,0x18)||field<uintptr_t>(actor,0x688)||
+       native_recovery103(actor)||wall_subject97(actor)||native_airborne_subject99(actor)||
+       field<uintptr_t>(actor,0x28)!=env||native_routing(native_unit)||
+       field<unsigned char>(actor,0x384)||field<unsigned char>(actor,0x665)!=1||
+       !squad_registered130(squad,native_unit,env)||field<uintptr_t>(actor,0x3b4)!=squad||
+       squad_matches130(squad,actor)!=1)return;
+    if(field<unsigned>(actor,0x658))return; // Absolute land slot only.
+    const float x=field<float>(actor,0x648),y=field<float>(actor,0x64c),z=field<float>(actor,0x650);
+    const float dx=x-field<float>(squad,0x644),dz=z-field<float>(squad,0x648);
+    const float radius=field<float>(squad,0x670);
+    const float away_x=x-field<float>(actor,0x48),away_z=z-field<float>(actor,0x50);
+    if(!std::isfinite(x)||!std::isfinite(y)||!std::isfinite(z)||!std::isfinite(radius)||radius<0||
+       (x==0&&y==0&&z==0)||!(dx*dx+dz*dz<=(radius+4.f)*(radius+4.f))||
+       !(away_x*away_x+away_z*away_z>.0625f))return;
+    // The existing position and heading are still valid. Arm their two
+    // native request flags as 3dbd70 does for a freshly issued slot order.
+    // The normal actor update handles the actual route and gait.
+    field<unsigned char>(actor,0x664)=0;
+    field<unsigned char>(actor,0x665)=0;
+}
 static bool restore_member130(const Detached130& r,uintptr_t current_unit){
     if(field<unsigned>(current_unit,4)!=r.unit_id||field<uintptr_t>(current_unit,0x14)!=r.environment||
        !unit_member130(current_unit,r.actor))return true;
@@ -112,7 +137,10 @@ static bool restore_member130(const Detached130& r,uintptr_t current_unit){
     // that state must not invent a rider slot in the horse formation on exit.
     if(!r.preferred&&!charge_target&&!field<uintptr_t>(actor,0x3b4))return true;
     if(field<uintptr_t>(actor,0x3b4)){
-        if(!charge_target||field<uintptr_t>(actor,0x3b4)==charge_target)return true;
+        if(!charge_target||field<uintptr_t>(actor,0x3b4)==charge_target){
+            reissue_officer_slot68(actor,field<uintptr_t>(actor,0x3b4),current_unit,r.environment);
+            return true;
+        }
         original_member_transfer130(reinterpret_cast<void*>(charge_target),actor,1);
         return field<uintptr_t>(actor,0x3b4)==charge_target&&squad_matches130(charge_target,actor)==1;
     }
@@ -121,6 +149,7 @@ static bool restore_member130(const Detached130& r,uintptr_t current_unit){
     if(!squad_registered130(target,current_unit,r.environment))return false;
     original_member_insert130(reinterpret_cast<void*>(target),actor,1);
     if(field<uintptr_t>(actor,0x3b4)!=target||squad_matches130(target,actor)!=1)return false;
+    reissue_officer_slot68(actor,target,current_unit,r.environment);
     InterlockedIncrement(&member_rejoins130);return true;
 }
 static void detach_member130(uintptr_t actor,const PossessionIdentity& id,unsigned generation){
@@ -198,7 +227,7 @@ static void create_unit_detach130(){
 
 static MH_STATUS disable_control_hooks130(){
     MH_STATUS result=MH_OK;
-    for(unsigned rva:{0x14bc50u,0x1b33f0u,0x1afed6u,0x3dacf0u,0x3c0bd0u,0x1679c0u}){
+    for(unsigned rva:{0x14bc50u,0x1b33f0u,0x1afed6u,0x3dacf0u,0x3c0bd0u,0x1679c0u,0x174ec0u,0x16aa00u,0x1b8740u,0x48d6f3u,0x459b4du,0x175360u,0x175346u,0x1b8830u,0x48d6a0u,0x48d860u,0x1752d0u,0x47efc0u,0x154140u}){
         auto status=MH_DisableHook(reinterpret_cast<void*>(base+rva));
         if(status!=MH_OK&&status!=MH_ERROR_DISABLED)result=MH_UNKNOWN;
     }
