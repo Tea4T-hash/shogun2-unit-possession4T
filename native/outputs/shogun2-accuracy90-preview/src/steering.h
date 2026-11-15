@@ -1,6 +1,14 @@
 #pragma once
 #include <cmath>
 #include "protocol.h"
+inline bool mounted_forward95(unsigned input){return (input&(FORWARD|BACKWARD))==FORWARD;}
+inline bool mounted_backward95(unsigned input){return (input&(FORWARD|BACKWARD))==BACKWARD;}
+inline unsigned personal_travel_input91(unsigned held,bool follow,bool aiming,bool mounted){
+    const bool translating=bool(held&FORWARD)!=bool(held&BACKWARD)||
+        (!mounted&&(bool(held&LEFT)!=bool(held&RIGHT)));
+    if(mounted&&mounted_backward95(held))return held&~RUN;
+    return follow&&!aiming&&translating&&!(held&WALK_OVERRIDE)?held|RUN:held;
+}
 struct Intent { float x,z; short turn; };
 inline Intent steering_view(unsigned input,float a,float dt,float speed) {
     float f=float(bool(input&FORWARD))-float(bool(input&BACKWARD));
