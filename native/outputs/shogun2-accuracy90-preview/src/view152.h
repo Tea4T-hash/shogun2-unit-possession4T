@@ -56,6 +56,9 @@ static void eye_reset152(){AcquireSRWLockExclusive(&view_lock152);eye_yaw152=eye
 static void eye_mouse152(float yaw,float pitch){AcquireSRWLockExclusive(&view_lock152);eye_yaw152=std::clamp(eye_yaw152+yaw,-view152::yaw_limit,view152::yaw_limit);eye_pitch152=std::clamp(eye_pitch152+pitch,-view152::pitch_limit,view152::pitch_limit);ReleaseSRWLockExclusive(&view_lock152);}
 static bool eye_apply152(const deathpose::Eye& native,deathpose::Eye& out){AcquireSRWLockShared(&view_lock152);float y=eye_yaw152,p=eye_pitch152;ReleaseSRWLockShared(&view_lock152);return view152::eye(native,y,p,out);}
 static void view_key152(std::uint8_t* current,std::uint8_t* previous,bool owned,bool valid){AcquireSRWLockExclusive(&view_lock152);view_input152.key(current,previous,owned,valid);ReleaseSRWLockExclusive(&view_lock152);}
+static void view_request152(){
+    AcquireSRWLockExclusive(&view_lock152);++view_input152.toggles;ReleaseSRWLockExclusive(&view_lock152);
+}
 static void view_wheel152(short delta){AcquireSRWLockExclusive(&view_lock152);view_input152.wheel=std::clamp(view_input152.wheel+int(delta),-12000,12000);ReleaseSRWLockExclusive(&view_lock152);}
 static void view_reset152(){AcquireSRWLockExclusive(&view_lock152);view_input152.toggles=0;view_input152.wheel=0;eye_yaw152=eye_pitch152=0;orbit_held154=false;orbit_yaw154=orbit_pitch154=0;view_lease152=0;InterlockedExchange(&third_person152,0);ReleaseSRWLockExclusive(&view_lock152);}
 
