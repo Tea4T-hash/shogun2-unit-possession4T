@@ -35,7 +35,7 @@ def replace(value,context):
 # These are Steam's player-visible labels. Internal action/set identifiers and
 # physical bindings stay stable; unused inputs must not advertise an action.
 CONFIG_MAJOR=3
-CONFIG_MINOR=6
+CONFIG_MINOR=12
 
 SET_TITLES = {'Menu': 'Menus', 'Campaign': 'Campaign', 'RTS': 'Battle (RTS)', 'Possession': 'Possession'}
 LABELS = {
@@ -48,16 +48,16 @@ LABELS = {
         L4='SHIFT: select card range (hold)',L5='Add / remove selection (hold)',R4='Quick-save (hold)',R5='Toggle character movement speed',
         LeftStick='Pan campaign map',RightStick='Turn / zoom camera',LeftPad='Scroll / zoom',RightPad='Cursor; panel L1 + swipe: scroll',L2='Move / attack',R2='Select / interact',
         LeftPadTouch='Enable scrolling (touch)',RightPadTouch='Enable cursor (touch)'),
-    'RTS': dict(A='Show formations / range (hold)',B='Cancel placement / deselect',X='Toggle run / walk',Y='Possess soldier',L1='Zoom in (hold)',R1='Zoom out (hold)',
-        L3='Add / remove selection (hold)',Menu='Game menu',View='Hide / cycle HUD; hold: controls guide',Up='Group 1: tap to select / hold to assign',Down='Group 2: tap to select / hold to assign',Left='Group 3: tap to select / hold to assign',Right='Group 4: tap to select / hold to assign',
-        L4='SHIFT: range / queue; + R4: select all',L5='Add selection / group modifier (hold)',R4='Melee mode; hold L4: select all',R5='Group / ungroup; L5: lock formation',
-        LeftStick='Pan battle camera',RightStick='Turn / tilt camera',LeftPad='Zoom camera',RightPad='Move cursor',L2='Move / attack / formation; double: run',R2='Select / drag box; double: focus unit',
-        LeftPadTouch='Enable zoom (touch)',RightPadTouch='Enable cursor (touch)'),
-    'Possession': dict(A='Climb / interact',B='Mount / dismount unit',X='Toggle unit melee / ranged',Y='Return to RTS',L1='Unit order / formation; double: run',R1='Command wheel (hold)',
-        L3='Run (hold)',R3='Change first / third person (hold)',Menu='Game menu (remain possessed)',View='Hide / cycle HUD; hold: controls guide',Up='Cycle ability / ammunition',Down='Use / end ability',Left='Third-person camera closer',Right='Third-person camera farther',
-        L4='Orbit camera (hold)',L5='Crouch (hold)',R4='Stop unit',R5='Follow Me',
-        LeftStick='Move soldier',RightStick='Look / command wheel choice',LeftPad='Third-person camera distance',RightPad='Look / touch for gyro',L2='Ready weapon / secondary melee response',R2='Fire / hold-release bow / primary melee response',
-        LeftPadTouch='Enable camera zoom (touch)',RightPadTouch='Enable look / gyro (touch)'),
+    'RTS': dict(A='Halt selected troops / confirm Commander',R3='Show formations / range (hold)',RightPadClick='Show formations / range (hold)',B='Cancel placement / deselect',X='Toggle run / walk',Y='Possess soldier',L1='Zoom in (hold)',R1='Zoom out (hold)',
+        L3='Tap: Commander / hold: add or remove selection',Menu='Game menu',View='Hide / cycle HUD; hold: controls guide',Up='Group 1: tap to select / hold to assign',Down='Group 2: tap to select / hold to assign',Left='Group 3: tap to select / hold to assign',Right='Group 4: tap to select / hold to assign',
+        L4='SHIFT: range / queue; + R4: select all',L5='Tap: toggle fire at will; hold: toggle skirmish',R4='Melee mode; hold L4: select all',R5='Tap: group / ungroup; hold: lock / unlock formation',
+        LeftStick='Pan battle camera',RightStick='Turn / tilt camera',LeftPad='Clicked direction: nudge; click + drag: turn',LeftPadClick='Fine-position selected units',RightPad='Move cursor',L2='Move / attack / formation; double: run',R2='Select / drag box; double: focus unit',
+        LeftPadTouch='Fine-adjust pad (touch alone is inert)',RightPadTouch='Enable cursor (touch)'),
+    'Possession': dict(A='Climb / interact / Commander (with RB)',B='Toggle crouch',X='Toggle unit melee / ranged',Y='Return to RTS',L1='Unit order / formation; double: run',R1='Orders (hold) / Commander (press A)',
+        L3='Toggle sprint',R3='Change first / third person (hold)',Menu='Game menu (remain possessed)',View='Hide / cycle HUD; hold: controls guide',Up='Cycle ability / ammunition',Down='Use / end ability',Left='Third-person camera closer',Right='Third-person camera farther',
+        L4='Orbit camera (hold)',L5='Toggle Skirmish (hold)',R4='Toggle slow motion / normal speed',R5='Pause / resume battle',
+        LeftStick='Move soldier',RightStick='Look / command wheel choice',LeftPad='Third-person camera distance',RightPad='Look around',L2='Ready weapon / secondary melee response',R2='Fire / hold-release bow / primary melee response',
+        LeftPadTouch='Enable camera zoom (touch)',RightPadTouch='Enable trackpad look (touch)'),
 }
 
 def labels(context):

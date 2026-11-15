@@ -43,9 +43,11 @@ int main(){
     assert(!menu181::focus_text("cursor-junk")&&menu181::pointer_mode181);assert(menu181::focus_text("directional")&&!menu181::pointer_mode181);++checks;
     deck178::Menu178 pointer;NavigationHost181 pointer_host;f.buttons=0;f.focused=true;f.left_stick={};f.sequence++;f.sample_us+=8000;pointer.sample(f,f.sample_us,config,pointer_host,back);f.left_stick.x=1;f.sequence++;f.sample_us+=16000;assert(pointer.sample(f,f.sample_us,config,pointer_host,back)&&pointer_host.moves==1);f.buttons=deck174::bit(deck174::Button::A);f.sequence++;f.sample_us+=8000;assert(pointer.sample(f,f.sample_us,config,pointer_host,back)&&pointer_host.clicks==1);++checks;
     assert(menu181::focus_text("cursor")&&menu181::attach("menu:new-root")&&!menu181::pointer_mode181);++checks;
-    NavigationHost181 menu_host;deck174::Edges menu_edge;menu_edge.down=deck174::bit(deck174::Button::Menu);InterlockedExchange(&menu181::pause_pending,0);assert(menu181::menu_press181(false,menu_edge,menu_host)&&menu_host.escapes==1&&!menu181::pause_pending);++checks;
-    menu_edge={};assert(!menu181::menu_press181(false,menu_edge,menu_host)&&menu_host.escapes==1);++checks;
-    menu_edge.down=deck174::bit(deck174::Button::Menu);assert(menu181::menu_press181(true,menu_edge,menu_host)&&menu_host.escapes==1&&menu181::pause_pending);++checks;
+    NavigationHost181 menu_host;deck174::Edges menu_edge;menu_edge.down=deck174::bit(deck174::Button::Menu);InterlockedExchange(&menu181::pause_pending,0);assert(menu181::menu_press181(false,false,menu_edge,menu_host)&&menu_host.escapes==1&&!menu181::pause_pending);++checks;
+    menu_edge={};assert(!menu181::menu_press181(false,false,menu_edge,menu_host)&&menu_host.escapes==1);++checks;
+    menu_edge.down=deck174::bit(deck174::Button::Menu);assert(menu181::menu_press181(true,true,menu_edge,menu_host)&&menu_host.escapes==1&&menu181::pause_pending);++checks;
+    InterlockedExchange(&menu181::pause_pending,0);
+    assert(!menu181::menu_press181(true,false,menu_edge,menu_host)&&menu_host.escapes==1&&!menu181::pause_pending);++checks;
     menu181::Host no_window;assert(!no_window.escape());++checks;
     assert(menu181::viewport181::valid(1280,800,1000,1250)&&!menu181::viewport181::valid(639,800,1000,1000)&&!menu181::viewport181::valid(1280,359,1000,1000)&&!menu181::viewport181::valid(32768,800,1000,1000));++checks;
     assert(!menu181::viewport181::valid(1280,800,0,1000)&&!menu181::viewport181::valid(1280,800,1000,1251)&&!menu181::viewport181::valid(1280,800,1001,1000));++checks;

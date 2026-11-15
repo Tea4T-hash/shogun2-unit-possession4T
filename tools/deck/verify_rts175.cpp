@@ -37,7 +37,19 @@ int main(){
     TEST("confirm uses native press and release once",{Exercise x;x.feed();x.feed(bit(Button::A));x.feed(bit(Button::A));x.feed();assert(x.host.count('D')==1&&x.host.count('U')==1);});
     TEST("native order gesture commits once on release",{Exercise x;x.feed();x.feed(0,{},1);x.feed(0,{},1);x.feed();x.feed();assert(x.host.count('B')==1&&x.host.count('E')==1&&x.r.committed==1);});
     TEST("cancel discards placement without releasing through commit",{Exercise x;x.feed();x.feed(0,{},1);x.feed(bit(Button::B),{},1);x.feed();assert(x.host.count('C')==1&&!x.host.count('E'));});
-    TEST("halt cancels owned gesture before native halt",{Exercise x;x.feed();x.feed(0,{},1);x.feed(bit(Button::X),{},1);x.feed();assert(x.host.count('C')==1&&x.host.count('H')==1&&!x.host.count('E'));});
+    TEST("battle A cancels an owned placement and calls Halt once per press",{
+        Exercise legacy;legacy.feed();legacy.feed(0,{},1);legacy.feed(bit(Button::X),{},1);legacy.feed();
+        assert(legacy.host.count('C')==1&&legacy.host.count('H')==1&&!legacy.host.count('E'));
+        Exercise x;Config c;c.community_rts=true;x.r.configure(c);
+        auto feed=[&](uint64_t buttons,float lt){
+            x.now+=8000;auto p=proof(x.host);x.r.begin(p,x.host,x.now);auto f=frame(x.now,++x.sequence);
+            f.buttons=buttons;f.left_trigger=lt;x.r.sample(f,p,x.host,x.now);x.r.finish(x.host,x.now);
+        };
+        feed(0,0);feed(0,1);feed(bit(Button::A),1);feed(bit(Button::A),1);feed(0,0);
+        assert(x.host.count('C')==1&&x.host.count('H')==1&&!x.host.count('E')&&!x.host.count('D'));
+        assert(x.host.events[1].kind=='C'&&x.host.events[2].kind=='H');
+        feed(bit(Button::A),0);assert(x.host.count('H')==2);
+    });
     TEST("unverified queue modifier never becomes a replacement order",{Exercise x;x.feed();x.feed(bit(Button::R1));x.feed(bit(Button::R1),{},1);x.feed(bit(Button::R1));x.feed();assert(!x.host.count('B')&&!x.host.count('E')&&x.r.unsupported);});
     TEST("focus loss cancels an owned drag without commit",{Exercise x;x.feed();x.feed(0,{},1);auto p=proof(x.host);p.focused=false;x.r.begin(p,x.host,x.now+8000);assert(x.host.count('C')==1&&!x.host.count('E'));});
     TEST("menu modal possession and wrong thread deny native actions",{for(unsigned mode=0;mode<4;++mode){Rts r;FakeHost h;auto p=proof(h);if(mode==0)p.blocked=true;if(mode==1)p.possessed=true;if(mode==2)p.owner_thread=false;if(mode==3)p.rts=false;r.begin(p,h,1000000);auto f=frame();f.buttons=bit(Button::A);r.sample(f,p,h,1000000);r.finish(h,1000000);assert(h.events.empty());}});

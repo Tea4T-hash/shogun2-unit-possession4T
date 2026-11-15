@@ -55,11 +55,12 @@ struct BridgeCalls {
     bool(*effective_pair)(void*,uint32_t,uint32_t,float&,float&){};
     bool(*retain_selected_pair)(void*,uint32_t,const NativeActor&,const NativeActor&){};
     uint32_t(*routed152)(void*,uint32_t,const NativeActor&,const NativeActor&,const NativeVerdict&,const NativePlan*){};
+    bool(*reserve_pair)(void*,const WitnessKey&,const NativeActor&,const NativeActor&){};
 };
 // Native callback coordinator. A witness migrates between engine workers;
 // the adapter serializes owned state and scopes replay to the current callback.
 // Native ABI wrappers, generation registration and IPC remain adapter concerns.
-enum class CancelReason92:uint32_t {External=1,Owner=2,NativeIdentity=3,NativeRemoval=4,Facts=5,Score=6,InputOverflow=7,ClickTimestamp=8,InvalidInputDelta=9,Presentation93=10};
+enum class CancelReason92:uint32_t {External=1,Owner=2,NativeIdentity=3,NativeRemoval=4,Facts=5,Score=6,InputOverflow=7,ClickTimestamp=8,InvalidInputDelta=9,Presentation93=10,NativeStart=11};
 struct CancellationStats92 {uint32_t total{},reason{};uint64_t serial{};};
 struct RegistrationStats92 {uint32_t ready{},waiting{},rejected{},reason_mask{};};
 class NativeBridge {
@@ -81,12 +82,15 @@ class NativeBridge {
     bool preparing92_{},preparation_canceled92_{},preparation_charge92_{};
     RegistrationStats92 registration92_{};
     CancellationStats92 cancellation92_{};Snapshot interrupted93_{};uint64_t interrupted_lease93_{},interrupted_battle93_{};
-    void canceled92(CancelReason92 reason){
-        if(gate_.occupied()&&gate_.snapshot().active&&gate_.snapshot().result==Result::Pending){
-            interrupted_lease93_=key_.pair.lease;interrupted_battle93_=key_.pair.battle;interrupted93_=gate_.snapshot();interrupted93_.active=true;interrupted93_.paused=false;interrupted93_.result=Result::Canceled;
-            ++cancellation92_.total;cancellation92_.reason=uint32_t(reason);cancellation92_.serial=interrupted93_.serial;
-        }
+    void canceled92(Snapshot prompt,CancelReason92 reason){
+        if(!prompt.active||!prompt.serial||prompt.result==Result::Canceled||
+           (prompt.serial==interrupted93_.serial&&key_.pair.lease==interrupted_lease93_&&
+            key_.pair.battle==interrupted_battle93_))return;
+        interrupted_lease93_=key_.pair.lease;interrupted_battle93_=key_.pair.battle;
+        interrupted93_=prompt;interrupted93_.paused=false;interrupted93_.result=Result::Canceled;
+        ++cancellation92_.total;cancellation92_.reason=uint32_t(reason);cancellation92_.serial=prompt.serial;
     }
+    void canceled92(CancelReason92 reason){if(gate_.occupied())canceled92(gate_.snapshot(),reason);}
     enum class Registration92 {Invalid,Waiting,Ready};
     Registration92 registration_state92(uint32_t returned){
         uint32_t env{},count{},a{},b{},outcome{},attacker{},defender{},matched{},fallback{};
@@ -127,12 +131,13 @@ class NativeBridge {
         if(state==Registration92::Waiting){++registration92_.waiting;acquisition_stage_=12;return returned;}
         preparing92_=false;
         if(state!=Registration92::Ready){++registration92_.rejected;return strict_?1:returned;}
-        // A native waiting interval consumes no response budget. Refresh current
-        // facts once before admitting the visible, timed event.
-        if(!facts(player_,own_facts_)||!facts(enemy_,enemy_facts_)){
+        // Strict possession has already selected and validated the pair and
+        // captured its scores. Native registration may consume that transient
+        // score context. Requiring it again would abandon a valid selection.
+        if(!strict_&&(!facts(player_,own_facts_)||!facts(enemy_,enemy_facts_))){
             registration92_.reason_mask=256;++registration92_.rejected;return 1;
         }
-        if(calls_.effective_pair){
+        if(!strict_&&calls_.effective_pair){
             if(!calls_.effective_pair(calls_.context,player_.address,enemy_.address,own_facts_.combat_score,enemy_facts_.combat_score)){
                 registration92_.reason_mask=512;++registration92_.rejected;return 1;
             }
@@ -242,18 +247,24 @@ public:
             auto decision=gate_.prepare(key_);if(decision==Prepare::Defer)return 0;
             if(decision==Prepare::Replay){
                 if(strict_&&gate_.snapshot().result==Result::Canceled){gate_.removed(witness,generation);return 1;}
+                const auto prompt=gate_.snapshot();
                 Verdict verdict;
-                if(!gate_.begin_replay(key_,true,verdict))return 1;
+                if(!gate_.begin_replay(key_,true,verdict)){
+                    canceled92(prompt,CancelReason92::NativeStart);
+                    gate_.removed(witness,generation);return 1;
+                }
                 auto result=native_;result.outcome=verdict.outcome&0xff;
                 if(verdict.outcome&ReverseRoles)std::swap(result.attacker_address,result.defender_address);
                 tally173::round(key_.pair.lease); // kit v13: one round of combat
                 if(result.outcome==5&&result.attacker_address==player_.address)tally173::kill(key_.pair.lease); // kit v10: kill by the possessed soldier
-                uint32_t returned;
+                uint32_t returned=1;
                 if(prepared_mode_){
-                    if(!replay_.arm(input_,result)){++replay_errors_;return 1;}
-                    returned=calls_.retarget?calls_.retarget(calls_.context,witness,result,plans_):1;
-                    if(!replay_.finish())++replay_errors_;
+                    if(replay_.arm(input_,result)){
+                        returned=calls_.retarget?calls_.retarget(calls_.context,witness,result,plans_):1;
+                        if(!replay_.finish())++replay_errors_;
+                    }else ++replay_errors_;
                 }else returned=cached_prepare(input_,result);
+                if(returned&0xff)canceled92(prompt,CancelReason92::NativeStart);
                 gate_.finish_replay(key_);return returned;
             }
         }
@@ -365,6 +376,9 @@ public:
             for(auto& plan:plans_)if(!reader_.get(plan.actor+0x1d0,plan.state)||!reader_.get(plan.actor+0x1d4,plan.clip)){
                 preparing92_=false;registration92_.reason_mask=4096;++registration92_.rejected;return reject_selected(input,selected);
             }
+            if(calls_.reserve_pair&&!calls_.reserve_pair(calls_.context,key_,player_,enemy_)){
+                preparing92_=false;++registration92_.rejected;return 1;
+            }
             return finish_registration92(cached_prepare(input,selected));
         }
         if(!gate_.acquire(key,verdict,own_facts,enemy_facts,charge))return reject_selected(input,selected);
@@ -415,24 +429,30 @@ public:
         if(!actor_identity(reader_,player_.address,key_.address,engine_,player,true)||
            !actor_identity(reader_,enemy_.address,key_.address,engine_,enemy,true)||
            !same_actor(player,player_)||!same_actor(enemy,enemy_))return;
-        // Refresh local native heights as well as whole-unit context every tick.
-        if(!facts(player,own_facts)||!facts(enemy,enemy_facts)){release(CancelReason92::Facts);return;}
-        if(calls_.effective_pair){
-            if(!calls_.effective_pair(calls_.context,player.address,enemy.address,own_facts.combat_score,enemy_facts.combat_score)){release(CancelReason92::Score);return;}
-            own_facts.known|=EffectiveCombat;enemy_facts.known|=EffectiveCombat;
+        // Once admitted, keep the original green window and the two native
+        // participants. Unit morale/orders and transient score samples may
+        // change while other soldiers are selecting encounters. Native life
+        // and identity checks above still retire a genuinely lost pair.
+        if(!strict_){
+            // Legacy dynamic prompts still use live context.
+            if(!facts(player,own_facts)||!facts(enemy,enemy_facts)){release(CancelReason92::Facts);return;}
+            if(calls_.effective_pair){
+                if(!calls_.effective_pair(calls_.context,player.address,enemy.address,own_facts.combat_score,enemy_facts.combat_score)){release(CancelReason92::Score);return;}
+                own_facts.known|=EffectiveCombat;enemy_facts.known|=EffectiveCombat;
+            }
+            own_facts_=own_facts;enemy_facts_=enemy_facts;
+            if(!paused&&focused&&calls_.routed152&&(own_facts.routing||enemy_facts.routing)){
+                NativeVerdict desired{5,own_facts.routing?enemy.address:player.address,own_facts.routing?player.address:enemy.address};
+                if(!replay_.arm(input_,desired)){release(CancelReason92::Facts);return;}
+                if(!own_facts.routing)tally173::kill(key_.pair.lease); // kit v10: routed enemy killed by the possessed soldier
+                gate_.removed(key_.address,key_.generation);
+                routed_answer152_=calls_.routed152(calls_.context,key_.address,player,enemy,desired,prepared_mode_?plans_:nullptr);routed_frame152_=true;
+                if(!replay_.finish())++replay_errors_;return;
+            }
+            // Routing still prevents a NEW encounter. An admitted encounter gets
+            // to finish before the unit resumes its native retreat.
+            if(calls_.facing_ready)own_facts_.routing=false;
         }
-        own_facts_=own_facts;enemy_facts_=enemy_facts;
-        if(!paused&&focused&&calls_.routed152&&(own_facts.routing||enemy_facts.routing)){
-            NativeVerdict desired{5,own_facts.routing?enemy.address:player.address,own_facts.routing?player.address:enemy.address};
-            if(!replay_.arm(input_,desired)){release(CancelReason92::Facts);return;}
-            if(!own_facts.routing)tally173::kill(key_.pair.lease); // kit v10: routed enemy killed by the possessed soldier
-            gate_.removed(key_.address,key_.generation);
-            routed_answer152_=calls_.routed152(calls_.context,key_.address,player,enemy,desired,prepared_mode_?plans_:nullptr);routed_frame152_=true;
-            if(!replay_.finish())++replay_errors_;return;
-        }
-        // Routing still prevents a NEW encounter. An admitted encounter gets
-        // to finish before the unit resumes its native retreat.
-        if(calls_.facing_ready)own_facts_.routing=false;
         aligning_=calls_.facing_ready&&!calls_.facing_ready(calls_.context,player_.address,enemy_.address);
         gate_.update(key_,own_facts_,enemy_facts_,dt,paused);
         auto edge=edges_.sample(input_serial,left,right,!paused&&focused);

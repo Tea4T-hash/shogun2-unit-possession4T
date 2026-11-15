@@ -21,6 +21,8 @@ local function run(mode,campaign)
         for i,v in ipairs(self.children)do if v==address then table.remove(self.children,i);break end end
         table.insert(self.children,address)
     end
+    -- This bootstrap fixture supplies an opaque existing component for native
+    -- named lookup; city ancestry/geometry use verify_frontend181.lua instead.
     function methods:Find(i)if type(i)~='number'then return 2 end;return self.children[i+1]end
     function methods:ChildCount()return #self.children end
     function methods:GlobalExists(name)return self.globals[name]~=nil end
@@ -56,7 +58,8 @@ local function run(mode,campaign)
             if not key then return real end
             lookups[key]=true
             if key=='menu_fit209'then return function(value)assert(value=='off'or(type(value)=='string'and value:match('^%d+,%d+$')));return true end end
-            if key=='panel188'then return function(value)assert(value=='open'or value=='map'or value=='unknown');return true end end
+            if key=='panel188'then return function(value)assert(value=='open'or value=='map'or value=='city'or value=='unknown');return true end end
+            if key=='decorate214'then return function(value)assert(type(value)=='string'and(value:match('^corner:%d+$')or value:match('^tooltip:%d+$')));return true end end
             if key=='back188'then return function(value)assert(value==true);went_back=went_back+1;return true end end
             if key=='context'then return function(tag)assert(type(tag)=='string');return real(tag)end end
             return function(value)
@@ -64,7 +67,7 @@ local function run(mode,campaign)
                 if key=='attach'then assert(type(value)=='string');return true end
                 if key=='detach'then stops=stops+1;return true end
                 if key=='focus'then assert(type(value)=='string');last_focus=value;return true end
-                if key=='error'then assert(type(value)=='string');reports=reports+1;return end
+                if key=='error'then assert(type(value)=='string');reports=reports+1;flags.last_error=value;return end
                 assert(value==true)
                 if key=='stop'then stops=stops+1;return true end
                 return flags[key]
@@ -91,7 +94,7 @@ local function run(mode,campaign)
         assert(creates==1 and not status,'Only the pulse owner exists before the new campaign texture is ready; main-menu legend is absent')
         assert(root.callbacks.OnUpdatePulse and root.callbacks.OnPreDraw)
         local group;for _,c in pairs(nodes)do if c.id=='s2up_deck181_group'then group=c end end;assert(group)
-        flags.down=true;group.callbacks.OnUpdatePulse();flags.down=false;assert(reports==0 and last_focus==nil and activated==0,'Deferred directions must not move/activate menu choices');
+        flags.down=true;group.callbacks.OnUpdatePulse();flags.down=false;assert(reports==0 and last_focus==nil and activated==0,'Deferred directions must not move/activate menu choices: '..tostring(flags.last_error));
         flags.cancel=true;group.callbacks.OnUpdatePulse();assert(went_back==1)
         flags.poll=false;group.callbacks.OnPreDraw();assert(went_back==1)
         group.callbacks.OnDestroyed();assert(stops==1 and unrequired==0);if not campaign then env.OnDestroyed();assert(unrequired==2)end

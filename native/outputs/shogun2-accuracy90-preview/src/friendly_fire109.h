@@ -2,6 +2,7 @@
 #include "../../shogun2-possession-cleanup-v46/src/actor_types152.h"
 #include "../../shogun2-possession-cleanup-v46/src/friendly_fire_protocol109.h"
 #include <array>
+#include <intrin.h>
 namespace friendly109 {
 struct Tag {uintptr_t projectile{},environment{};uint32_t id{},lease{},actor{},unit{};bool notified{};};
 struct Registry {
@@ -21,6 +22,10 @@ static friendly109::Status* friendly_status109;static HANDLE friendly_mapping109
 static volatile LONG friendly_hits109,friendly_errors109;
 using FriendlyImpact109=uintptr_t(__thiscall*)(void*,uintptr_t,uintptr_t,uint32_t,uint32_t);
 static FriendlyImpact109 original_friendly_impact109;
+using NativeLeaderRole=bool(__thiscall*)(void*);
+static NativeLeaderRole original_leader_role;
+static __declspec(thread) uintptr_t projectile_impact_victim;
+static bool proximity_independent200(uintptr_t actor);
 // Pure reads only: this observer never acquires/releases a lease, starts a death
 // view, changes native combat, or calls the ownership predicates with side effects.
 static bool friendly_owned109(PossessionIdentity& out){
@@ -55,7 +60,7 @@ static bool friendly_owned109(PossessionIdentity& out){
 // Native Register41c760 appends the newly constructed projectiles to pool+14,
 // count+10. Each projectile has its native monotonically assigned id at+4 and
 // shooter at+1c. Record ONLY this personal-shot call's newly appended objects.
-static void friendly_tag109(uintptr_t pool,unsigned first,const PossessionIdentity& shot,unsigned generation){
+static void friendly_tag109(uintptr_t pool,unsigned first,const PossessionIdentity& shot,unsigned generation,unsigned* arrow=nullptr){
     PossessionIdentity current;if(!friendly_owned109(current)||!same_soldier(current,shot)||generation!=possession_lease.generation)return;
     unsigned count=field<unsigned>(pool,0x10);auto entries=field<uintptr_t>(pool,0x14);
     if(count<first||count-first>128||count>262144||!entries)return;
@@ -63,16 +68,17 @@ static void friendly_tag109(uintptr_t pool,unsigned first,const PossessionIdenti
         field<uintptr_t>(projectile,0x1c)!=shot.actor)continue;
         friendly109::Tag tag{projectile,shot.environment,field<unsigned>(projectile,4),generation,shot.actor_id,shot.unit_id,false};
         AcquireSRWLockExclusive(&friendly_lock109);friendly_registry109.add(tag);ReleaseSRWLockExclusive(&friendly_lock109);
+        if(arrow&&*arrow==arrowcam107::no_projectile)*arrow=tag.id;
     }
 }
-static void friendly_register109(uintptr_t pool,void* launch){
+static void friendly_register109(uintptr_t pool,void* launch,unsigned* arrow=nullptr){
     unsigned first=0,generation=0;PossessionIdentity shot{};bool track=false;
     __try {track=friendly_owned109(shot);if(track){first=field<unsigned>(pool,0x10);generation=possession_lease.generation;}}
     __except(EXCEPTION_EXECUTE_HANDLER){InterlockedIncrement(&friendly_errors109);track=false;}
     // Always forward exactly once, outside the observation exception handler.
     using Register109=void(__thiscall*)(void*,void*);
     reinterpret_cast<Register109>(base+0x41c760)(reinterpret_cast<void*>(pool),launch);
-    if(track){__try {friendly_tag109(pool,first,shot,generation);}
+    if(track){__try {friendly_tag109(pool,first,shot,generation,arrow);}
         __except(EXCEPTION_EXECUTE_HANDLER){InterlockedIncrement(&friendly_errors109);}}
 }
 static bool friendly_candidate109(uintptr_t victim,uintptr_t projectile,friendly109::Tag& tag,unsigned& victim_id,unsigned& victim_unit){
@@ -92,11 +98,32 @@ static bool friendly_candidate109(uintptr_t victim,uintptr_t projectile,friendly
     auto target_unit=field<uintptr_t>(victim,0x214);if(!target_unit)return false;
     victim_id=field<unsigned>(victim,0x1c8);victim_unit=field<unsigned>(target_unit,4);return victim_unit!=0;
 }
+static bool __fastcall leader_role_hook(void* actor,void*){
+    const auto caller=reinterpret_cast<uintptr_t>(_ReturnAddress());
+    const bool leader=original_leader_role(actor);
+    if(!leader||caller!=base+0x3a61db||!projectile_impact_victim||
+       reinterpret_cast<uintptr_t>(actor)!=possessed)return leader;
+    __try{
+        PossessionIdentity current;
+        if(!friendly_owned109(current)||field<uintptr_t>(current.actor,0)!=base+0x15dbd68)
+            return leader;
+        const auto physical=current.mount?current.mount:current.actor;
+        // Only the lethal projectile check for the current detached general.
+        // The engine still calculates hit chance, armor, damage and death.
+        if((projectile_impact_victim==current.actor||projectile_impact_victim==physical)&&
+           proximity_independent200(physical))return false;
+    }__except(EXCEPTION_EXECUTE_HANDLER){}
+    return leader;
+}
 static uintptr_t __fastcall friendly_impact109(void* object,void*,uintptr_t victim,uintptr_t projectile,uint32_t third,uint32_t fourth){
     friendly109::Tag tag{};unsigned victim_id=0,victim_unit=0;bool notify=false;
     __try {notify=friendly_candidate109(victim,projectile,tag,victim_id,victim_unit);}
     __except(EXCEPTION_EXECUTE_HANDLER){InterlockedIncrement(&friendly_errors109);}
-    auto result=original_friendly_impact109(object,victim,projectile,third,fourth);
+    const auto previous_victim=projectile_impact_victim;
+    projectile_impact_victim=projectile?victim:0;
+    uintptr_t result;
+    __try {result=original_friendly_impact109(object,victim,projectile,third,fourth);}
+    __finally {projectile_impact_victim=previous_victim;}
     if(notify&&friendly_status109){__try {PossessionIdentity current;
         if(friendly_owned109(current)&&tag.lease==possession_lease.generation&&tag.actor==current.actor_id&&tag.unit==current.unit_id){
             AcquireSRWLockExclusive(&friendly_lock109);
@@ -123,4 +150,12 @@ static void create_friendly_hook109(){
     const unsigned char signature[]={0x83,0xec,0x20,0x53,0x56,0x57,0x8b,0x7c,0x24,0x34};
     auto target=reinterpret_cast<void*>(base+0x473f80);require(!memcmp(target,signature,sizeof signature),"Native projectile impact109 signature differs");
     require(MH_CreateHook(target,reinterpret_cast<void*>(&friendly_impact109),reinterpret_cast<void**>(&original_friendly_impact109))==MH_OK,"Friendly-fire109 observer hook failed");
+    const unsigned char role_entry[]={0x8b,0x01,0xff,0x90,0xbc,0,0,0};
+    const unsigned char lethal_call[]={0xe8,0x25,0x29,0x03,0,0x84,0xc0,0x0f,0x84};
+    auto role=reinterpret_cast<void*>(base+0x3d8b00);
+    require(!memcmp(role,role_entry,sizeof role_entry)&&
+        !memcmp(reinterpret_cast<void*>(base+0x3a61d6),lethal_call,sizeof lethal_call),
+        "Native projectile leader protection signature differs");
+    require(MH_CreateHook(role,reinterpret_cast<void*>(&leader_role_hook),
+        reinterpret_cast<void**>(&original_leader_role))==MH_OK,"Projectile leader protection hook failed");
 }

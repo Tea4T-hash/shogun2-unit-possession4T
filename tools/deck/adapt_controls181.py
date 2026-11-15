@@ -33,10 +33,26 @@ def generate(snapshot):
   .replace('static bool overlay_key106(', '#include "../../../deck/overlay_gate181.h"\nstatic bool overlay_key106(')
   .replace('    auto key=frame.key;', '    auto key=frame.key;\n    if(layer==4&&key.lease==188&&!key.actor&&!key.unit)return deck_help_gate188();\n    if(layer==overlay106::HUD&&key.lease==186&&!key.actor&&!key.unit)return deck_header_gate186();')
   .replace('            deck175::poll(self_module);','            if(device192::enabled()&&focus)capture_weapon_mouse(GetForegroundWindow());\n            deck175::poll(self_module);')
+  .replace('                if(down(VK_SHIFT))input|=RUN;',
+   '                if(down(VK_SHIFT))input|=RUN;\n'
+   '                if(state->follow){\n'
+   '                    deck181::Sample pace;\n'
+   '                    if(deck181::read_sample(GetCurrentProcessId(),pace)&&deck181::controller_held(pace,deck183::WalkPace)&&\n'
+   '                       pace.lease==state->lease_generation&&pace.actor==state->actor_id&&pace.unit==state->unit_id)input|=WALK_OVERRIDE;\n'
+   '                }')
   .replace('static void mouse_look101(int dx,int dy,','static void mouse_look101(float dx,float dy,')
+  .replace('            const bool gameplay214=focus&&!native_modal214();',
+   '            deck181::Sample pointer_sample181;\n'
+   '            const bool campaign_pointer181=state->mode==POSSESSED&&device192::enabled()&&deck181::read_sample(GetCurrentProcessId(),pointer_sample181)&&\n'
+   '                pointer_sample181.context==unsigned(deck174::Context::Campaign);\n'
+   '            if(campaign_pointer181)InterlockedExchange(&state->release,1);\n'
+   '            const bool gameplay214=focus&&!campaign_pointer181&&!native_modal214();')
+  .replace('if(gameplay214&&state->mode==POSSESSED&&!state->release&&!state->stop){',
+   'if(gameplay214&&state->mode==POSSESSED&&!state->release&&!state->stop&&\n'
+   '               (!device192::enabled()||deck175::possession_cursor181())){')
   .replace('mouse_look101(dx,dy,input,elapsed);','const auto deck_look201=deck175::controller181::look201.take();\n                        if(!device192::enabled()||dx||dy||deck_look201.x||deck_look201.y||(input&(TURN_LEFT|TURN_RIGHT)))mouse_look101(float(dx)+deck_look201.x,float(dy)+deck_look201.y,input,elapsed);'))
  # The exact owned-camera guard precedes the new analog integration. PC mouse,
- # trackpad and gyro still take their existing consumer and sensitivity path.
+ # trackpad still takes its existing consumer and sensitivity path.
  transform(ADAPTER,lambda s:s.replace('static void adjust_eye(uintptr_t camera) {',
   'static void deck_look_frame202();\nstatic void adjust_eye(uintptr_t camera) {')
   .replace('        if(state->mode!=POSSESSED||!camera_owned(camera))return;',
@@ -73,8 +89,6 @@ def generate(snapshot):
   return s[:start]+'    #include "../../../../tools/deck/verify_keyboard_hud198.h"\n'+s[end:]
  transform('native/outputs/shogun2-accuracy90-preview/src/verify_keyboard84.cpp',keyboard_hud_fixture198)
  # Independent fourth pixel layer; existing HUD/QTE/death protocols unchanged.
- transform('native/outputs/shogun2-possession-cleanup-v46/src/overlay_surface106.h',lambda s:s.replace('Death=3','Death=3,Help=4').replace('layer==QTE?1024u*1024u*4u:4u','(layer==QTE||layer==Help)?1024u*1024u*4u:4u').replace('layer>Death','layer>Help').replace('(layer==HUD?750u:200u)','((layer==HUD||layer==Help)?750u:200u)'))
- transform('native/outputs/shogun2-accuracy90-preview/src/native_overlay106.h',lambda s:s.replace('layer>3','layer>4').replace('textures_[3]','textures_[4]').replace('readers[3]','readers[4]').replace('retry[3]','retry[4]').replace('backend[3]','backend[4]').replace('frame[3]','frame[4]').replace('has[3]','has[4]').replace('for(unsigned i=0;i<3;++i)','for(unsigned i=0;i<4;++i)'))
  transform('native/outputs/shogun2-possession-cleanup-v46/src/hud_layout108.h',lambda s:s.replace('struct Rect {','inline bool deck_ui192=false;\nstruct Rect {').replace('s*.85f*1.15f','s*.85f*(deck_ui192?1.15f:1.f)').replace('height*.25f','height*(deck_ui192?.25f:.19f)'))
  transform('native/outputs/shogun2-ammunition83-preview/hud-src/verify_hud_layout108.cpp',lambda s:s.replace('using namespace hudlayout108;','using namespace hudlayout108;deck_ui192=true;'))
  transform(QTE,lambda s:keyboard_merge(s).replace('        LARGE_INTEGER f;QueryPerformanceFrequency','        hudlayout108::deck_ui192=device192::enabled();\n        LARGE_INTEGER f;QueryPerformanceFrequency').replace('#include "qte_service94.h"','#include "qte_service94.h"\n#include "../../../deck/channel181.h"'))
@@ -82,7 +96,7 @@ def generate(snapshot):
   s=s.replace('#include "hud_renderer.h"','#include "hud_renderer.h"\n#include "../../../deck/command_display184.h"')
   s=s.replace('static bool measure(){','static bool measure(){deck181::Sample controller;if(deck181::read_sample(pid,controller)&&controller.context==unsigned(deck174::Context::Menu))return false;')
   s=s.replace('pid=find_process(0);Module engine=', 'pid=find_process(0);hudlayout108::deck_ui192=device192::enabled(pid);Module engine=')
-  s=s.replace('    hud80::View d{};','    deck181::presentation_pid()=pid;\n    hud80::View d{};')
+  s=s.replace('    hud80::View d{};','    deck181::presentation_pid()=pid;\n    hud80::View d{};d.controller_ui=hudlayout108::deck_ui192;')
   start=s.index('    if(commands_shared100)for(unsigned retry=0;retry<4;++retry){')
   end=s.index('    if(equipment_shared)',start)
   s=s[:start]+'''    static deck184::CommandDisplay command_display184;
@@ -101,20 +115,21 @@ def generate(snapshot):
    anchor='if(seq!='+shared+'->sequence)continue;'
    if s.count(anchor)!=1:raise ValueError('Missing stable HUD sample anchor: '+shared)
    s=s.replace(anchor,anchor+'now=GetTickCount64();')
-  return s.replace('static void update(){','#include "../../../deck/help_rts186.h"\nstatic void update(){').replace('    if(!active){pixels106.hide();','    if(!active){try{if(fg==pid&&deck_header186()){visible=false;return;}}catch(...){}pixels106.hide();')
+  return s.replace('static void update(){','#include "../../../deck/help_rts186.h"\nstatic void update(){').replace('    if(!active){pixels106.hide();','    if(!active){preload_cards();try{if(fg==pid&&(commander_rts_hud76()||deck_header186())){visible=false;return;}}catch(...){}pixels106.hide();').replace('visible=false;preload_cards();return;','visible=false;return;')
  transform(HUD,adapt_hud)
  def wheel197(path):
   mode='v.commands_known?int(v.commands.fire_mode):-1'if 'ammunition83'in path else '-1'
-  return '    deck181::draw_command_wheel183(g,a,width,height,v.mon.c_str(),'+mode+',v.following,[&](const wchar_t* label,Gdiplus::RectF box,float size,Gdiplus::Color color){native_fonts.paint(g,label,box,size,color,true);});'
+  crest=',v.native_crest.get()' if 'ammunition83' in path else ''
+  return '    if(draw_wheel)deck181::draw_command_wheel183(g,a,width,height,v.mon.c_str(),'+mode+',v.following,[&](const wchar_t* label,Gdiplus::RectF box,float size,Gdiplus::Color color){native_fonts.paint(g,label,box,size,color,true);}'+crest+');'
  for path in RENDERERS:
   transform(path,lambda s:'#include "../../../deck/glyphs181.h"\n#include "../../../deck/help_header186.h"\n'+s.replace('inline void key_image(Graphics& g,const wchar_t* label,RectF r){','inline void key_image(Graphics& g,const wchar_t* label,RectF r){\n    if(deck181::draw_key(g,label,r))return;label=deck181::key_label(label);')
    .replace('inline void mouse_image(Graphics& g,RectF r,bool left,bool active=true){','inline void mouse_image(Graphics& g,RectF r,bool left,bool active=true){\n    if(deck181::controller_present()){key_image(g,left?L"RT":L"LT",r);return;}')
-   .replace('L"RTS view"','deck181::controller_present()?L"Y: RTS":L"RTS view"')
+
    .replace('L"LMB: hold / release"','(deck181::controller_present()?L"RT: hold / release":L"LMB: hold / release")').replace('    (void)offline;', wheel197(path)+'\n    (void)offline;').replace('        g.Restore(all);return;', wheel197(path)+'\n        g.Restore(all);return;')
-   .replace('    g.Restore(all);\n}', '    g.Restore(all);\n    if(deck181::controller_present()){auto saved=g.Save();float physical_width=width*scale;float zoom=deck186::header_scale(physical_width);g.TranslateTransform(deck186::header_left(physical_width),float(deck186::header_top));g.ScaleTransform(zoom,zoom);deck186::draw_header(g,[](unsigned slot,deck181::Glyph& glyph){return deck181::reader().glyph(slot,glyph);},[&](const wchar_t* label,Gdiplus::RectF bounds,float size){auto shadow=bounds;shadow.X+=1;shadow.Y+=1;native_fonts.paint(g,label,shadow,size,Gdiplus::Color(220,25,21,18));native_fonts.paint(g,label,bounds,size,Gdiplus::Color(255,242,233,207));});g.Restore(saved); }\n}'))
+   .replace('    g.Restore(all);\n}', '    g.Restore(all);\n    if(deck181::controller_present()){auto saved=g.Save();float physical_width=width*scale;float zoom=deck186::header_scale(physical_width);g.TranslateTransform(deck186::header_left(physical_width),float(deck186::header_top));g.ScaleTransform(zoom,zoom);deck186::draw_header(g,[](unsigned slot,deck181::Glyph& glyph){return deck181::reader().glyph(slot,glyph);},[&](const wchar_t* label,Gdiplus::RectF bounds,float size){auto shadow=bounds;shadow.X+=1;shadow.Y+=1;native_fonts.paint(g,label,shadow,size,Gdiplus::Color(220,25,21,18));native_fonts.paint(g,label,bounds,size,Gdiplus::Color(255,242,233,207));});g.Restore(saved); }\n    else if(deck181::pc_commander_legend78()){auto saved=g.Save();float physical_width=width*scale;float zoom=deck186::header_scale(physical_width);g.TranslateTransform(deck186::header_left(physical_width),float(deck186::header_top));g.ScaleTransform(zoom,zoom);deck186::draw_commander_pc([&](const wchar_t* label,Gdiplus::RectF bounds,float size){auto shadow=bounds;shadow.X+=1;shadow.Y+=1;native_fonts.paint(g,label,shadow,size,Gdiplus::Color(220,25,21,18));native_fonts.paint(g,label,bounds,size,Gdiplus::Color(255,242,233,207));});g.Restore(saved); }\n}'))
  transform('tools/native_build.py',lambda s:s.replace("ADAPTER_LIBS = BASE_LIBS + ['d3d11.lib', 'd3d9.lib', 'dxgi.lib', 'd3dcompiler.lib']", "ADAPTER_LIBS = BASE_LIBS + ['d3d11.lib', 'd3d9.lib', 'dxgi.lib', 'd3dcompiler.lib', 'gdiplus.lib']"))
  import adapt_gameplay203
  adapt_gameplay203.apply(transform)
- manifest,bindings=native_defaults181.values();settings=(snapshot/'native/deck/controller174.ini').read_text()
+ manifest,bindings=native_defaults181.values();settings=''.join(line for line in (snapshot/'native/deck/controller174.ini').read_text().splitlines(keepends=True) if not line.startswith('gyro_'))
  (snapshot/'native/deck/defaults175_generated.h').write_text('#pragma once\nnamespace defaults175 {\n'+''.join('inline constexpr char '+n+'[]='+'{'+','.join(str(b)for b in v.encode('utf-8'))+',0};\n'for n,v in [('manifest',manifest),('bindings',bindings),('settings',settings)])+'}\n')
  return dict(changed_sources=changed,normal_source_modified=False,native_gameplay_rules_changed=False,action_sets=list(native_defaults181.SETS),glyphs='Steam client -> bounded memory; no generated glyph history')

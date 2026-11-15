@@ -17,6 +17,7 @@ If you hit either problem, include the unit, map and what was happening nearby. 
 v0.24 gameplay was accepted, with first-person weapon/arm poses and clipping left for later work. Melee combat presentation was reported good; ordinary walking and running keep their original movement states.
 
 - **Mounted bows:** the weapon can look wrong while aiming. This is still an open issue.
+- **Six-shooter after reloading:** while holding aim, the pistol can briefly dip and rise again between shots after the first reload.
 - **Arms and weapons clipping:** first-person visibility has improved, but some weapons and animations still let you see through parts of the model. Looking sharply up/down can expose it.
 - **Missing HUD or odd timing:** include resolution, fullscreen/windowed mode, Windows scaling, monitor refresh rate, battle speed and whether the whole game slowed down. Not every display/overlay combination has been tested.
 
@@ -25,7 +26,7 @@ v0.24 gameplay was accepted, with first-person weapon/arm poses and clipping lef
 - **Bow draw and sound:** bow strength depends on holding LMB, but the native draw animation and sound begin with RMB. Separating sound timing from that animation is deferred.
 
 - **Personal charging has improved:** the new request/contact behavior was accepted by the owner. Use forward sprint plus LMB/RT in melee mode without aiming; intermittent failures can still occur.
-- **Enemies targeting a separated player:** enemies still ignored the lone possessed soldier in the latest revision34 test. The included targeting corrections have not resolved autonomous shooting, pursuit or melee acquisition.
+- **Enemies targeting a separated player:** the owner confirmed enemy ranged fire against a lone possessed soldier in a later test. Pursuit, melee acquisition and coverage across unit types still need testing.
 
 - **Interrupted melee prompts:** another hit, death or a change in the fight can cut a prompt short. INTERRUPTED is there to show that it ended early. Crowded fights still need more testing.
 - **Shots or volleys not releasing:** include the exact unit, weapon and ammo. Bow, gun and other weapon support is broader than the combinations tested so far. Say whether it was your soldier, the rest of the unit, or both.

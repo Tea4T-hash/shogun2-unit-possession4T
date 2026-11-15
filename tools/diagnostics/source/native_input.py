@@ -30,22 +30,27 @@ h=k.OpenFileMappingW(4,False,f'Local\\Shogun2PossessionPOC46-{pid}')
 if not h:raise C.WinError(C.get_last_error())
 v=k.MapViewOfFile(h,4,0,0,84)
 if not v:raise C.WinError(C.get_last_error())
-eh=k.OpenFileMappingW(4,False,f'Local\\Shogun2Equipment81-{pid}')
-if not eh:raise RuntimeError('Equipment81 telemetry is not loaded')
-ev=k.MapViewOfFile(eh,4,0,0,216)
+equipment_version,equipment_size=106,224
+eh=k.OpenFileMappingW(4,False,f'Local\\Shogun2Equipment{equipment_version}-{pid}')
+if not eh:
+    equipment_version,equipment_size=81,216
+    eh=k.OpenFileMappingW(4,False,f'Local\\Shogun2Equipment{equipment_version}-{pid}')
+if not eh:raise RuntimeError('Equipment telemetry is not loaded')
+ev=k.MapViewOfFile(eh,4,0,0,equipment_size)
 if not ev:raise C.WinError(C.get_last_error())
 def equipment_snapshot81():
     for retry in range(4):
         seq=struct.unpack('<i',C.string_at(ev+16,4))[0]
         if seq&1:continue
-        data=C.string_at(ev,216)
+        data=C.string_at(ev,equipment_size)
         if seq!=struct.unpack('<i',C.string_at(ev+16,4))[0]:continue
         magic,version,size,owner=struct.unpack_from('<4I',data)
-        if (magic,version,size,owner)!=(0x31514553,81,216,pid):raise RuntimeError('Equipment81 protocol differs')
+        if (magic,version,size,owner)!=(0x31514553,equipment_version,equipment_size,pid):raise RuntimeError('Equipment81 protocol differs')
         names=['lease','actor','unit','slot','kind','styles','ability','projectile','crouch_supported','crouched','pending','error','switches','ammo_changes']
         result=dict(zip(names,struct.unpack_from('<14I',data,20)))
         result['tick_ms']=struct.unpack_from('<Q',data,80)[0]
         result['ammunition']=data[88:216].decode('utf-16-le').split('\0')[0]
+        if equipment_version==106:result['bow_power']=struct.unpack_from('<f',data,216)[0]
         return result
     return {'unstable':True}
 

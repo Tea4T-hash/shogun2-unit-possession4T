@@ -30,3 +30,7 @@ deployment, capture or publication commands as part of routine development.
 
 The Deck campaign setup footer correction and its captured clipping regression
 are documented in [CampaignSetup209.md](CampaignSetup209.md).
+
+Current native follow-ups: [renderer coexistence](RendererCoexistence211.md),
+[possession reservation lifetime](MeleeReservation212.md) and
+[excluded QTE candidate cleanup](MeleeCandidates213.md).

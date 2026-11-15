@@ -31,7 +31,23 @@ def apply(transform):
  transform(SRC+'verify_view156.cpp',camera_death_test)
 
 
- transform(SRC+'adapter.cpp',lambda s:s.replace('static void __fastcall detour(void* actor,void*) {','#include "../../../deck/locomotion203.h"\nstatic void __fastcall detour(void* actor,void*) {').replace('        if(controlled){finish(', '        if(controlled){locomotion_mark203(reinterpret_cast<uintptr_t>(actor));finish(').replace('create_unit_detach130();create_mounted_render_hooks70();','create_unit_detach130();create_locomotion203();create_mounted_render_hooks70();').replace('        if(disable_control_hooks130()!=MH_OK)result=MH_UNKNOWN;', '        if(disable_control_hooks130()!=MH_OK)result=MH_UNKNOWN;\n        {auto stop203=MH_DisableHook(reinterpret_cast<void*>(base+0x366a10));if(stop203!=MH_OK&&stop203!=MH_ERROR_DISABLED)result=MH_UNKNOWN;}'))
+ def locomotion(s):
+  s=s.replace('static bool prepare(uintptr_t actor) {','#include "../../../deck/locomotion203.h"\nstatic bool prepare(uintptr_t actor) {').replace('        const unsigned movement_input=personal_travel_input91(', '        unsigned movement_input=personal_travel_input91(')
+  mounted_motion = """        if(mounted){
+            if(horse_root_owns_motion95(actor,movement_input))return false;
+            // Brake before reversing. If the native step cannot take over,
+            // retain a slow manual reverse at the stock backstep pace.
+            if(mounted_backward95(movement_input)&&horse_braking96(actor))movement_input&=~BACKWARD;
+        }
+"""
+  s=s.replace('        float speed=0,turn_rate=0;\n',mounted_motion+'        float speed=0,turn_rate=0;\n',1)
+  s=s.replace('        if(!apply_native_speed_step(', """        const bool backing96=mounted&&mounted_backward95(movement_input);
+        if(backing96)speed=std::min(speed,horse_reverse_pace96);
+        if(!apply_native_speed_step(""",1)
+  s=s.replace('        if(rapid_ceiling136>=0)',"""        if(backing96){speed=std::min(speed,horse_reverse_pace96);state->effective_speed=speed;}
+        if(rapid_ceiling136>=0)""",1)
+  return s.replace('        if(controlled){finish( '        if(controlled){locomotion_mark203(reinterpret_cast<uintptr_t>(actor));finish(').replace('create_unit_detach130();create_mounted_render_hooks70();','create_unit_detach130();create_locomotion203();create_mounted_render_hooks70();').replace('        if(disable_control_hooks130()!=MH_OK)result=MH_UNKNOWN;', '        if(disable_control_hooks130()!=MH_OK)result=MH_UNKNOWN;\n        {auto stop203=MH_DisableHook(reinterpret_cast<void*>(base+0x366a10));if(stop203!=MH_OK&&stop203!=MH_ERROR_DISABLED)result=MH_UNKNOWN;}')
+ transform(SRC+'adapter.cpp',locomotion)
 
  def acquisition(s):
   s=s.replace('static uintptr_t __fastcall target_squad147(void* context,void*){','#include "../../../deck/acquisition203.h"\nstatic uintptr_t __fastcall target_squad147(void* context,void*){')
@@ -39,8 +55,8 @@ def apply(transform):
   s=s.replace('static void create_proximity147(){','static void create_proximity147(){\n    create_acquisition203();')
   return s
  transform(SRC+'proximity147.h',acquisition)
- transform(SRC+'unit_detach130.h',lambda s:s.replace('0x1679c0u}', '0x1679c0u,0x174ec0u,0x16aa00u,0x1b8740u,0x48d6f3u,0x459b4du,0x175360u,0x175346u,0x1b8830u,0x48d6a0u,0x48d860u,0x1752d0u,0x47efc0u}'))
- transform(SRC+'verify_proximity147.cpp',lambda s:s.replace('static void charge_assignment147(', '#include "../../../../tools/deck/verify_acquisition207.h"\nstatic void charge_assignment147(').replace(' field<float>(h,0x48)=1;', ' verify_acquisition207(f,formation,ip,h);\n field<float>(h,0x48)=1;').replace(' set_distance(6);require(', ' #include "../../../../tools/deck/verify_acquisition203.h"\n verify_acquisition207(f,formation,ip,possessed);\n set_distance(6);require(',1))
+ transform(SRC+'unit_detach130.h',lambda s:s.replace('0x1679c0u}', '0x1679c0u,0x174ec0u,0x16aa00u,0x1b8740u,0x48d6f3u,0x459b4du,0x175360u,0x175346u,0x1b8830u,0x48d6a0u,0x48d860u,0x1752d0u,0x47efc0u,0x154140u}'))
+ transform(SRC+'verify_proximity147.cpp',lambda s:s.replace('static void charge_assignment147(', '#include "../../../../tools/deck/verify_acquisition207.h"\n#include "../../../../tools/deck/verify_acquisition65.h"\nstatic void charge_assignment147(').replace(' field<float>(h,0x48)=1;', ' verify_acquisition207(f,formation,ip,h);\n verify_ranged65(formation,ip,possessed,P::ptr(f.peer));\n field<float>(h,0x48)=1;').replace(' set_distance(6);require(', ' #include "../../../../tools/deck/verify_acquisition203.h"\n verify_acquisition207(f,formation,ip,possessed);\n verify_ranged65(formation,ip,possessed,P::ptr(f.peer));\n set_distance(6);require(',1))
  def movement_fixture(s):
   edits=[('int main(){','#include "../../../../tools/deck/verify_locomotion203_provider.h"\nint main(){'),
     (' // Native mounted principal proof,',' #include "../../../../tools/deck/verify_locomotion203.h"\n // Native mounted principal proof,'),

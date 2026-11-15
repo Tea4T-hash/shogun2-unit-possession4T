@@ -24,3 +24,11 @@ No subagents unless the owner explicitly requests them.
 Revision36 corrects the Deck campaign setup clipping parent; the owner accepted
 the Start Game footer fix. Preserve PC device bypass and the normal native
 button/content geometry. This acceptance does not resolve enemy acquisition.
+
+Revision39 adds native cleanup of excluded QTE candidates' combat reservations
+and retains revision38's current-possession guard and revision37 renderer
+coexistence. The full fresh build and PC/Deck rollback/readback passed. The owner
+reported “success” after installation; the exact scenario was not specified and
+the formal revision39 loaded-hash/hook gate was not completed. Keep this scoped
+manual report separate from all-siege or stability proof. Enemy acquisition
+while separated remains unresolved. See V0_34_MELEE39_VALIDATION.json.

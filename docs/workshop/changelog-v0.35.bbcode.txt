@@ -1,0 +1,17 @@
+[h2]v0.35 — Custom unit portraits, HUD and Steam Deck controls[/h2]
+
+[h3]Possession HUD and controls[/h3]
+[list]
+[*]Custom and replacement unit portraits now load from your enabled mods and are preloaded as the battle roster becomes available. Portraits keep their proportions, and missing artwork leaves the rest of the HUD visible.
+[*]Slimmer HUD with the unit card at bottom left, orders and abilities along the right, and an ammunition meter in place of the numeric count. Activity such as Moving, Holding, Firing or In Melee reflects the rest of your formation.
+[*]You can ready and fire your personal ranged weapon while your formation is in melee mode. On PC, Alt toggles slow motion.
+[*]On Deck, hold B to crouch. R4 toggles slow motion and R5 pauses or resumes. Hold R1 and use the right stick to choose a command, then release R1. The pause and battle results menus can open while you stay possessed.
+[/list]
+
+[h3]Steam Deck battle and campaign[/h3]
+[list]
+[*]Deployment uses the Battle RTS controls before Start Battle. Click the left trackpad edge to preview a move in one of eight directions, or click and drag from the center to rotate the selection as a group. Release to issue the previewed order with the native placement sound.
+[*]Fixed the terrain request that could freeze the game on formation-move release. Press and hold the right trackpad to show formations and ranges. Double-tapping RT to focus a unit releases the click so trackpad movement does not start an unintended box selection.
+[*]Double-tap RT to open campaign details where a mouse double-click would. With city details open, LB and RB cycle through cities. The end-turn controls and supported hover tooltips are larger.
+[*]Corrected a startup conflict between controller input and the gameplay loader. Menu/Start can skip supported intros, and controller recovery now retries after focus returns from idle.
+[/list]

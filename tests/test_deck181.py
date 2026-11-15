@@ -40,10 +40,15 @@ class ContextBindingsTests(unittest.TestCase):
  def test_context_specific_labels_do_not_promise_unused_commands(self):
   labels={c:native.labels(c)for c in native.SETS}
   self.assertNotIn('Y',labels['Menu'])
-  self.assertEqual(labels['Possession']['B'],'Mount / dismount unit')
+  self.assertEqual(labels['Possession']['B'],'Toggle crouch')
+  self.assertEqual(labels['Possession']['R4'],'Toggle slow motion / normal speed')
+  self.assertEqual(labels['Possession']['R5'],'Pause / resume battle')
+  self.assertEqual(labels['Possession']['L5'],'Toggle Skirmish (hold)')
   self.assertEqual(labels['Campaign']['X'],'Zoom home')
   self.assertEqual(labels['RTS']['X'],'Toggle run / walk')
-  self.assertNotIn('R3',labels['RTS']);self.assertEqual(labels['RTS']['Y'],'Possess soldier')
+  self.assertEqual(labels['RTS']['L5'],'Tap: toggle fire at will; hold: toggle skirmish')
+  self.assertEqual(labels['RTS']['R5'],'Tap: group / ungroup; hold: lock / unlock formation')
+  self.assertEqual(labels['RTS']['R3'],'Show formations / range (hold)');self.assertEqual(labels['RTS']['Y'],'Possess soldier')
   self.assertEqual(labels['Possession']['R3'],'Change first / third person (hold)')
   self.assertEqual(labels['Possession']['Left'],'Third-person camera closer')
  def test_display_only_semantic_filter_retains_bindings(self):
@@ -55,27 +60,36 @@ class ContextBindingsTests(unittest.TestCase):
   self.assertNotIn('Not assigned',self.manifest)
   self.assertNotIn('Menu_RightStick',self.manifest)
   self.assertNotIn('Campaign_R3',self.manifest)
-  self.assertIn('Run (hold)',self.manifest)
+  self.assertEqual(native.labels('Possession')['L3'],'Toggle sprint')
  def test_updated_layout_revisions_match_and_do_not_force_legacy_layouts(self):
   manifest=dict(native.parse(self.manifest)[0][1]);config=dict(self.mapping)
   self.assertEqual(config['title'],'Unit Possession Layout')
-  for key,wanted in [('major_revision','3'),('minor_revision','6')]:
+  for key,wanted in [('major_revision','3'),('minor_revision','12')]:
    self.assertEqual(manifest[key],wanted);self.assertEqual(config[key],wanted)
   self.assertEqual(manifest['major_revision_affects_xinput'],'0');self.assertEqual(manifest['major_revision_affects_mousekb'],'0')
  def test_y_is_sole_possession_entry_and_r3_label_only_changes_view(self):
-  self.assertNotIn('RTS_R3',self.manifest)
+  self.assertIn('game_action RTS181 RTS_R3',self.bindings)
   self.assertEqual(native.labels('RTS')['Y'],'Possess soldier')
   self.assertEqual(native.labels('Possession')['Y'],'Return to RTS')
   self.assertEqual(native.labels('Possession')['R3'],'Change first / third person (hold)')
- def test_right_pad_click_is_unbound_in_every_context(self):
-  for context in native.SETS:
+ def test_right_pad_click_is_formations_only_in_battle(self):
+  for context in ('Menu','Campaign','Possession'):
    self.assertNotIn('RightPadClick',native.labels(context))
    self.assertNotIn('game_action '+context+'181 '+context+'_RightPadClick',self.bindings)
-  self.assertNotIn('RightPadClick',self.manifest)
+  self.assertEqual(native.labels('RTS')['RightPadClick'],'Show formations / range (hold)')
+  self.assertEqual(native.labels('RTS')['A'],'Halt selected troops / confirm Commander')
+  self.assertEqual(native.labels('RTS')['L3'],'Tap: Commander / hold: add or remove selection')
+  self.assertIn('game_action RTS181 RTS_A',self.bindings)
+  self.assertFalse(any('gyro' in label.lower() for label in native.labels('Possession').values()))
+  self.assertIn('game_action RTS181 RTS_RightPadClick',self.bindings)
  def test_cpp_required_channels_match_real_action_declarations(self):
   import re
   text=(ROOT/'native/deck/binding_profiles182.h').read_text()
-  buttons={c:int(v)for c,v in re.findall(r'case deck174::Context::(\w+):return (\d+)ull;',text)}
+  buttons={}
+  for c,v,excluded in re.findall(r'case deck174::Context::(\w+):return (\d+)ull(?:&~deck174::bit\(deck174::Button::(\w+)\))?;',text):
+   mask=int(v)
+   if excluded:mask&=~(1<<native.old.BUTTONS.index(excluded))
+   buttons[c]=mask
   analogs={c:int(v)for c,v in re.findall(r'case deck174::Context::(\w+):return (\d+)u;',text)}
   for c in native.SETS:
    self.assertEqual(buttons[c],sum(1<<i for i,k in enumerate(native.old.BUTTONS)if k in native.labels(c)))

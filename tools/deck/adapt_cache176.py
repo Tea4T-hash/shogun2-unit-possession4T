@@ -13,7 +13,7 @@ AFTER=BEFORE+'''
 GATE='static bool battle_ready(uintptr_t base){try{auto root=local_u32(base+0x1bc8180);auto env=local_u32(root+0x110);auto common=local_u32(env+8);auto phase=local_u32(common+0xb4);auto id=local_u32(phase+0x14);return id>=5&&id<=8;}catch(...){return false;}}'
 DECK_GATE='#include "../../deck/device192.h"\n#include "../../deck/battle_ready181.h"\nstatic bool battle_ready(uintptr_t base){try{if(device192::enabled())return deck181::battle_ready(base,local_u32);auto root=local_u32(base+0x1bc8180);auto env=local_u32(root+0x110);auto common=local_u32(env+8);auto phase=local_u32(common+0xb4);auto id=local_u32(phase+0x14);return id>=5&&id<=8;}catch(...){return false;}}'
 
-def verify(snapshot,baseline=ROOT,legend184=False):
+def verify(snapshot,baseline=ROOT,legend184=False,startup222=False):
     expected=(Path(baseline)/SOURCE).read_text(encoding='utf-8')
     actual=(Path(snapshot)/SOURCE).read_text(encoding='utf-8')
     if legend184:
@@ -21,6 +21,13 @@ def verify(snapshot,baseline=ROOT,legend184=False):
         publish='\n    if(device192::enabled())deck184::publish_resources(runtime_folder);'
         if actual.count(include)!=1 or actual.count(publish)!=1:raise ValueError('Unreviewed legend resource handoff')
         actual=actual.replace(include,'').replace(publish,'')
+    if startup222:
+        import adapt_frontend181
+        # Strictly reverse the separately reviewed startup handoff before
+        # comparing the entire loader. Foreign changes still fail equality.
+        for before,after in reversed(adapt_frontend181.LOADER_HANDOFF222):
+            if actual.count(after)!=1:raise ValueError('Unreviewed startup222 handoff')
+            actual=actual.replace(after,before)
     if expected.count(BEFORE)!=1 or actual.count(AFTER)!=1 or actual.count(DECK_GATE)!=1 or actual.replace(AFTER,BEFORE).replace(DECK_GATE,GATE)!=expected:
         raise ValueError('Unreviewed cache/deployment integration change')
     return dict(temporary_mapping_closed_before_alias_commit=True,initialized_battle_camera_gate=True,exact_reverse_comparison=True,validated_resource_folder_published=legend184,

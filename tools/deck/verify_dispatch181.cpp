@@ -88,11 +88,11 @@ int main(){
   command100::Frame anchor{};anchor.position={10,2,30};anchor.yaw=.4f;anchor.tick=GetTickCount64();anchor.lease=7;anchor.actor=8;anchor.unit=9;command_publish_frame100(anchor);
   deck181::Controls wheel;deck174::Frame f;f.source=deck174::Source::Simulation;f.connected=f.focused=f.native_bindings=true;f.active_buttons=deck174::all_buttons;f.epoch=1;
   auto send=[&](uint64_t buttons,deck174::Vec2 stick){f.sequence++;f.sample_us=1000000+f.sequence*8000;f.buttons=buttons;f.right_stick=stick;deck181::Queued q;q.output=wheel.sample(f,deck174::Context::Possession,f.sample_us);q.frame=f;q.frame.sample_us=deck175::clock_us();q.lease=7;q.actor=8;q.unit=9;deck175::controller181::dispatch(q,proof);};
-  send(0,{});send(deck174::bit(deck174::Button::R1)|(pad?deck174::bit(deck174::Button(unsigned(deck174::Button::Up)+choice)):0),pad?deck174::Vec2{}:sticks[choice]);
+  send(0,{});send(deck174::bit(deck174::Button::R1)|(pad?deck174::bit(deck174::Button(unsigned(deck174::Button::Up)+(choice+1)%4)):0),sticks[choice]);
   command100::Event event;assert(!command_pop100(event));send(0,{});assert(command_pop100(event)&&event.input==expected[choice]&&event.frame.lease==7&&event.frame.actor==8&&event.frame.unit==9&&event.frame.position.x==10&&event.frame.position.z==30);++delivered;
   for(unsigned i=0;i<30;++i){send(0,{});assert(!command_pop100(event));}assert(!command_key_held100);
  }
- std::cout<<"PASS wheel197 dispatch: "<<delivered<<" actual adapter/window/native-command queue deliveries; identity and anchor retained, no repeats\n";
+ std::cout<<"PASS wheel197 dispatch: "<<delivered<<" actual adapter/window/native-command queue deliveries; identity/anchor retained, conflicting D-pad ignored, no repeats\n";
  }
  deck175::owned_window=input_window;deck175::posted=1;deck175::window(input_window,WM_NCDESTROY,0,0);assert(!deck175::owned_window&&!deck175::posted);++checks;
  // Exercise the actual adapter yield ordering with an owned mock hook.

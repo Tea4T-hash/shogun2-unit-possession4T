@@ -1,3 +1,34 @@
+# Revision51: Custom and replacement unit portraits
+
+The HUD reads the Steam launcher’s enabled pack list, including UTF-16LE
+lists without a byte-order mark. It indexes local artwork when the HUD
+starts and warms the available human battle roster before possession.
+The owner confirmed that their modded portrait appeared on Steam Deck.
+
+# Revision50: Battle RTS formation controls
+
+| Left trackpad | Action |
+|---|---|
+| Click the outer edge | Move in one of eight directions around the ring, including the four diagonals. Release to issue the previewed move and play the stock cue. |
+| Click the center and drag left or right | Preview a turn around the selection’s shared center. Release to issue the order and play the stock cue. |
+
+The initial click determines the gesture. The center covers 75% of the pad’s
+radius. The same controls apply to a single land unit, formation groups and
+multi-unit selections. The turn preserves the relative positions and facings
+of the selection. A blocked placement cancels the turn.
+
+# Pending revision40: controls and HUD pass
+
+Not installed or uploaded. See [QoL214](QoL214.md) for the full scope and test limits.
+Hold R1 and choose a command with the **right stick only**, then release R1;
+B cancels. The wheel does not use D-pad prompts or D-pad selection.
+Possession R4 = slow/normal, R5 = pause/resume, B held = crouch.
+PC ALT = slow/normal; F = climb and E = Stop remain.
+Native pause/results menus stay available while possessed. Ammo is a native meter,
+and the unit activity row reflects the rest of the formation, excluding the player.
+
+The older per-checkpoint controls and acceptance notes below remain historical.
+
 > Historical development/checkpoint notes. The combined implementation is now
 > maintained in public `main`; use the root README and BUILD_STEAM_DECK.md for
 > current play/build instructions. Earlier private-item state below is historical.

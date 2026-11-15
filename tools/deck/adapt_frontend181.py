@@ -5,7 +5,10 @@ ROOT=Path(__file__).resolve().parents[2]
 EXPORTS=('prepare','supported','poll','stop','active','focused','ready','bindings','failed','glyphs','glyph_failed',
  'cancel','heartbeat','error','up','down','left','right','focus','attach','detach','campaign_prepare','pause','next','previous',
  'home','arts','finance','diplomacy','clan','end_turn','quick_save','move_speed','encyclopedia',
- 'pan_left','pan_right','pan_up','pan_down','turn_left','turn_right','viewport','context','camera','legend184','ui_viewport185','panel188','back188','menu_fit209')
+ 'pan_left','pan_right','pan_up','pan_down','turn_left','turn_right','viewport','context','camera','legend184','ui_viewport185','panel188','back188','menu_fit209','decorate214')
+# Exact reversible bridge startup substitutions, also checked by cache review.
+LOADER_HANDOFF222=[('#include "../../common/startup_gate168.h"', '#include "../../common/startup_gate168.h"\n#include "../../deck/device192.h"\n#include "../../deck/startup_handoff222.h"'), ('static DWORD WINAPI integrated_worker(void* argument){bool owned_adapter168=false,owned_qte168=false,owned_gate168=false;try{', 'static DWORD WINAPI integrated_worker(void* argument){bool owned_adapter168=false,owned_qte168=false,owned_gate168=false;deck222::StartupGuard keyboard_startup222;try{'), ('    auto adapter_module168=LoadLibraryW(adapter.c_str());', '    // Drain frontend keyboard ownership before the adapter validates it.\n    require(keyboard_startup222.acquire(device192::enabled()),"Native input owner did not yield before gameplay startup");\n    auto adapter_module168=LoadLibraryW(adapter.c_str());'), ('    record(6,"Ready: equipment81, authentic HUD81 and restyled QTE79 started automatically");', '    record(6,"Ready: equipment81, authentic HUD81 and restyled QTE79 started automatically");\n    keyboard_startup222.release();')]
+
 def injection(snapshot,context):
     source=(snapshot/'native/deck/frontend181.lua').read_text();nav=(snapshot/'native/deck/navigation181.lua').read_text()
     assert ']==]'not in source+nav
@@ -33,12 +36,15 @@ def injection(snapshot,context):
 def generate(snapshot):
     snapshot=Path(snapshot).resolve()
     if snapshot==ROOT or ROOT.is_relative_to(snapshot):raise ValueError('Use isolated source snapshot')
+    # Apply only in the isolated combined bridge. Preserve the baseline loader
+    # and its immutable contract pins for historical/regular build paths.
+    loader222=substitute(snapshot/'native/work/autoload99-preview/integrated.h',LOADER_HANDOFF222)
     entry=substitute(snapshot/'tools/workshop/entry165.cpp',[(
       'extern "C" __declspec(dllexport) int __cdecl s2up_workshop_prepare165(void* state)',
       '#include "../../native/deck/frontend181.h"\nextern "C" __declspec(dllexport) int __cdecl s2up_workshop_prepare165(void* state)')])
     entry_path=snapshot/'tools/workshop/entry165.cpp'
     text=entry_path.read_text()
-    text=text.replace('    prepared165=false;if(root_guard165', '    \n#ifndef S2UP165_LUA_FIXTURE\n    require(device192::select(),"Device profile unavailable");\n    if(device192::enabled()){\n        require(deck205::edges.install(reinterpret_cast<uintptr_t>(GetModuleHandleW(L"Empire.Retail.dll")),true),"Native Deck cursor-edge camera suppression unavailable");\n        require(deck185::install_ui185(reinterpret_cast<uintptr_t>(GetModuleHandleW(L"Empire.Retail.dll"))),"Native Deck UI scaling unavailable");\n    }\n#endif\n    prepared165=false;if(root_guard165')
+    text=text.replace('    prepared165=false;if(root_guard165', '    \n#ifndef S2UP165_LUA_FIXTURE\n    require(device192::select(),"Device profile unavailable");\n    if(device192::enabled()){\n        require(deck205::edges.install(reinterpret_cast<uintptr_t>(GetModuleHandleW(L"Empire.Retail.dll")),true),"Native Deck cursor-edge camera suppression unavailable");\n        require(deck185::install_ui185(reinterpret_cast<uintptr_t>(GetModuleHandleW(L"Empire.Retail.dll"))),"Native Deck UI scaling unavailable");\n        deck85::install_tooltips(reinterpret_cast<uintptr_t>(GetModuleHandleW(L"Empire.Retail.dll")));\n    }\n#endif\n    prepared165=false;if(root_guard165')
     entry_path.write_text(text)
     bootstrap=substitute(snapshot/'tools/workshop/bootstrap165.lua',[(
       '    run_stock167(original)\n    assert(start(true)',
@@ -60,7 +66,7 @@ def generate(snapshot):
       'const std::string& native_sha=""){','const std::string& native_sha="",const char* target_root="ui/frontend ui/layout_scripts/root.luac",unsigned expected_size=13739,const char* expected_sha=workshop165::root_sha){'),
       ('workshop165::ui_root168(p,false,&metadata)','workshop165::ui_root168(p,false,&metadata,target_root,expected_size,expected_sha)'),
       ('workshop165::original_root(game/L"data/data.pack")','workshop165::ui_root168(game/L"data/data.pack",true,nullptr,target_root,expected_size,expected_sha)')])
-    return dict(entry=entry,bootstrap=bootstrap,private_builder=build,campaign_reader=pack,campaign_coexistence=compatibility,
+    return dict(loader_handoff222=loader222,entry=entry,bootstrap=bootstrap,private_builder=build,campaign_reader=pack,campaign_coexistence=compatibility,
       stock_callbacks_preserved=True,parenting_outside_frame_callbacks=True,root_frame_callbacks_chained=True)
 def campaign_wrapper(snapshot,native_sha):
     snapshot=Path(snapshot)

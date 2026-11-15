@@ -26,20 +26,27 @@ int main(){try{using namespace qte;PreparedWorld w;unsigned cases=0;
         NativeBridge b(w.reader(),w.selection(),ports,World::engine,{0,5,true},true,true,true);w.bridge=&b;auto owner=w.owner();auto before=routed_calls152;
         check(b.prepare(World::witness,1,owner)==0,"Routing prepare failed");
         if(during){check(b.occupied(),"Normal encounter missing prompt");w.put(World::unit1+0xcec,own);w.put(World::unit2+0xcec,enemy);b.frame(owner,.01,false,true,b.snapshot().serial,false,false);}
-        bool routed=own>=2||enemy>=2;
+        bool routed=!during&&(own>=2||enemy>=2);
         if(routed){check(routed_calls152==before+1&&!b.occupied()&&!b.snapshot().active&&w.committed.outcome==5&&w.rolls==1&&b.replay_errors()==0,"Routing did not bypass prompt with one native selection");
             check(w.committed.defender_address==(own>=2?World::player:World::enemy),"Routing did not choose correct loser");}
         else check(routed_calls152==before&&b.occupied()&&b.snapshot().active&&w.committed.outcome==0,"Unbroken/wavering combat changed");
         ++cases;
     }
-    // Public Session returns the native transition answer once on the same
-    // prepare/update callback, without re-entering the newly active witness.
+    // A locked strict prompt finishes before a newly routed unit returns
+    // to normal native routing behavior, from either callback.
     for(bool update:{false,true}){
         RouteSession152 f;f.world.setup(true,0);f.world.put(World::unit1+0xcec,0u);f.world.put(World::unit2+0xcec,0u);
         Session session(f.world.reader(),f.world.selection(),f.ports(),World::engine,{0,5,true},true,true,false,true);f.session=&session;auto owner=f.world.owner();
         check(session.prepare(World::witness,1,owner,{1,0,200,.1,1},true)==0&&session.occupied(),"Session transition baseline");
+        auto prompt=session.publication(1,200).prompt;
+        // A prior frame can arrive late in the same native encounter.
+        check(session.enqueue({1,prompt.serial,100.,true,false,true,false}),"Invalid-time click fixture");
         f.world.put(World::unit1+0xcec,2u);auto answer=update?session.update(World::witness,1,owner,{1,1,200.1,.1,1},true):session.prepare(World::witness,1,owner,{1,1,200.1,.1,1},true);
-        check(answer==0&&!session.occupied()&&f.world.prepares==1&&f.world.rolls==1&&f.world.committed.defender_address==World::player,"Same-callback route answer lost or native preparation repeated");
+        check(answer==0&&session.occupied()&&f.world.prepares==0&&f.world.rolls==1,
+              "Mid-prompt routing or invalid click discarded an already selected strict encounter");
+        auto after=session.publication(1,200.1);
+        check(!after.error&&after.prompt.result==Result::Pending&&after.prompt.serial==prompt.serial,
+              "Rejected click changed the answer or QTE lifetime");
     }
     for(bool own_route:{false,true}){w.initialize(true,0);w.put(World::unit1+0xcec,own_route?2u:0u);w.put(World::unit2+0xcec,own_route?0u:3u);auto ports=w.ports();ports.routing=route_fact152;ports.routed152=route_prepare_test152;NativeBridge b(w.reader(),w.selection(),ports,World::engine,{0,5,true},true,true,true);w.bridge=&b;check(b.prepare(World::witness,1,w.owner(),false)==0&&!b.occupied()&&w.rolls==1,"Routing blocked by QTE cooldown");}
     std::cout<<"PASS: "<<cases<<" original selected-pair routing cases: broken/shattered player loses, enemy loses, both prioritise player defeat; initial/mid-prompt, one selection, no prompt/hold, ordinary non-routing unchanged. Native preparation/playback are explicit fixture ports.\n";return 0;

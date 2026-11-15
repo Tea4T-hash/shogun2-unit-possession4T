@@ -49,7 +49,7 @@ def source_files(root):
                 continue
             if (
                 path.is_file()
-                and path.suffix in suffixes
+                and (path.suffix in suffixes or path.name == 'LICENSE')
                 and path.name
                 not in {
                     'local.json',

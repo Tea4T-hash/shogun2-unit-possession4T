@@ -1,0 +1,56 @@
+{
+  "version": "0.34",
+  "revision": "melee-rts-39",
+  "source_publication_only": true,
+  "previous_public_source": "9d75647950613ad397e639b048924fd6f22181b8",
+  "pack_sha256": "a68637165024934159d5dcdf36efc1c941f50b0f10666394bfe777fc90947449",
+  "pack_bytes": 4275374,
+  "native_sha256": "f9f127e13175771c591325510175d386131e3cc6c9b7a6b4d03f17a851a78ad7",
+  "components": {
+    "possession-v46.dll": "5d43d9d04aaa669be7682b1aada7b9bb4e7d33df0fce2470585bdf8f4e8402ad",
+    "possession-hud.exe": "d6d3a12c5481af6ac170fa36ffb107f724e3425da58f2426eadc6544dfe14bb4",
+    "qte-playable-v79.dll": "fe69725a778689423356364d244c21bc5a5ea2933a17b01de9997f9933747adb",
+    "prepare-local-assets159.exe": "94ff6a0d149826ae92f0f32a85ac5e13892206a571528d3879207cf245b9f6ae"
+  },
+  "changes_since_revision36": [
+    "Renderer contract excludes only the unrelated four-byte frame callback slot; all other native UI checks remain.",
+    "Extra melee reservation suppression requires a live matching possession and encounter generation.",
+    "Retaining two native-selected QTE fighters now releases excluded candidates through original native actor cleanup."
+  ],
+  "live_revision38_failure": "Lone live defender had an orphaned shared native busy reservation despite no witness and empty Combat/Avoidance queues. The original reservation creation moment was not instrumented.",
+  "native_reproduction": "Old pair narrowing retained excluded actors busy after original destruction; the unmodified full-list control released everyone on stock and reviewed Bugfix engines.",
+  "fresh_checks": {
+    "adapter_executables": 100,
+    "QTE_executables": 51,
+    "HUD_executables": 8,
+    "candidate_cleanup_original_engine_cases": 60,
+    "RTS_reservation_original_engine_cases": 16,
+    "renderer_coexistence_engine_images": 2,
+    "renderer_owners": 8,
+    "renderer_refused_mutations": 880,
+    "original_projection_inverse_points": 4896,
+    "exact_external_loader_fixture": true,
+    "native_public_pack_reader": 7,
+    "compiled_campaign_handoff": 8,
+    "campaign_reader": 8,
+    "context_backend": 5,
+    "Python": 52
+  },
+  "owner_acceptance": {
+    "date": "2026-11-03",
+    "message": "success",
+    "manual_test_success_reported": true,
+    "scope": "Owner reported success after revision39 installation. Exact scenario, battle completion and feature coverage were not specified.",
+    "formal_revision39_loaded_hash_and_hook_gate": false,
+    "all_sieges_or_long_session_proven": false
+  },
+  "PC_and_Deck_installed_pack_hashes_verified": true,
+  "exact_revision38_rollback_verified": true,
+  "game_assets_included": false,
+  "external_loader_included": false,
+  "recorder_debugger_included": false,
+  "installer": null,
+  "Workshop_uploaded_by_this_publication": false,
+  "previous_validation": "V0_34_MENU36_VALIDATION.json",
+  "enemy_acquisition_result": "Lone-player enemy acquisition remains independently unresolved."
+}

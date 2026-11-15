@@ -78,11 +78,11 @@ int main(){
   Exercise x;x.full();auto n=x.host.moves.size();x.now+=8000;x.r.finish(x.host,x.now);assert(x.host.moves.size()==n);
   x.feed(bit(Button::L1));assert(x.speed()>0&&x.speed()<.002f);x.full();x.feed(bit(Button::L1),{},{},300000);assert(x.speed()>0&&x.speed()<.03f);
  });
- TEST("pan turn pitch and pad scroll stay independent of shoulder smoothing",{
+ TEST("pan/turn/pitch stay independent; unclicked fine pad has no zoom",{
   Exercise a,b;for(unsigned i=0;i<80;++i){a.feed(0,{.6f,-.8f},{-.5f,.8f});b.feed(bit(Button::L1),{.6f,-.8f},{-.5f,.8f});
    auto x=a.host.moves.back(),y=b.host.moves.back();assert(x.pan.x==y.pan.x&&x.pan.y==y.pan.y&&x.turn==y.turn&&x.pitch==y.pitch&&x.dt==y.dt&&x.zoom==0&&y.zoom>0);}
   a.feed(bit(Button::LeftPadTouch),{},{},8000,{0,0});b.feed(bit(Button::LeftPadTouch)|bit(Button::L1),{},{},8000,{0,0});
-  a.feed(bit(Button::LeftPadTouch),{},{},8000,{0,.5f});b.feed(bit(Button::LeftPadTouch)|bit(Button::L1),{},{},8000,{0,.5f});assert(a.host.scrolled==.5f&&a.host.scrolled==b.host.scrolled);
+  a.feed(bit(Button::LeftPadTouch),{},{},8000,{0,.5f});b.feed(bit(Button::LeftPadTouch)|bit(Button::L1),{},{},8000,{0,.5f});assert(a.host.scrolled==0&&b.host.scrolled==0);
  });
  TEST("invalid durations and values clear the helper",{
   for(float dt:{0.f,-.01f,.1f,std::numeric_limits<float>::quiet_NaN(),std::numeric_limits<float>::infinity()}){deck195::ShoulderZoom z;for(int i=0;i<100;++i)z.step(1,.008f);assert(z.step(1,dt)==0&&z.step(1,.008f)<.002f);}

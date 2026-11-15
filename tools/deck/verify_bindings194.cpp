@@ -31,8 +31,24 @@ int main(){
  // RT/LT have identical select/order meaning through actual menu transforms.
  for(bool campaign_mode:{false,true})for(bool right_trigger:{false,true}){deck178::Menu178 m;Mouse h;bool back{};auto convert=[&](Frame f){return campaign_mode?deck188::campaign_menu_frame189(f,false):deck188::menu_frame188(f);};auto f=convert(frame(1));CHECK(m.sample(f,f.sample_us,{},h,back));f=frame(2);(right_trigger?f.right_trigger:f.left_trigger)=1;f=convert(f);CHECK(m.sample(f,f.sample_us,{},h,back));CHECK(right_trigger?(h.left_down==1&&!h.right_down):(h.right_down==1&&!h.left_down));f=convert(frame(3));CHECK(m.sample(f,f.sample_us,{},h,back));CHECK(right_trigger?h.left_up==1:h.right_up==1);}
  // Every direct possession button reaches its existing native key consumer.
- const std::pair<Button,unsigned> possession[]={{Button::A,deck181::F},{Button::B,deck181::M},{Button::X,deck181::One},{Button::Y,deck181::F10},{Button::L1,deck181::Q},{Button::L3,deck181::Shift},{Button::L4,deck181::Middle},{Button::L5,deck181::Control},{Button::R4,deck181::E},{Button::R5,deck181::C},{Button::Up,deck181::T},{Button::Down,deck181::G},{Button::Menu,deck181::Escape}};
- for(auto p:possession){deck181::Controls c;auto f=frame(1);c.sample(f,Context::Possession,f.sample_us);f=frame(2,bit(p.first));auto out=c.sample(f,Context::Possession,f.sample_us);CHECK(out.accepted&&out.held(p.second));f=frame(3);CHECK(!c.sample(f,Context::Possession,f.sample_us).held(p.second));}
+ const std::pair<Button,unsigned> possession[]={{Button::A,deck181::F},{Button::B,deck181::Control},{Button::X,deck181::One},{Button::Y,deck181::F10},{Button::L1,deck181::Q},{Button::L3,deck181::Shift},{Button::L4,deck181::Middle},{Button::Up,deck181::T},{Button::Down,deck181::G},{Button::Menu,deck181::Escape}};
+ for (auto binding : possession) {
+  const auto button = binding.first;
+  const auto key = binding.second;
+  const bool toggles = button == Button::B || button == Button::L3;
+  deck181::Controls controls;
+  auto f = frame(1);
+  controls.sample(f, Context::Possession, f.sample_us);
+  f = frame(2, bit(button));
+  const auto out = controls.sample(f, Context::Possession, f.sample_us);
+  CHECK(out.accepted && out.held(key));
+  f = frame(3);
+  CHECK(controls.sample(f, Context::Possession, f.sample_us).held(key) == toggles);
+  if (toggles) {
+   f = frame(4, bit(button));
+   CHECK(!controls.sample(f, Context::Possession, f.sample_us).held(key));
+  }
+ }
  for(bool aim:{false,true}){deck181::Controls c;auto f=frame(1);c.sample(f,Context::Possession,f.sample_us);for(unsigned n=2;n<8;++n){f=frame(n);if(n%2==0)(aim?f.left_trigger:f.right_trigger)=1;auto out=c.sample(f,Context::Possession,f.sample_us);CHECK(out.held(aim?deck181::Aim:deck181::Primary)==(n%2==0));}}
  // X is a native run/walk shortcut only in RTS; holding never repeats.
  {deck181::Controls c;auto f=frame(1);c.sample(f,Context::RTS,f.sample_us);f=frame(2,bit(Button::X));CHECK(c.sample(f,Context::RTS,f.sample_us).shortcuts==(1u<<deck183::ToggleRun));for(unsigned n=3;n<30;++n){f=frame(n,bit(Button::X));CHECK(!c.sample(f,Context::RTS,f.sample_us).shortcuts);}f=frame(30);c.sample(f,Context::RTS,f.sample_us);f=frame(31,bit(Button::X));CHECK(c.sample(f,Context::RTS,f.sample_us).shortcuts==(1u<<deck183::ToggleRun));}
@@ -40,6 +56,10 @@ int main(){
  // native idle, window transition, focus loss, clock rollback.
  {deck194::CursorActivity a;CHECK(!a.update(1,true,false,100));CHECK(a.update(1,true,true,200));CHECK(a.update(1,true,false,2199));CHECK(!a.update(1,true,false,2200));CHECK(a.update(1,true,true,3000));CHECK(a.update(1,true,true,9000));CHECK(!a.update(2,true,false,9001));CHECK(a.update(2,true,true,9002));CHECK(!a.update(2,false,true,9003));CHECK(!a.update(2,true,false,9004));CHECK(a.update(2,true,true,10000));CHECK(!a.update(2,true,false,9000));CHECK(!a.update(0,true,true,10001));}
  CHECK(deck194::cursor_window(nullptr,WM_NCHITTEST,0,0)==HTTRANSPARENT);CHECK(deck194::cursor_window(nullptr,WM_MOUSEACTIVATE,0,0)==MA_NOACTIVATE);
+ {CURSORINFO native{sizeof(CURSORINFO)};native.hCursor=LoadCursor(nullptr,IDC_ARROW);
+  CHECK(native.hCursor&&!deck194::visible_shape(native));
+  native.flags=CURSOR_SUPPRESSED;CHECK(!deck194::visible_shape(native));
+  native.flags=CURSOR_SHOWING;CHECK(deck194::visible_shape(native)==native.hCursor);}
  // Actual DrawIconEx and layered DIB upload, never show a window or send input.
  HWND owner=CreateWindowExW(WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE,L"STATIC",L"owned cursor fixture",WS_POPUP,0,0,1280,800,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);CHECK(owner);
  DWORD before=GetGuiResources(GetCurrentProcess(),GR_GDIOBJECTS);

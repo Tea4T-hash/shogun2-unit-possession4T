@@ -15,11 +15,25 @@ int main(){unsigned checks=0;
  constexpr uintptr_t b=0x10000000;
  std::map<uintptr_t,uintptr_t> m={{b+0x1bc8180,0x20000000},{0x20000000,b+0x170d284},{0x20000018,b+0x170d290},{0x2000010c,b+0x170d304},{0x20000110,0x21000000},{0x21000008,0x22000000},{0x220000b4,0x23000000},{0x23000014,3},{0x210281fc,0x24000000},{0x24000000,b+0x15d26fc},{0x240008e0,0x25000000},{0x240008cc,0x25000000},{0x25000000,b+0x15d1a74},{0x240008f8,0x26000000},{0x2102826c,0x27000000}};
  auto read=[&](uintptr_t a){auto i=m.find(a);return i==m.end()?uintptr_t(0):i->second;};
- assert(deck181::battle_ready(b,read));++checks; // Observed native deployment phase3.
- m[0x25000000]=b+0x15d22e8;assert(!deck181::battle_ready(b,read));m[0x25000000]=b+0x15d1a74;++checks;
+ assert(deck181::battle_ready(b,read)&&deck181::in_deployment(b,read));++checks;
+ m[0x25000000]=b+0x15d22e8;assert(!deck181::battle_ready(b,read)&&deck181::in_deployment(b,read));
+ m[0x240008e0]=0;assert(!deck181::battle_ready(b,read)&&deck181::in_deployment(b,read));
+ m[0x240008e0]=0x25000000;m[0x25000000]=b+0x15d1a74;++checks;
  for(auto at:{uintptr_t(0x20000000),uintptr_t(0x20000018),uintptr_t(0x2000010c),uintptr_t(0x24000000)}){auto old=m[at];m[at]=0;assert(!deck181::battle_ready(b,read));m[at]=old;}++checks;
  m[0x240008f8]=0;m[0x2102826c]=0;assert(deck181::battle_ready(b,read));++checks;
- for(auto phase:{0,1,2,4,9,99}){m[0x23000014]=phase;assert(!deck181::battle_ready(b,read));}++checks;
+ for(auto phase:{0,1,2,4,9,99}){m[0x23000014]=phase;assert(!deck181::battle_ready(b,read)&&!deck181::in_deployment(b,read));}++checks;
  for(auto phase:{5,6,7,8}){m[0x23000014]=phase;assert(deck181::battle_ready(b,read));}++checks;
+ m[0x25000000]=b+0x15d22e8;m[0x25000180]=0x24000000;
+ for(auto phase:{5,6,7,8}){
+  m[0x23000014]=phase;assert(deck181::owns_possession_cursor(b,0x21000000,0x25000000,read));
+ }
+ for(auto phase:{0,3,4,9,99}){
+  m[0x23000014]=phase;assert(!deck181::owns_possession_cursor(b,0x21000000,0x25000000,read));
+ }
+ m[0x23000014]=5;
+ for(auto at:{uintptr_t(0x20000110),uintptr_t(0x240008e0),uintptr_t(0x25000180)}){
+  auto old=m[at];m[at]=0;assert(!deck181::owns_possession_cursor(b,0x21000000,0x25000000,read));m[at]=old;
+ }
+ std::cout<<"PASS Deck cursor ownership across battle, stale lease and campaign return\n";
  std::cout<<"PASS "<<checks<<" handoff181 owner/timeout/initialized-deployment checks; no game execution\n";
 }

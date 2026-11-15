@@ -13,6 +13,11 @@ import adapt_runtime175
 import extend_contract175
 
 
+@unittest.skipIf(
+    '#include "../../native/deck/proton_paths174.h"'
+    in (ROOT / adapt_runtime175.EXTRACTOR).read_text(encoding='utf-8'),
+    'Historical pre-integration checks use the v0.35 source tag',
+)
 class PrivateIntegrationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

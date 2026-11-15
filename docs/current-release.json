@@ -1,37 +1,40 @@
 {
   "schema": 3,
   "product": "Shogun 2 Unit Possession",
-  "version": "0.34",
+  "version": "0.37",
   "branch": "main",
-  "tag": null,
+  "tag": "v0.37",
   "release_url": null,
   "repository_visibility": "public; owner controls visibility",
   "format": "Steam Workshop; automatic resources from each owned game",
   "workshop": {
     "item": "3825625050",
     "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3825625050",
-    "candidate": 172,
+    "candidate": 181,
+    "revision": "melee-rts-39",
     "pack": "shogun2_unit_possession_workshop165.pack",
-    "pack_sha256": "62ec1ac51066ed76fcc8abdf83956c75260c13a16f7aa27030f7bf69eecabc6c",
-    "pack_bytes": 3729730,
-    "steam_manifest": "3194424785911379296",
+    "pack_sha256": "a68637165024934159d5dcdf36efc1c941f50b0f10666394bfe777fc90947449",
+    "pack_bytes": 4275374,
+    "steam_manifest": "2737704436340709338",
     "uploaded_and_exact_download_verified": true,
-    "last_verified_date": "2026-10-27",
-    "updated_by_this_GitHub_release": false,
+    "last_verified_date": "2026-11-05",
+    "steam_time_updated": 1793760330,
+    "published_change_notes": "https://steamcommunity.com/sharedfiles/filedetails/changelog/3825625050",
     "last_known_verified_delivery": {
       "item": "3825625050",
       "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3825625050",
-      "candidate": 172,
+      "candidate": 181,
+      "revision": "melee-rts-39",
       "pack": "shogun2_unit_possession_workshop165.pack",
-      "pack_sha256": "62ec1ac51066ed76fcc8abdf83956c75260c13a16f7aa27030f7bf69eecabc6c",
-      "pack_bytes": 3729730,
-      "steam_manifest": "3194424785911379296",
+      "pack_sha256": "a68637165024934159d5dcdf36efc1c941f50b0f10666394bfe777fc90947449",
+      "pack_bytes": 4275374,
+      "steam_manifest": "2737704436340709338",
       "uploaded_and_exact_download_verified": true,
-      "last_verified_date": "2026-10-27",
-      "updated_by_this_GitHub_release": false
+      "last_verified_date": "2026-11-05",
+      "steam_time_updated": 1793760330,
+      "published_change_notes": "https://steamcommunity.com/sharedfiles/filedetails/changelog/3825625050"
     },
-    "updated_by_this_GitHub_source_push": false,
-    "owner_reported_campaign_footer_acceptance": "Revision36 accepted on 2026-11-02; this source push does not upload Workshop or independently verify its delivery"
+    "updated_by_this_GitHub_source_push": false
   },
   "source_kit": null,
   "player_archive": null,
@@ -41,7 +44,7 @@
     "steam_launch_option_required": false,
     "camera_chooser": false,
     "starting_view": "third-person",
-    "perspective_key": "P",
+    "perspective_key": "Tab or P",
     "resources": "automatically prepared from owned game and cached"
   },
   "storage": {
@@ -62,9 +65,29 @@
     "revision34_enemy_acquisition_trial": "FAILED: still ignored",
     "full_feature_coverage_or_long_term_stability_proven": false,
     "Deck_campaign_Start_Game_footer_owner_accepted": true,
-    "revision36_formal_loaded_hash_gate_completed": false
+    "revision36_formal_loaded_hash_gate_completed": false,
+    "revision39_owner_reported_success": true,
+    "revision39_owner_message": "success",
+    "revision39_formal_loaded_hash_gate_completed": false,
+    "revision50_owner_accepted_formation_controls": true,
+    "revision51_owner_reported_custom_portrait_visible_on_Deck": true,
+    "revision51_formal_loaded_hash_gate_completed": false,
+    "revision124_custom_weapon_live_test": {
+      "Bo-Hiya": [
+        "aim",
+        "fire"
+      ],
+      "Korean Pirates": [
+        "aim",
+        "fire"
+      ]
+    },
+    "revision125_offline_checks_passed": true,
+    "revision125_live_gameplay_verified": false,
+    "revision126_custom_battle_tooltip_pc_owner_accepted": true,
+    "revision126_custom_battle_tooltip_deck_hardware_verified": false
   },
-  "validation": "docs/public-release/V0_34_MENU36_VALIDATION.json",
+  "validation": "docs/public-release/V0_37_VALIDATION.json",
   "owner_decisions": {
     "first_party_license": "MIT",
     "resources": "from owned game",
@@ -88,24 +111,23 @@
     "bow audio follows native animation",
     "small text in fitted Deck campaign panels",
     "unfinished directional menu highlighting",
-    "campaign-to-battle controller transitions",
-    "enemy acquisition failed revision34 owner test"
+    "campaign-to-battle controller transitions"
   ],
   "history": "Historical tags and release notes remain. Installer downloads were removed; earlier game-resource-containing downloads remain absent.",
   "legal_clearance": "Resource exclusion is not legal clearance for native hooks/reverse engineering; see PROVENANCE.md.",
   "github_runtime": {
-    "revision": "menu-parent-36",
+    "revision": "custom-battle-tooltip-126",
     "candidate": 181,
     "pack": "shogun2_unit_possession_workshop165.pack",
-    "pack_sha256": "79e8e7ffbad5f1474a3188d6eac91a456d6d0148bba91e453f5c862f5071e11f",
-    "pack_bytes": 4272214,
-    "pack_distributed_by_this_source_push": false,
-    "live_enemy_acquisition_accepted": false,
-    "native_sha256": "3e81d86ab8be93fbe1b13ef1d2e58c9b002f097b952b5d165fa236b6fea8e778"
+    "pack_sha256": "64054dc25361ee7e21c70ddddcb526dd56d6f789125ea7abf5202d819f70249d",
+    "pack_bytes": 4662688,
+    "native_sha256": "34f38e848a933e93a42f774cb55b47f3327e8f0d1ba69cee2a9237c22ff884c8",
+    "pack_distributed_by_this_source_push": false
   },
-  "source_status": "Maintained combined PC/Steam Deck source through revision36; binary/Steam publication separate",
+  "source_status": "v0.37 tags Revision 126. The owner confirmed the Custom Battle setup tooltip fix on PC.",
   "last_tagged_release": {
     "version": "0.33",
     "url": "https://github.com/logsam58/shogun2-unit-possession/releases/tag/v0.33"
-  }
+  },
+  "source_tag_url": "https://github.com/logsam58/shogun2-unit-possession/tree/v0.37"
 }

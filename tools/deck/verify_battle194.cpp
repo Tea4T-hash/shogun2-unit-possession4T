@@ -55,10 +55,10 @@ int wmain(int argc,wchar_t** argv){
  memset(keys,0,256);deck181::merge_rts_keys194(keys,s,nullptr,base);CHECK(!*cached);
  }
  CHECK(deck175::native_guards(base));CHECK(FreeLibrary(mapped));}
- // Actual public button policy + key merge: A holds Space, never SelectAll;
+ // Actual public button policy + key merge: Right-pad click holds Space, never SelectAll;
  // L4+R4 emits Ctrl+A once and does not carry its own Shift into that chord.
  deck181::Controls c;auto f=frame(1,1000000);c.sample(f,Context::RTS,f.sample_us);unsigned char keys[256]{};
- for(unsigned i=2;i<12;++i){f=frame(i,1000000+i*8000,bit(Button::A));auto o=c.sample(f,Context::RTS,f.sample_us);CHECK(o.held(deck181::Space)&&!o.shortcuts);deck181::Sample s;std::copy(o.keys.begin(),o.keys.end(),s.keys);memset(keys,0,256);deck181::merge_rts_keys194(keys,s,nullptr,0);CHECK(keys[0x39]&&!keys[0x1e]);}
+ for(unsigned i=2;i<12;++i){f=frame(i,1000000+i*8000,bit(Button::RightPadClick));auto o=c.sample(f,Context::RTS,f.sample_us);CHECK(o.held(deck181::Space)&&!o.shortcuts);deck181::Sample s;std::copy(o.keys.begin(),o.keys.end(),s.keys);memset(keys,0,256);deck181::merge_rts_keys194(keys,s,nullptr,0);CHECK(keys[0x39]&&!keys[0x1e]);}
  f=frame(12,1100000);CHECK(!c.sample(f,Context::RTS,f.sample_us).held(deck181::Space));
  f=frame(13,1108000,bit(Button::L4));c.sample(f,Context::RTS,f.sample_us);f=frame(14,1116000,bit(Button::L4)|bit(Button::R4));auto o=c.sample(f,Context::RTS,f.sample_us);CHECK(o.shortcuts==(1u<<deck183::SelectAll));
  deck181::Sample s;std::copy(o.keys.begin(),o.keys.end(),s.keys);memset(keys,0,256);deck181::merge_rts_keys194(keys,s,&deck183::chords[deck183::SelectAll],0);CHECK(keys[0x1e]&&keys[0x1d]&&!keys[0x2a]);

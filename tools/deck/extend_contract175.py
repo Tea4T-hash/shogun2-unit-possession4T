@@ -48,7 +48,7 @@ def extend(snapshot,baseline=ROOT,cache_fix176=False,context_controls181=False):
             "native/outputs/shogun2-accuracy90-preview/src/native_overlay106.h"})
     if cache_fix176:
         import adapt_cache176
-        cache_review=adapt_cache176.verify(snapshot,baseline,legend184=context_controls181)
+        cache_review=adapt_cache176.verify(snapshot,baseline,legend184=context_controls181,startup222=context_controls181)
         allowed_changes.add(adapt_cache176.SOURCE)
     manifest=json.loads((baseline/'tools/data/engine-contract172.json').read_text())
     generated='native/common/engine_contract172_generated.h'

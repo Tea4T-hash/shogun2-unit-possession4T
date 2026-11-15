@@ -1,0 +1,65 @@
+{
+  "version": "0.36",
+  "revision": 125,
+  "previous_source_tag": "v0.35",
+  "pack": "shogun2_unit_possession_workshop165.pack",
+  "pack_sha256": "4447693c927d9353f8220e02458737355b44bba44f4c1f26f9306edb78b91742",
+  "pack_bytes": 4663196,
+  "bridge_sha256": "9bde9ca2f9cf72fac9a485d3ac352a942770033b715532835d4db9a0171e99b1",
+  "component_sha256": {
+    "possession-v46.dll": "c343e4ee0e21354caef4aafcc775fb6507e2741af625c51af280718888131a78",
+    "possession-hud.exe": "bd8653917f7290097c54593c3f686a2605dff255a7e46d4938fc247b7406f6dc",
+    "qte-playable-v79.dll": "629177cc80477298ef0ab09008ff02c9d87ab01ebe9ac9329d90d206e3276049",
+    "prepare-local-assets159.exe": "2fc1ea7179d816c240bd4859a6843fb08064b119e21223f767277757d1904eea"
+  },
+  "verified_runtime_and_tool_source_files": 833,
+  "package_evidence": {
+    "offline_native_suite_counts": {
+      "adapter": 4,
+      "qte_focused": 3,
+      "hud": 8,
+      "wheel_input": 4,
+      "overlay": 1
+    },
+    "reused_verified_suites": [
+      "qte",
+      "wheel_input",
+      "wheel_render",
+      "overlay"
+    ],
+    "custom_weapon_row_baseline_and_regression_passed": true,
+    "wheel_renderer_checked": true,
+    "same_pack_staged_on_pc_and_deck": true
+  },
+  "revision124_owner_report": {
+    "verified_behaviors": {
+      "Bo-Hiya": [
+        "aim",
+        "fire"
+      ],
+      "Korean Pirates": [
+        "aim",
+        "fire"
+      ]
+    },
+    "tested_device": "not specified",
+    "process_hash_observed": false
+  },
+  "revision125_live_gameplay_verified": false,
+  "publication": {
+    "source_tag": true,
+    "binary_assets": false,
+    "workshop_upload": false
+  },
+  "source_publication_checks": {
+    "python_current_passed": 45,
+    "python_historical_passed_on_v0_35": 7,
+    "canonical_generated_tables_passed": 6,
+    "role_and_source_index_checks_passed": true,
+    "native_contract_source_files": 296,
+    "source_only_test_and_catalog_updates": [
+      "tests/test_deck175.py",
+      "tools/data/derived-records.json"
+    ]
+  }
+}
