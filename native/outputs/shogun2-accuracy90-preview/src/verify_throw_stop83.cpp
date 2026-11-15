@@ -23,6 +23,7 @@ static void pose_manual_origin(float*){}
 static bool read_aim_frame(ViewRay&){return false;}
 static void manual_bow_apply(const uint32_t*,uintptr_t){}
 #include "equipment_policy81.h"
+static volatile LONG equipment_personal_override214{};
 static LONG equipment_slot81=equipment81::Ranged;
 static bool equipment_crouched81(){return false;}
 // This isolated fixture covers ordinary native firing. Full command-mode
