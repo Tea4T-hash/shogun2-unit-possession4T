@@ -8,8 +8,14 @@
 static unsigned cell_coordinates148[2]{};
 static bool blocked_scene148;
 static unsigned cell_calls148,collision_calls148;
+static void provide_cell148(void* out){
+    auto result=static_cast<unsigned*>(out);result[0]=result[1]=1;result[2]=reinterpret_cast<unsigned>(cell_coordinates148);
+}
 static void __fastcall cells148(void*,void*,const float*,float,unsigned,unsigned,void* out){
-    auto result=static_cast<unsigned*>(out);result[0]=result[1]=1;result[2]=reinterpret_cast<unsigned>(cell_coordinates148);++cell_calls148;
+    provide_cell148(out);++cell_calls148;
+}
+static void __fastcall radial_cells73(void*,void*,const float*,float,void* out){
+    provide_cell148(out);
 }
 static bool __fastcall collision148(void*,void*,uintptr_t,uintptr_t,unsigned){++collision_calls148;return blocked_scene148;}
 static void __fastcall unused_path148(void*,void*,const void*,const void*){}
@@ -39,6 +45,7 @@ int main(){SetUnhandledExceptionFilter(&fault147);try{
     f.jump(0x8c2b0,reinterpret_cast<void*>(&words147));f.jump(0x8c2d0,reinterpret_cast<void*>(&words147));f.jump(0xf04d0,reinterpret_cast<void*>(&free_words147));
     f.jump(0x9e9d0,reinterpret_cast<void*>(&words147)); // ushort visited-ID allocation, conservatively sized provider.
     f.jump(0x3f6290,reinterpret_cast<void*>(&no_terrain_cell147));
+    f.jump(0x17e8f0,reinterpret_cast<void*>(&radial_cells73));
     f.jump(0x3d8070,reinterpret_cast<void*>(&cells148));f.jump(0x3f5600,reinterpret_cast<void*>(&collision148));
     f.jump(0x3df290,reinterpret_cast<void*>(&unused_path148));f.jump(0x3de710,reinterpret_cast<void*>(&unused_direct148));f.jump(0x370b40,reinterpret_cast<void*>(&unused_point148));
     f.jump(0x3ddc60,reinterpret_cast<void*>(&contact_words148));
@@ -68,6 +75,14 @@ int main(){SetUnhandledExceptionFilter(&fault147);try{
     equipment_ranged81=0;equipment_slot81=equipment81::Melee;state->heartbeat=GetTickCount64();state->input=FORWARD|RUN;
     require(MH_Initialize()==MH_OK,"Personal charge hooks init");create_unit_detach130();require(MH_EnableHook(MH_ALL_HOOKS)==MH_OK,"Personal charge hooks enable");charge_mapping146();
     sync_members130(unit);require(proximity_squad147(actor)==ip&&field<uintptr_t>(actor,0x3b4)==ip,"Far actor did not have independent native participation");
+    const auto before_probe73=f.actor;
+    require(probe_combat_enemy73(actor),"Nearby enemy behind the soldier was missed");
+    field<float>(enemies[2],0x50)=-6.f;
+    field<float>(peer,0x48)=2.f;
+    require(!probe_combat_enemy73(actor),"Ally, dead soldier or another floor enabled combat walking");
+    field<float>(peer,0x48)=100.f;field<float>(enemies[2],0x50)=-4.f;
+    require(f.actor==before_probe73,"Close-contact query modified the player");
+    std::cout<<"PASS combat proximity73: original native radial query; enemy behind, ally, death, altitude and range.\n";
     // Reverse the native perception query: an enemy with NO preassigned target
     // must enumerate the separated player although the player's formation is far away.
     auto seen_actor=field<uintptr_t>(P::ptr(nodes),0xc);auto seen_next=field<uintptr_t>(P::ptr(nodes),0x14);
@@ -114,6 +129,8 @@ int main(){SetUnhandledExceptionFilter(&fault147);try{
     field<float>(actor,0x1ac)=5;field<float>(actor,0x150)=1;
     reinterpret_cast<UnitTick130>(base+0x3dd9d0)(reinterpret_cast<void*>(actor));
     require(field<unsigned>(actor,0x244)==2&&field<unsigned>(actor,0x1d0)==16,"Original entry/motion did not classify a real charge");
+    reinterpret_cast<ChargeContact148>(base+0x3c0bd0)(reinterpret_cast<void*>(controller),actor,enemies[1]);
+    require(field<unsigned>(controller,0x14)==1,"An unrelated outgoing contact stole the selected charge");
     reinterpret_cast<ChargeContact148>(base+0x3c0bd0)(reinterpret_cast<void*>(controller),actor,enemies[0]);
     require(charge_contacts148==2&&charge_control146.queued&&field<unsigned>(controller,0x14)==2,"Original incoming/outgoing contact queue did not establish handoff");
     field<unsigned char>(actor,0x258)=1;charge_boundary146(unit,true);require(charge_input_locked146(),"Charge task completion lost queued native encounter to QTE");
@@ -125,11 +142,33 @@ int main(){SetUnhandledExceptionFilter(&fault147);try{
     std::vector<unsigned char> pair149(0x200);auto w149=P::ptr(pair149);
     field<unsigned char>(w149,0xc)=1;field<uintptr_t>(w149,4)=environment;field<unsigned>(w149,0x38)=2;field<uintptr_t>(w149,0x30)=actor;field<uintptr_t>(w149,0x34)=enemies[0];field<unsigned>(w149,0x78)=2;field<uintptr_t>(w149,0x58)=actor;field<unsigned>(w149,0x5c)=16;
     field<uintptr_t>(actor,0x688)=field<uintptr_t>(enemies[0],0x688)=w149;field<float>(actor,0x69c)=1;field<float>(actor,0x6a4)=1;
+    // Same native attacker's target and frame, but charge alignment should
+    // keep the native charge rate rather than the ordinary melee walk.
+    field<float>(unit,0x22c)=.8f;
+    field<float>(actor,0x48)=field<float>(actor,0x50)=0;
+    field<float>(actor,0x69c)=0;field<float>(actor,0x6a4)=2;
     melee60::Request r149;r149.pid=GetCurrentProcessId();r149.lease=state->lease_generation;r149.serial=149;r149.player=state->actor_id;r149.player_unit=state->unit_id;r149.opponent=field<unsigned>(enemies[0],0x1c8);r149.opponent_unit=99;r149.phase=melee60::Aligning;r149.heartbeat=GetTickCount64();
+    r149.phase=melee60::Facing;
+    require(PossessionMeleeCommitment63(&r149)==63,"Facing fixture was rejected");
+    const auto before_facing=f.actor;
+    require(!prepare(actor)&&f.actor==before_facing,"A QTE prompt stole an active charge's approach");
+    r149.phase=melee60::Aligning;
     require(PossessionMeleeCommitment63(&r149)==63,"Native charge pair handoff rejected");
     field<float>(actor,0xd8)=field<float>(actor,0xe0)=0;state->heartbeat=GetTickCount64();
     require(!prepare(actor)&&(field<float>(actor,0xd8)>0||field<float>(actor,0xe0)>0),"On-rails charge skipped registered native pair alignment");
+    const auto dt=field<float>(base,0x15b2448);
+    const auto native_charge=field<float>(P::ptr(f.config),0x2c)*field<float>(unit,0x22c);
+    require(std::abs(field<float>(actor,0xe0)-native_charge*dt)<.00001f,
+        "Registered charge slowed to ordinary melee pace");
+    field<unsigned>(w149,0x5c)=0;
+    require(!prepare(actor)&&std::abs(field<float>(actor,0xe0)-alignment_speed149(nullptr,nullptr,0)*dt)<.00001f,
+        "Ordinary native outcome received charge-only speed");
+    field<unsigned>(w149,0x5c)=16;
+    field<float>(actor,0x6a4)=native_charge*dt*.5f;
+    require(!prepare(actor)&&std::abs(field<float>(actor,0xe0)-native_charge*dt*.5f)<.00001f,
+        "Charge alignment stepped through its native endpoint");
     charge_boundary146(unit,true);require(charge_pose_entries149>=1&&charge_pair_plan149==16,"Actual native charge classification/plan observation missing");
+    std::cout<<"PASS charge pace72: native selected target, charge-rate alignment, ordinary fallback, and no overshoot.\n";
     field<unsigned char>(w149,0xd1)=1;field<float>(actor,0xd8)=7;state->heartbeat=GetTickCount64();require(!prepare(actor)&&field<float>(actor,0xd8)==7,"Native charge playback received an alignment override");
     melee60::Request off149;PossessionMeleeCommitment63(&off149);melee_handoff78.reset();melee_opponent_motion78.reset();field<uintptr_t>(actor,0x688)=field<uintptr_t>(enemies[0],0x688)=0;
     charge_boundary146(unit,true);require(!charge_input_locked146(),"Finished native pair kept charge control forever");
