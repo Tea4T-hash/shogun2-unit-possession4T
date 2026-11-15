@@ -9,8 +9,8 @@
 // Optional numeric/pixel channel. Existing gameplay/QTE protocols are unchanged.
 namespace overlay106 {
 constexpr unsigned Magic=0x36314f53,Version=106,HeaderBytes=256;
-enum Layer:unsigned {HUD=1,QTE=2,Death=3};
-inline unsigned capacity(unsigned layer){return layer==HUD?3840u*2160u*4u:layer==QTE?1024u*1024u*4u:4u;}
+enum Layer:unsigned {HUD=1,QTE=2,Death=3,Help=4,Wheel=5};
+inline unsigned capacity(unsigned layer){return layer==HUD?3840u*2160u*4u:layer==Wheel?2048u*2048u*4u:(layer==QTE||layer==Help)?1024u*1024u*4u:4u;}
 inline double wall(){LARGE_INTEGER n,f;QueryPerformanceCounter(&n);QueryPerformanceFrequency(&f);return double(n.QuadPart)/double(f.QuadPart);}
 struct Key {unsigned lease{},actor{},unit{};};
 inline bool same(Key a,Key b){return a.lease==b.lease&&a.actor==b.actor&&a.unit==b.unit;}
@@ -27,7 +27,7 @@ inline void name(wchar_t* out,DWORD pid,unsigned layer){swprintf_s(out,100,L"Loc
 inline bool valid_header(const Header& h,DWORD pid,unsigned layer){return h.magic==Magic&&h.version==Version&&h.bytes==sizeof(Header)&&h.pid==pid&&h.layer==layer&&h.capacity==capacity(layer);}
 inline bool valid_frame(const Frame& f,unsigned layer,uint64_t now){
  // Kit v19: HUD active==3 = possession gate display (pre-load / done), accepted only by the adapter's gate rule.
- if((f.active!=1&&!((layer==QTE||layer==HUD)&&f.active==2)&&!(layer==HUD&&f.active==3))||!f.key.lease||!f.number||now<f.tick||now-f.tick>(layer==HUD?750u:200u)||
+ if((f.active!=1&&!((layer==QTE||layer==HUD)&&f.active==2)&&!(layer==HUD&&f.active==3))||!f.key.lease||!f.number||now<f.tick||now-f.tick>((layer==HUD||layer==Help||layer==Wheel)?750u:200u)||
     !f.width||!f.height||f.width>3840||f.height>2160||uint64_t(f.width)*f.height*4>capacity(layer)||
     f.view_width<640||f.view_height<360||f.view_width>16384||f.view_height>16384||!f.rect_count||f.rect_count>2)return false;
  for(unsigned i=0;i<f.rect_count;++i){auto q=f.rect[i];if(q.width<=0||q.height<=0||q.width>16384||q.height>16384||
@@ -39,7 +39,7 @@ protected:
  HANDLE mapping_{};Header* header_{};DWORD pid_{};unsigned layer_{};
  bool map(DWORD pid,unsigned layer,bool create){
   if(header_)return pid_==pid&&layer_==layer;
-  if(layer<HUD||layer>Death)return false;wchar_t n[100];name(n,pid,layer);
+  if(layer<HUD||layer>Wheel)return false;wchar_t n[100];name(n,pid,layer);
   HANDLE m=create?CreateFileMappingW(INVALID_HANDLE_VALUE,nullptr,PAGE_READWRITE,0,HeaderBytes+capacity(layer),n):OpenFileMappingW(FILE_MAP_ALL_ACCESS,FALSE,n);
   if(!m)return false;DWORD error=GetLastError();auto h=static_cast<Header*>(MapViewOfFile(m,FILE_MAP_ALL_ACCESS,0,0,HeaderBytes+capacity(layer)));
   if(!h){CloseHandle(m);return false;}
@@ -69,10 +69,12 @@ class Reader:public Channel {
  std::vector<unsigned char> pending_pixels_;
 public:
  bool open(DWORD pid,unsigned layer){return map(pid,layer,false);}
- const Snapshot* read(uint64_t now){
+ const Snapshot* read(){
   if(!header_||!valid_header(*header_,pid_,layer_))return nullptr;
   for(unsigned i=0;i<3;++i){LONG s=header_->sequence;if(s&1)continue;MemoryBarrier();Frame f=header_->frame;
-   if(!valid_frame(f,layer_,now)){MemoryBarrier();if(s==header_->sequence)return nullptr;continue;}
+   // The producer can finish a newer frame between Present and this copy.
+   // Compare with the clock after copying its header to avoid a blank frame.
+   if(!valid_frame(f,layer_,GetTickCount64())){MemoryBarrier();if(s==header_->sequence)return nullptr;continue;}
    bool changed=f.number!=snapshot_.frame.number||!same(f.key,snapshot_.frame.key)||f.width!=snapshot_.frame.width||f.height!=snapshot_.frame.height;
    if(changed){pending_pixels_.resize(size_t(f.width)*f.height*4);memcpy(pending_pixels_.data(),reinterpret_cast<unsigned char*>(header_)+HeaderBytes,pending_pixels_.size());}
    MemoryBarrier();if(s!=header_->sequence)continue;if(changed)snapshot_.pixels.swap(pending_pixels_);snapshot_.frame=f;return &snapshot_;
@@ -80,7 +82,7 @@ public:
   // A publisher writing its next DIB must not make a completed image blink.
   // This is a bounded pixel cache; the consumer still proves CURRENT numeric
   // lease/actor/unit on every draw. No native identity grace is introduced.
-  return valid_frame(snapshot_.frame,layer_,now)?&snapshot_:nullptr;
+  return valid_frame(snapshot_.frame,layer_,GetTickCount64())?&snapshot_:nullptr;
  }
  void acknowledge(unsigned backend,const Frame* f=nullptr,double submitted=0){if(!header_)return;Ack a{};a.backend=backend;a.tick=GetTickCount64();a.submitted=submitted>0?submitted:wall();if(f){a.key=f->key;a.number=f->number;}
   InterlockedIncrement(&header_->ack_sequence);MemoryBarrier();header_->ack=a;MemoryBarrier();InterlockedIncrement(&header_->ack_sequence);}
