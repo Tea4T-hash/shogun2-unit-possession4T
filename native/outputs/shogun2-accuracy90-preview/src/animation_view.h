@@ -19,12 +19,17 @@ inline bool angles(const deathpose::Eye& eye,float& yaw,float& pitch){
     yaw=std::atan2(direction[0],direction[2]);pitch=std::asin(std::fmax(-1.f,std::fmin(1.f,direction[1])));return true;
 }
 struct Handoff {
-    uintptr_t actor{};uint32_t lease{},serial{},unit{};uint64_t encounter{};bool pending{},native_playback{};
+    uintptr_t actor{};uint32_t lease{},serial{},unit{};uint64_t encounter{};bool pending{},native_playback{},resume_movement{};
     void reset(){*this={};}
     void observe(uintptr_t a,uint32_t l,uint32_t s,uint32_t u,uint64_t event,bool playing=false){
         bool preserve=matches(a,l,s,u)&&encounter==event&&native_playback;
-        actor=a;lease=l;serial=s;unit=u;encounter=event;pending=true;native_playback=preserve||playing;
+        actor=a;lease=l;serial=s;unit=u;encounter=event;pending=true;native_playback=preserve||playing;resume_movement=false;
     }
     bool matches(uintptr_t a,uint32_t l,uint32_t s,uint32_t u)const{return pending&&actor==a&&lease==l&&serial==s&&unit==u;}
+    void finish(){pending=false;native_playback=false;resume_movement=true;}
+    bool take_resume(uintptr_t a,uint32_t l,uint32_t s,uint32_t u){
+        if(!resume_movement||actor!=a||lease!=l||serial!=s||unit!=u)return false;
+        resume_movement=false;return true;
+    }
 };
 }
