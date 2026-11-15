@@ -1,3 +1,4 @@
+#include "../../../deck/framing203.h"
 #pragma once
 #include "view152.h"
 // One original world-only query per third-person camera update. No actor grid
@@ -48,11 +49,13 @@ static void view_camera152(uintptr_t camera){
             if(!camera_ray(eye.view,eye.view+3,ray)||!level_camera_up(ray,eye.up))return;
         }
         float forward[3],end[3];for(unsigned i=0;i<3;++i)forward[i]=eye.view[i+3]-eye.view[i];if(!deathpose::normalize(forward))return;
-        // Head is the pivot; retain the look direction and native roll. All
-        // targeting consumers subsequently capture this actual rendered eye.
-        for(unsigned i=0;i<3;++i)end[i]=eye.view[i]-forward[i]*view_distance152;
-        float distance=camera_clearance152(eye.view,end);
-        for(unsigned i=0;i<3;++i){field<float>(camera,8+i*4)=eye.view[i]-forward[i]*distance;field<float>(camera,0x14+i*4)=field<float>(camera,8+i*4)+forward[i];field<float>(camera,0x58+i*4)=eye.up[i];}
+        // Keep the character beside the centre aim ray throughout scrolling.
+        // Query the complete shoulder-offset segment, including native roll.
+        float delta203[3],length203{};
+        if(!framing203::segment(forward,eye.up,view_distance152,delta203,length203))return;
+        for(unsigned i=0;i<3;++i)end[i]=eye.view[i]+delta203[i];
+        float fraction203=framing203::fraction(camera_clearance152(eye.view,end),length203);
+        for(unsigned i=0;i<3;++i){field<float>(camera,8+i*4)=eye.view[i]+delta203[i]*fraction203;field<float>(camera,0x14+i*4)=field<float>(camera,8+i*4)+forward[i];field<float>(camera,0x58+i*4)=eye.up[i];}
         reinterpret_cast<Cancel>(field<uintptr_t>(field<uintptr_t>(camera,0),0xf4))(reinterpret_cast<void*>(camera));
         remember_owned_eye(camera);
     }__except(EXCEPTION_EXECUTE_HANDLER){state->error=22;}
