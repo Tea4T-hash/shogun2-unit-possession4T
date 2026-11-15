@@ -111,16 +111,20 @@ static void ammunition_label81(uintptr_t record,wchar_t (&label)[64]){
 static void publish_equipment81(){
     if(!equipment_status81||!possession_lease.active)return;
     EquipmentStatus81 sample{};sample.lease=state->lease_generation;sample.actor=state->actor_id;sample.unit=state->unit_id;
-    sample.slot=equipment_slot81;auto record=bow_record(unit);sample.kind=unsigned(native_personal_kind(record));
+    sample.slot=equipment_personal_override214?equipment81::Ranged:equipment_slot81;auto record=bow_record(unit);sample.kind=unsigned(native_personal_kind(record));
+    sample.launcher_sight=launcher_sight123(record);
     sample.projectile=record?field<unsigned>(record,0):0;sample.crouch_supported=equipment_crouch_supported81;sample.crouched=equipment_crouch81;
     auto request=equipment_requests_snapshot81();sample.pending=request.slot||request.toggle||request.tabs||equipment_ammo_inflight81;
     sample.error=equipment_error81;sample.switches=equipment_switches81;sample.ammo_changes=equipment_ammo_changes81;sample.tick=GetTickCount64();
     equipment81::AmmoOption options[33]{};unsigned current=0;sample.styles=collect_ammunition81(options,current,false);sample.ability=current?options[current].id:0;
+    if(sample.slot==equipment81::Ranged&&sample.kind==unsigned(PersonalWeaponKind::Bow)&&
+        state->aiming&&!state->fire_ticket&&!state->weapon_phase&&state->weapon_reload_remaining<=0)
+        sample.bow_power=bow_power142(weapon_mounted(),bow_clock142());
     ammunition_label81(record,sample.ammunition);
     publish_ammunition83(options,sample.styles,record,sample.pending,sample.error);
     AcquireSRWLockExclusive(&equipment_publish_lock81);InterlockedIncrement(&equipment_status81->sequence);MemoryBarrier();
     // Header and sequence are not copied over a reader's seqlock.
-    memcpy(&equipment_status81->lease,&sample.lease,sizeof(sample)-offsetof(EquipmentStatus81,lease));
+    memcpy(&equipment_status81->lease,&sample.lease,offsetof(EquipmentStatus81,arrow_camera)-offsetof(EquipmentStatus81,lease));
     MemoryBarrier();InterlockedIncrement(&equipment_status81->sequence);ReleaseSRWLockExclusive(&equipment_publish_lock81);
 }
 #include "ability_native141.h"
@@ -147,14 +151,18 @@ static void process_equipment_commands81(uintptr_t camera){
 }
 static bool equipment_prepare_motion81(){
     // Caller has validated the lease and excluded committed native melee.
+    const auto kind142=native_personal_kind(bow_record(unit));
+    const bool ranged=kind142!=PersonalWeaponKind::Unsupported;
     if(equipment_generation81!=state->lease_generation){
+        InterlockedExchange(&equipment_personal_override214,0);
         equipment_generation81=state->lease_generation;InterlockedExchange(&equipment_lease81,LONG(equipment_generation81));
-        bool ranged=native_personal_kind(bow_record(unit))!=PersonalWeaponKind::Unsupported;InterlockedExchange(&equipment_personal152,ranged?1:0);InterlockedExchange(&equipment_ranged81,unit_projectile152(unit)?1:0);
+        InterlockedExchange(&equipment_personal152,ranged?1:0);
+        InterlockedExchange(&equipment_ranged81,unit_projectile152(unit)?1:0);
         bool melee=field<unsigned char>(unit,0xead)!=0;InterlockedExchange(&equipment_unit_melee134,melee?1:0);
         InterlockedExchange(&equipment_slot81,ranged&&!melee?equipment81::Ranged:equipment81::Melee);
         InterlockedExchange(&equipment_crouch81,0);InterlockedExchange(&equipment_ammo_inflight81,0);equipment_error81=0;
     }
-    auto kind142=native_personal_kind(bow_record(unit));InterlockedExchange(&bow_family142,kind142==PersonalWeaponKind::Bow?1:0);
+    InterlockedExchange(&bow_family142,!ranged?-1:kind142==PersonalWeaponKind::Bow?1:0);
     bool firearm=kind142==PersonalWeaponKind::Firearm;
     bool supported=equipment81::crouch_supported(weapon_mounted(),firearm,equipment_unit_ability81(57,false),
         valid_weapon_clip(possessed,106),valid_weapon_clip(possessed,127),valid_weapon_clip(possessed,132),valid_weapon_clip(possessed,138));
@@ -164,32 +172,39 @@ static bool equipment_prepare_motion81(){
         // Native impacts and other non-weapon states retain their own movement.
         InterlockedExchange(&equipment_crouch81,0);return false;
     }
-    bool safe=equipment_boundary81().safe()&&!equipment_ammo_inflight81&&personal_weapon_mode(field<unsigned>(possessed,0x1f0),weapon_mounted());
+    bool safe=equipment_boundary81().safe()&&!equipment_ammo_inflight81;
+    if(safe&&bool(equipment_personal152)!=ranged){
+        // The formation's active projectile can change after possession.
+        InterlockedExchange(&equipment_personal152,ranged?1:0);
+        InterlockedExchange(&equipment_ranged81,unit_projectile152(unit)?1:0);
+    }
     // Synchronize to the actual native unit mode, including native hotkey/UI
     // changes not represented by a private pending request (for example pause
     // and resume). Native unit state, not our requested target, is the authority.
     bool native_melee=field<unsigned char>(unit,0xead)!=0;
     InterlockedExchange(&equipment_unit_melee134,native_melee?1:0);
     unsigned native_slot=equipment_personal152&&!native_melee?equipment81::Ranged:equipment81::Melee;
-    bool restore_melee137=safe&&native_slot==equipment81::Melee&&
+    const bool personal_ready214=equipment_personal152&&native_melee&&state->aiming;
+    const unsigned pose_slot214=personal_ready214?equipment81::Ranged:native_slot;
+    bool restore_melee137=safe&&!personal_ready214&&native_slot==equipment81::Melee&&
         meleedisplay137::ready_request(field<unsigned>(possessed,0x1f0),weapon_mounted())&&
         melee_presentation_owned137(possessed);
-    if(safe&&(unsigned(equipment_slot81)!=native_slot||restore_melee137)){
+    if(safe&&(unsigned(equipment_slot81)!=native_slot||bool(equipment_personal_override214)!=personal_ready214||restore_melee137)){
         own_weapon_call=1;
         __try {
             reinterpret_cast<RangedAction>(base+0x3ca920)(reinterpret_cast<void*>(possessed));mounted_draw={};state->aim_pose=0;
             InterlockedExchange(&state->fire_request,0);InterlockedExchange(&manual_arrow_released,0);
-            unsigned mode=native_slot==equipment81::Melee?(weapon_mounted()?30:10):personal_lower_mode(weapon_mounted());
+            unsigned mode=pose_slot214==equipment81::Melee?(weapon_mounted()?30:10):personal_lower_mode(weapon_mounted());
             original_change(reinterpret_cast<void*>(possessed),mode,0,0);
         }__finally {own_weapon_call=0;}
-        InterlockedExchange(&equipment_slot81,LONG(native_slot));InterlockedExchange(&equipment_crouch81,0);++equipment_switches81;
+        InterlockedExchange(&equipment_slot81,LONG(native_slot));InterlockedExchange(&equipment_personal_override214,personal_ready214?1:0);InterlockedExchange(&equipment_crouch81,0);++equipment_switches81;
         equipment_render_reset81();
     }
     if(safe&&request.lease==state->lease_generation&&request.slot==native_slot){
         equipment_error81=0;equipment_consume81(request.lease,request.slot,false);
     }
     if(safe){
-        bool crouched=supported&&equipment_slot81==equipment81::Ranged&&request.lease==state->lease_generation&&request.ctrl;
+        bool crouched=supported&&equipment_ranged_selected81()&&request.lease==state->lease_generation&&request.ctrl;
         unsigned native_mode=field<unsigned>(possessed,0x1f0);
         bool native_kneeling=!weapon_mounted()&&(native_mode==9||native_mode==15||native_mode==17);
         if(crouched!=bool(equipment_crouch81)||(!crouched&&native_kneeling)){
