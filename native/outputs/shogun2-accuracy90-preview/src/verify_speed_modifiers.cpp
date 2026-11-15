@@ -76,6 +76,15 @@ int main(){void* memory=nullptr;try{
     while(moving>0&&ticks<20){moving=native_speed_step(moving,0,3,6,.1f,-.1f);++ticks;}
     require(moving==0&&ticks==8,"Native braking fails to stop");
     require(native_speed_step(0,4.25f,3,6,.1f,-.1f)==.3f,"Native start acceleration");
+    // A direction change starts from the velocity in that direction.
+    for(const auto direction:std::array<std::array<float,2>,4>{{{1,0},{0,1},{-1,0},{0,-1}}}){
+        const auto x=direction[0],z=direction[1];
+        require(directed_speed95(6.f,x*6.f,z*6.f,x,z)==6.f,"Aligned run speed lost");
+        require(directed_speed95(6.f,-x*6.f,-z*6.f,x,z)==0.f,"Opposite run speed carried into reversal");
+        require(directed_speed95(6.f,z*6.f,-x*6.f,x,z)==0.f,"Perpendicular run speed carried into strafe");
+        require(native_speed_step(directed_speed95(6.f,-x*6.f,-z*6.f,x,z),2.f,3.f,6.f,.1f,-.1f)==.3f,
+            "Reversal skipped native acceleration");
+    }
     VirtualFree(memory,0,MEM_RELEASE);memory=nullptr;
     std::cout<<"PASS: "<<comparisons<<" original SSE speed-step comparisons and "<<cell_comparisons
         <<" original terrain-grid lookups; braking and category precedence verified; game untouched.\n";return 0;
