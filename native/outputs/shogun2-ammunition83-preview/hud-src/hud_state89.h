@@ -8,7 +8,7 @@ inline State resolve(const Input& s){
  if(!s.equipment||!s.selected||s.kind<1||s.kind>3)return {L"Unavailable",false,Reticle::None};
  Reticle reticle=s.kind==2?Reticle::Firearm:Reticle::Drop;
  if(s.pending)return {L"Switching...",false,Reticle::None};
- if(!s.ammo_known||s.ammo_error||!std::isfinite(s.ammunition)||s.ammunition<0)return {L"Unavailable",false,Reticle::None};
+ if(!s.ammo_known||s.ammo_error||!std::isfinite(s.ammunition)||s.ammunition<0)return {L"Unavailable",false,reticle};
  if(s.ammunition<1)return {L"Out of ammo",false,reticle};
  if(s.phase==4||s.reload>.05f)return {L"Reloading",false,reticle};
  if(s.phase==3)return {L"Released",false,reticle};
