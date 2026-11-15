@@ -428,8 +428,136 @@ static bool confirm_follow93(uintptr_t actor){
     if(followed(actor,false)){InterlockedIncrement(&release_recovered93);return true;}
     return false;
 }
+// ---- Kit v20: possession blacklist ------------------------------------------------------------
+// Ships and their crews can never be possessed or tracked: possession refuses a soldier whose unit
+// key is on this list, or whose army has ships (any fleet unit). Refusal happens before the lease
+// is taken, so nothing about the soldier is followed, counted or shown.
+static const wchar_t* const blacklist177[]={
+    L"Boshin_Corvette_Kaiten",
+    L"Boshin_Corvette_Kaiten_Copper_Plated",
+    L"Boshin_Corvette_Kaiten_Iron_Plated",
+    L"Boshin_Corvette_Kaiten_MP",
+    L"Boshin_Corvette_Kanko_Maru",
+    L"Boshin_Corvette_Kanko_Maru_Copper_Plated",
+    L"Boshin_Corvette_Kanko_Maru_Iron_Plated",
+    L"Boshin_Corvette_Kanko_Maru_MP",
+    L"Boshin_Corvette_Kanrin_Maru",
+    L"Boshin_Corvette_Kanrin_Maru_Copper_Plated",
+    L"Boshin_Corvette_Kanrin_Maru_Iron_Plated",
+    L"Boshin_Corvette_Kanrin_Maru_MP",
+    L"Boshin_Corvette_Kasuga",
+    L"Boshin_Corvette_Kasuga_Copper_Plated",
+    L"Boshin_Corvette_Kasuga_Iron_Plated",
+    L"Boshin_Corvette_Kasuga_Iron_Plated_MP",
+    L"Boshin_Corvette_Kasuga_MP",
+    L"Boshin_Frigate_Kaiyo_Maru",
+    L"Boshin_Frigate_Kaiyo_Maru_Copper_Plated",
+    L"Boshin_Frigate_Kaiyo_Maru_Iron_Plated",
+    L"Boshin_Frigate_Kaiyo_Maru_Iron_Plated_MP",
+    L"Boshin_Frigate_Kaiyo_Maru_MP",
+    L"Boshin_Gen_Ironclad_Kotetsu_MP",
+    L"Boshin_Gun_Boat_Chiyodagata",
+    L"Boshin_Gun_Boat_Chiyodagata_MP",
+    L"Boshin_Ironclad_HMS_Warrior",
+    L"Boshin_Ironclad_HMS_Warrior_MP",
+    L"Boshin_Ironclad_Kotetsu",
+    L"Boshin_Ironclad_Kotetsu_MP",
+    L"Boshin_Ironclad_L'Ocean",
+    L"Boshin_Ironclad_L'Ocean_MP",
+    L"Boshin_Ironclad_USS_Roanoke",
+    L"Boshin_Ironclad_USS_Roanoke_MP",
+    L"Boshin_Ship_HMS_Warrior",
+    L"Boshin_Ship_Kaiten",
+    L"Boshin_Ship_Kaiyo_Maru",
+    L"Boshin_Ship_Kanko_Maru",
+    L"Boshin_Ship_Kanrin_Maru",
+    L"Boshin_Ship_Kasuga",
+    L"Boshin_Ship_Kotetsu",
+    L"Boshin_Ship_LOcean",
+    L"Boshin_Ship_USS_Roanoke",
+    L"Boshin_Torpedo_Boat_Chiyodagata",
+    L"Boshin_Torpedo_Boat_Chiyodagata_MP",
+    L"Cannon_Ship_Cannon_Bune",
+    L"Cannon_Ship_Cannon_Bune_MP",
+    L"Cannon_Ship_Cannon_Bune_Mori",
+    L"Galleon_Black_Ship",
+    L"Galleon_Caravel",
+    L"Galleon_Caravel_Mori",
+    L"Galleon_Nanban_Trade_Ship",
+    L"Galleon_The_Black_Ship",
+    L"Gen_Heavy_Bune_MP",
+    L"Genpei_Heavy_Ship_Heavy_Ship_Attendants",
+    L"Genpei_Heavy_Ship_Heavy_Ship_Attendants_MP",
+    L"Genpei_Heavy_Ship_Heavy_Ship_Samurai",
+    L"Genpei_Heavy_Ship_Heavy_Ship_Samurai_MP",
+    L"Genpei_Light_Ship_Light_Ship_Attendants",
+    L"Genpei_Light_Ship_Light_Ship_Attendants_MP",
+    L"Genpei_Light_Ship_Light_Ship_Pirate",
+    L"Genpei_Light_Ship_Light_Ship_Samurai",
+    L"Genpei_Light_Ship_Light_Ship_Samurai_MP",
+    L"Genpei_Medium_Ship_Fire_Bomb_Medium_Ship",
+    L"Genpei_Medium_Ship_Fire_Bomb_Medium_Ship_MP",
+    L"Genpei_Medium_Ship_Medium_Ship_Attendants",
+    L"Genpei_Medium_Ship_Medium_Ship_Attendants_MP",
+    L"Genpei_Medium_Ship_Medium_Ship_Pirate",
+    L"Genpei_Medium_Ship_Medium_Ship_Samurai",
+    L"Genpei_Medium_Ship_Medium_Ship_Samurai_MP",
+    L"Genpei_Trade_Ship_Trade_Ship",
+    L"Heavy_Ship_Heavy_Bune",
+    L"Heavy_Ship_Heavy_Bune_MP",
+    L"Heavy_Ship_Heavy_Bune_Mori",
+    L"Heavy_Ship_Nihon_Maru",
+    L"Heavy_Ship_Nihon_Maru_MP",
+    L"Heavy_Ship_Nihon_Maru_Mori",
+    L"Heavy_Ship_O_Ataka_Bune",
+    L"Heavy_Ship_O_Ataka_Bune_Kizugawa",
+    L"Heavy_Ship_O_Ataka_Bune_MP",
+    L"Heavy_Ship_O_Ataka_Bune_Mori",
+    L"Light_Ship_Bow_Kobaya",
+    L"Light_Ship_Bow_Kobaya_MP",
+    L"Light_Ship_Bow_Kobaya_Mori",
+    L"Light_Ship_Bow_Ship",
+    L"Light_Ship_Fire_Bomb_Kobaya",
+    L"Light_Ship_Fire_Bomb_Kobaya_MP",
+    L"Light_Ship_Fire_Bomb_Kobaya_Mori",
+    L"Light_Ship_Fire_Bomb_Ship",
+    L"Light_Ship_Matchlock_Kobaya",
+    L"Light_Ship_Matchlock_Kobaya_MP",
+    L"Light_Ship_Matchlock_Kobaya_Mori",
+    L"Light_Ship_Matchlock_Kobaya_Otomo",
+    L"Light_Ship_Matchlock_Ship",
+    L"Light_Ship_Siege_Tower_Bune",
+    L"Light_Ship_Siege_Tower_Bune_MP",
+    L"Light_Ship_Siege_Tower_Bune_Mori",
+    L"Light_Ship_Siege_Tower_Ship",
+    L"Medium_Ship_Medium_Bune",
+    L"Medium_Ship_Medium_Bune_MP",
+    L"Medium_Ship_Medium_Bune_Mori",
+    L"Medium_Ship_Sengoku_Bune",
+    L"Medium_Ship_Sengoku_Bune_MP",
+    L"Medium_Ship_Sengoku_Bune_Mori",
+    L"Medium_Ship_Wako_Medium_Bune",
+    L"Trade_Ship_Red_Seal_Ship",
+    L"Trade_Ship_Trade_Ship",
+    L"Trade_Ship_Wako_Trade_Ship"
+};
+static volatile LONG blacklist_blocked177=0;
+template<class T> static bool bl_get177(uintptr_t a,T& v){SIZE_T n=0;return a&&ReadProcessMemory(GetCurrentProcess(),reinterpret_cast<const void*>(a),&v,sizeof v,&n)&&n==sizeof v;}
+static bool blacklisted177(uintptr_t actor){
+    uint32_t unit{},army{},ships{},definition{},object{},chars{};
+    if(!bl_get177(actor+0x214,unit)||!unit)return true;                      // no unit: never possess
+    if(bl_get177(uintptr_t(unit)+0x2a4,army)&&army&&bl_get177(uintptr_t(army)+0x12c,ships)&&ships)return true; // fleet
+    if(!bl_get177(uintptr_t(unit)+0x1c,definition)||!definition||!bl_get177(uintptr_t(definition),object)||!object||
+       !bl_get177(uintptr_t(object)+8,chars)||chars<0x10000)return false;   // key unreadable: army check above decides
+    wchar_t key[161]{};
+    for(unsigned i=0;i<160;++i){wchar_t c{};if(!bl_get177(uintptr_t(chars)+i*2,c))return false;key[i]=c;if(!c)break;}
+    for(const auto* listed:blacklist177)if(!_wcsicmp(key,listed))return true;
+    return false;
+}
+static void entry_failed(unsigned error);
 // Commit on the validated window boundary; do not wait for a ground-motion callback.
 static bool adopt_possession97(uintptr_t actor){
+    if(state&&state->acquire&&!possessed&&blacklisted177(actor)){InterlockedIncrement(&blacklist_blocked177);entry_failed(40);return false;} // kit v20
     if(!state||!state->acquire||possessed||!followed(actor,true))return false;
     possessed=actor;auto locomotion=possession_lease.identity.mount?possession_lease.identity.mount:actor;
     unsigned heading=field<unsigned short>(locomotion,0x64);
