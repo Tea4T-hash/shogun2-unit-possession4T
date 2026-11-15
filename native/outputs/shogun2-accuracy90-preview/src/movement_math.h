@@ -10,6 +10,10 @@ inline float native_speed_step(float previous,float target,float scaled_accelera
     if(previous>target)return previous+std::max(target-previous,deceleration*negative_dt);
     return previous;
 }
+// Physical velocity from another direction cannot seed acceleration here.
+inline float directed_speed95(float speed,float vx,float vz,float x,float z){
+    return std::clamp(vx*x+vz*z,0.f,speed);
+}
 // Native terrain cell conversion rounds (2*float(coordinate*scale)-.5) using
 // the active rounding mode, arithmetic-shifts by one, adds the grid origin,
 // then caps as unsigned. Negative out-of-map cells follow the native cap.
