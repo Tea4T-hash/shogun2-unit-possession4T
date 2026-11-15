@@ -60,8 +60,8 @@ int main(){try{unsigned cases=0,old_wrong=0;
         check(publisher.open(GetCurrentProcessId(),overlay106::QTE)&&native.open(GetCurrentProcessId(),overlay106::QTE)&&input.open(GetCurrentProcessId(),overlay106::QTE),"Real numeric/pixel endpoints unavailable");
         overlay106::Frame f{};f.key={4,1,3};f.width=f.height=1;f.view_width=1920;f.view_height=1080;f.rect_count=1;f.rect[0]={0,0,1,1};unsigned pixel=0xffffffff;
         PresentedImages113 images;Snapshot first{};first.serial=8;first.elapsed=.2f;Snapshot second=first;second.elapsed=.5f;
-        auto n=publisher.publish(f,&pixel);images.remember(n,f.key,7,first);auto old=native.read(GetTickCount64());check(old&&old->frame.number==n,"First channel image");native.acknowledge(11,&old->frame,overlay106::wall());
-        Frame93 cached{first,7,4,overlay106::wall()-.01};n=publisher.publish(f,&pixel);images.remember(n,f.key,7,second);auto current=native.read(GetTickCount64());check(current&&current->frame.number==n,"Second channel image");native.acknowledge(11,&current->frame,overlay106::wall());
+        auto n=publisher.publish(f,&pixel);images.remember(n,f.key,7,first);auto old=native.read();check(old&&old->frame.number==n,"First channel image");native.acknowledge(11,&old->frame,overlay106::wall());
+        Frame93 cached{first,7,4,overlay106::wall()-.01};n=publisher.publish(f,&pixel);images.remember(n,f.key,7,second);auto current=native.read();check(current&&current->frame.number==n,"Second channel image");native.acknowledge(11,&current->frame,overlay106::wall());
         // No render-worker acknowledgement poll occurs between these presents
         // and input's independent read of the existing shared channel.
         overlay106::Ack ack;check(input.ack(ack),"Input acknowledgement read");transport::Payload live;live.lease=4;live.anchor.battle=7;live.prompt.serial=8;
