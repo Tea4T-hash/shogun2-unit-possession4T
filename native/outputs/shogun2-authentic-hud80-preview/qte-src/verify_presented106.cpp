@@ -16,5 +16,24 @@ int main(){try{LARGE_INTEGER f;QueryPerformanceFrequency(&f);frequency=double(f.
  Ack good{key,11,199,GetTickCount64(),wall()};auto serial=drawn_prompt106.serial;
  for(unsigned bad=0;bad<8;++bad){auto ack=good;if(bad==0)ack.number=0;if(bad==1)ack.number+=32;if(bad==2)++ack.key.lease;if(bad==3)++ack.key.actor;if(bad==4)++ack.key.unit;if(bad==5)ack.submitted=NAN;if(bad==6)ack.submitted=wall()+1;if(bad==7)ack.submitted=0;require(!acknowledged_image106(ack,key,serial,1),"Invalid/reused native image accepted");++cases;}
  require(!acknowledged_image106(good,key,serial+1,1),"Another QTE serial accepted");
+ // Force the renderer to start its loop just before the producer commits.
+ const double render_started=wall();double published=wall();
+ while(published<=render_started)published=wall();
+ transport::Payload latest;latest.pid=1;latest.enabled=latest.occupied=1;latest.lease=key.lease;
+ latest.prompt=drawn_prompt106;
+ latest.anchor={1,published,0,.1,1,true,false};latest.published_wall=published;
+ transport::Publication channel;transport::publish(channel,latest);
+ Snapshot projected;
+ require(!transport::presentation(latest,render_started,projected),"Pre-copy timestamp did not reproduce the hidden bar");
+ transport::Payload copied;double observed;
+ require(sample_publication97(channel,copied,observed)&&observed>=published&&
+     transport::presentation(copied,observed,projected)&&projected.serial==latest.prompt.serial,
+     "A fresh QTE publication vanished during the copy/clock interleaving");
+ QtePresenter96 presenter;
+ require(presenter.use_native(4,1,1,true),"Ready native renderer missed initial prompt");
+ for(unsigned i=0;i<60;++i)require(presenter.use_native(4,1,1,i%2==0),"Missed acknowledgement switched renderer");
+ require(!presenter.use_native(4,1,2,false),"New prompt inherited the previous renderer");
+ for(unsigned i=0;i<60;++i)require(!presenter.use_native(4,1,2,true),"A late native acknowledgement duplicated the fallback");
+ require(presenter.use_native(4,2,2,true)&&!presenter.use_native(5,2,2,false),"Renderer crossed battle or possession lease");
  std::cout<<"PASS: "<<cases<<" production image-history/native-ack/click cases across30/60/120/144/240Hz; CPU-ahead prompt cannot replace acknowledged geometry, wrong lease/actor/unit/serial and expired ring entries rejected. No scanout/latency claim.\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
