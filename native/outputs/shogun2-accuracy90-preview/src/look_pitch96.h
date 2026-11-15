@@ -17,5 +17,5 @@ inline bool pitched_eye(const deathpose::Eye& native,float requested,deathpose::
  for(unsigned k=0;k<3;++k)result.view[k+3]=native.view[k]+direction[k];
  return animationview::angles(result,yaw,pitch);
 }
-inline float mouse_pitch(float pitch,int dy,float sensitivity){return std::clamp(pitch-float(dy)*sensitivity,-1.553343034f,1.553343034f);}
+inline float mouse_pitch(float pitch,float dy,float sensitivity){return std::clamp(pitch-float(dy)*sensitivity,-1.553343034f,1.553343034f);}
 }
