@@ -43,6 +43,111 @@ int main(){void* memory=nullptr;try{
     require(!equipment_prepare_motion81()&&equipment_slot81==equipment81::Ranged&&fixture_mode81==8,"Actual native ranged mode without private request was ignored");
     possession_lease.identity.mount=1;equipment_requests81.ctrl=true;changes=fixture_changes81;require(!equipment_prepare_motion81()&&!equipment_crouch_supported81&&fixture_changes81==changes,"Mounted soldier crouched");possession_lease.identity.mount=0;
     equipment_reset81();require(!equipment_crouch81&&!equipment_crouch_supported81&&!equipment_lease81&&!equipment_requests81.ctrl&&!equipment_requests81.slot&&!equipment_requests81.tabs,"Release retained equipment requests");
+    // A custom pack can keep the actor's normal clips and replace projectile
+    // IDs, keys, velocity and range. The in-memory constructor layout is the
+    // source for these fixtures, not a guess based on any projectile's name.
+    auto string=[&](uintptr_t dst,const auto* text,unsigned n){
+        field<unsigned>(dst,0)=n;field<unsigned>(dst,4)=n;
+        field<uintptr_t>(dst,8)=reinterpret_cast<uintptr_t>(text);
+    };
+    const auto record=fixture_projectile81;
+    static const wchar_t custom[]=L"custom_mixed_unit_unknown";
+    static const wchar_t arrow[]=L"arrow",gun[]=L"bullet",shell[]=L"cannon_ball";
+    static const char bomb[]="grenade";
+    std::array<unsigned char,64> shot_type{};
+    field<unsigned>(record,0)=812;
+    field<unsigned>(record,0x60)=207;
+    field<float>(record,0x6c)=123.5f;
+    string(record+4,custom,unsigned(std::wcslen(custom)));
+    string(record+0x28,arrow,5);
+    require(native_personal_kind(record)==PersonalWeaponKind::Unsupported,"Unresolved custom descriptor accepted");
+    field<uintptr_t>(record,0x24)=reinterpret_cast<uintptr_t>(shot_type.data());
+    field<unsigned>(record,0x10)=1;
+    require(native_personal_kind(record)==PersonalWeaponKind::Unsupported,"Artillery accepted as personal weapon");
+    field<unsigned>(record,0x10)=0;
+    require(native_personal_kind(record)==PersonalWeaponKind::Bow&&bow_record(unit)==record,"Custom native bow rejected");
+    ammo83::Item item{};
+    ammunition_item83(record,item);
+    require(item.icon==ammo83::Arrow,"Custom bow did not get its generic arrow icon");
+    string(record+0x28,gun,6);
+    require(native_personal_kind(record)==PersonalWeaponKind::Firearm,"Custom native firearm rejected");
+    item={};ammunition_item83(record,item);
+    require(item.icon==ammo83::Bullet,"Custom firearm did not get its generic bullet icon");
+    // Two rows from the enabled Workshop packs, neither in the old key list.
+    static const wchar_t matchlock[]=L"shogun_matchlock_long",pistoleers[]=L"pistoleers";
+    string(record+4,matchlock,unsigned(std::wcslen(matchlock)));
+    field<unsigned>(record,0x60)=225;field<float>(record,0x6c)=300;
+    require(native_personal_kind(record)==PersonalWeaponKind::Firearm,"Ultimate Field Command long matchlock rejected");
+    string(record+4,pistoleers,unsigned(std::wcslen(pistoleers)));
+    field<unsigned>(record,0x60)=60;field<float>(record,0x6c)=200;
+    require(native_personal_kind(record)==PersonalWeaponKind::Firearm,"Expanded Japan pistoleers rejected");
+    static const wchar_t rocket[]=L"rocket",bohiya[]=L"shogun_bohiya",rocket_model[]=L"projectile_rocket";
+    static const wchar_t mortar[]=L"shogun_handmortar",rockets[]=L"shogun_rocket";
+    static const char fragment_model[]="projectile_fragment01";
+    const auto shot=reinterpret_cast<uintptr_t>(shot_type.data());
+    static const char fire_lance[]="ming_rocket_firelance",fragment[]="fragment",shrapnel[]="shrapnel",fougasse[]="fougasse";
+    field<unsigned>(record,0x10)=1;field<unsigned>(record,0x60)=200;field<float>(record,0x6c)=45.f;
+    field<unsigned>(record,0x4c)=1;
+    string(record+4,bohiya,13);string(record+0x18,rocket_model,17);string(record+0x28,rocket,6);string(shot,rocket,6);
+    bool typed=false;
+    require(native_personal_kind(record,&typed)==PersonalWeaponKind::Thrown&&typed&&bow_record(unit)==record&&
+            launcher_sight123(record)==LauncherSight123::Rocket,"UEFC Bo-Hiya did not equip its portable launcher");
+    item={};ammunition_item83(record,item);require(item.icon==ammo83::Rocket,"Bo-Hiya ammunition was not recognized as rockets");
+    string(record+4,custom,unsigned(std::wcslen(custom)));
+    require(native_personal_kind(record)==PersonalWeaponKind::Thrown&&launcher_sight123(record)==LauncherSight123::Rocket,
+            "Renamed portable launcher was not recognized");
+    field<unsigned>(record,0x10)=3;
+    require(native_personal_kind(record)==PersonalWeaponKind::Unsupported&&launcher_sight123(record)==LauncherSight123::None,
+            "Naval-category launcher was admitted");
+    field<unsigned>(record,0x10)=1;
+    string(record+4,mortar,17);
+    require(native_personal_kind(record)==PersonalWeaponKind::Thrown&&launcher_sight123(record)==LauncherSight123::Mortar,
+            "Stock hand mortar lost its weapon family");
+    string(record+4,rockets,13);
+    require(native_personal_kind(record)==PersonalWeaponKind::Thrown&&launcher_sight123(record)==LauncherSight123::Rocket,
+            "Stock fire rockets lost their weapon family");
+    field<unsigned>(record,0x10)=0;field<unsigned>(record,0x60)=50;field<float>(record,0x6c)=50.f;
+    string(record+4,fire_lance,sizeof fire_lance-1);string(record+0x18,fragment_model,sizeof fragment_model-1);
+    string(record+0x28,shrapnel,8);string(shot,fragment,8);
+    field<unsigned>(record,0x4c)=30;
+    require(native_personal_kind(record,&typed)==PersonalWeaponKind::Firearm&&typed&&bow_record(unit)==record,
+            "UEFC Korean Pirates did not equip their native musket-rig fire lance");
+    item={};ammunition_item83(record,item);require(item.icon==ammo83::Bullet,"Fire lance inherited the rocket icon from its name");
+    string(record+4,custom,unsigned(std::wcslen(custom)));
+    require(native_personal_kind(record)==PersonalWeaponKind::Firearm,"Renamed fire lance was not recognized");
+    field<unsigned>(record,0x10)=1;
+    require(native_personal_kind(record)==PersonalWeaponKind::Unsupported,"Crew artillery shrapnel admitted");
+    field<unsigned>(record,0x10)=0;field<unsigned>(record,0x4c)=1;
+    require(native_personal_kind(record)==PersonalWeaponKind::Unsupported,"A lone fragment was treated as a volley");
+    field<unsigned>(record,0x4c)=30;string(shot,fougasse,8);
+    require(native_personal_kind(record)==PersonalWeaponKind::Unsupported,"Impact fragments admitted as a personal weapon");
+    string(record+4,custom,unsigned(std::wcslen(custom)));
+    string(record+0x28,bomb,7);
+    require(native_personal_kind(record)==PersonalWeaponKind::Thrown,"Custom native grenade rejected");
+    string(record+0x28,shell,11);
+    require(native_personal_kind(record)==PersonalWeaponKind::Unsupported,"Cannon shell treated as personal firearm");
+    field<unsigned char>(unit,0xead)=0;
+    field<unsigned>(possessed,0x1f0)=8;
+    equipment_prepare_motion81();
+    require(!equipment_personal152&&equipment_slot81==equipment81::Melee&&bow_family142<0,
+            "Unknown initial record became an equipped ranged weapon");
+    string(record+0x28,gun,6);
+    state->weapon_phase=WEAPON_DRAW;
+    equipment_prepare_motion81();
+    require(!equipment_personal152&&equipment_slot81==equipment81::Melee,"Changed equipment interrupted a committed shot");
+    state->weapon_phase=0;
+    equipment_prepare_motion81();
+    require(equipment_personal152&&equipment_slot81==equipment81::Ranged&&bow_family142==0&&equipment_ranged_selected81(),
+            "Possession did not refresh to the newly recognized firearm");
+    field<unsigned char>(unit,0xead)=1;state->aiming=1;
+    equipment_prepare_motion81();
+    require(equipment_personal_override214&&equipment_ranged_selected81(),
+            "Custom firearm could not enter personal aim while its formation used melee");
+    field<unsigned>(record+0x28,4)=2;
+    require(native_personal_kind(record)==PersonalWeaponKind::Unsupported,"Malformed missile type accepted");
+    string(record+0x28,gun,6);
+    field<float>(record,0x6c)=std::numeric_limits<float>::quiet_NaN();
+    require(native_personal_kind(record)==PersonalWeaponKind::Unsupported,"Invalid custom velocity accepted");
     VirtualFree(memory,0,MEM_RELEASE);memory=nullptr;
     std::cout<<"PASS: production equipment boundary selects actual native kneel/stand/melee modes; shot/handoff/old lease/unlocked ability/missing clip/mounted guards; release clears state. Synthetic objects only, game untouched.\n";return 0;
 }catch(const std::exception& e){if(memory)VirtualFree(memory,0,MEM_RELEASE);std::cerr<<e.what()<<'\n';return 1;}}
