@@ -14,7 +14,7 @@ static void ability_reset141(){
  ability_lease141=0;ability_selected141=~0u;ability_next141=ability_pending_until141=0;ability_error141=0;
 }
 static void ability_sample141(bool focus){
- unsigned held=(GetAsyncKeyState('G')&0x8000?1u:0u)|(GetAsyncKeyState('F')&0x8000?2u:0u);
+ unsigned held=(deck181::key_state('G')&0x8000?1u:0u)|(deck181::key_state('F')&0x8000?2u:0u); // our key layout, Deck-aware reader
  unsigned edges=held&~ability_previous141;ability_previous141=held;
  bool active=focus&&state&&state->mode==POSSESSED&&!state->release&&!state->stop&&!dead_view();
  AcquireSRWLockExclusive(&ability_input_lock141);
