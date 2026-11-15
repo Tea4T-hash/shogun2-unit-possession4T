@@ -33,7 +33,8 @@ struct Authorization {
     void removed(uint32_t address,uint64_t generation){if(key.address==address&&key.generation==generation)*this={};}
 };
 using WriteBytes=bool(*)(void*,uint32_t,const void*,size_t);
-inline bool retain_selected(const Reader& r,WriteBytes write,void* context,uint32_t engine,uint32_t witness,const NativeActor& player,const NativeActor& enemy){
+using ReleaseExcluded213=void(*)(void*,uint32_t,uint32_t);
+inline bool retain_selected(const Reader& r,WriteBytes write,void* context,uint32_t engine,uint32_t witness,const NativeActor& player,const NativeActor& enemy,ReleaseExcluded213 release=nullptr){
     SelectionInput input;uint8_t alternate{};
     if(!write||!selection_input(r,witness,engine,input)||!r.get(witness+0xee,alternate)||alternate||
        player.address==enemy.address||player.unit==enemy.unit||player.side==enemy.side)return false;
@@ -43,13 +44,24 @@ inline bool retain_selected(const Reader& r,WriteBytes write,void* context,uint3
         if(!r.get(original[i]+0x688,backlink)||backlink)return false;
         p|=original[i]==player.address;e|=original[i]==enemy.address;
     }
-    if(!p||!e)return false;
+    if(!p||!e||(input.count>2&&!release))return false;
+    // Native3c0b10 reserves EVERY initial candidate in manager+88 before
+    // preparation. A shortened list hides excluded actors from the original
+    // destructor. Refuse duplicates and keep the full list on write failure.
+    for(unsigned i=0;i<input.count;++i)for(unsigned j=0;j<i;++j)
+        if(original[i]==original[j])return false;
     uint32_t pair[2]={player.address,enemy.address},count=2;
     if(!write(context,witness+0x10,pair,sizeof pair))return false;
     if(!write(context,witness+0x24,&count,sizeof count)){write(context,witness+0x10,original,sizeof original);return false;}
+    // The initial list and every zero backlink were validated above. Release
+    // excluded reservations through original3e1930 on this engine callback;
+    // keep both selected candidates reserved for their native preparation.
+    for(unsigned i=0;i<input.count;++i)
+        if(original[i]!=player.address&&original[i]!=enemy.address)
+            release(context,witness,original[i]);
     return true;
 }
-inline bool narrow(const Reader& r,WriteBytes write,void* context,uint32_t engine,uint32_t witness,const NativeActor& player){
+inline bool narrow(const Reader& r,WriteBytes write,void* context,uint32_t engine,uint32_t witness,const NativeActor& player,ReleaseExcluded213 release=nullptr){
     SelectionInput input;if(!selection_input(r,witness,engine,input))return false;
     if(input.count==2)return true;
     uint8_t alternate{};if(!r.get(witness+0xee,alternate)||alternate||!write)return false;
@@ -65,12 +77,8 @@ inline bool narrow(const Reader& r,WriteBytes write,void* context,uint32_t engin
         float distance=(x-px)*(x-px)+(z-pz)*(z-pz);if(distance<best){best=distance;enemy=actor;}
     }
     if(!found||!enemy.address)return false;
-    // Existing inline storage; no allocation, no actor/backlink/health writes.
-    // The untouched excluded actors retain their native AI and can form pairs.
-    uint32_t original[5]{},pair[2]={player.address,enemy.address},count=2;
-    for(unsigned i=0;i<5;++i)if(!r.get(witness+0x10+i*4,original[i]))return false;
-    if(!write(context,witness+0x10,pair,sizeof pair))return false;
-    if(!write(context,witness+0x24,&count,sizeof count)){write(context,witness+0x10,original,sizeof original);return false;}
-    return true;
+    // Legacy helper is unused by production selection. Share the same native
+    // reservation cleanup if a fixture or future caller retains this pair.
+    return retain_selected(r,write,context,engine,witness,player,enemy,release);
 }
 } }
