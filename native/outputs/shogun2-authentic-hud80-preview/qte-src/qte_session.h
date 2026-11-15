@@ -8,7 +8,7 @@ namespace qte {
 class Session {
     NativeBridge bridge_;Timeline timeline_;ClickQueue<> clicks_;
     TimePoint point_{},anchor_{};Owner owner_{};
-    double processed_{};bool initialized_{},clock_verified_{},presented_input93_{};
+    double processed_{};bool initialized_{},clock_verified_{},strict_{},presented_input93_{};
     bool left_{},right_{},focused_{};uint32_t errors_{};
     void advance(const Owner& owner,const ClockFrame& frame,bool focused){
         if(owner.observation_busy93)return; // Torn publication: hold; never reinterpret as a confirmed lease loss.
@@ -28,13 +28,18 @@ class Session {
             if(key.valid()&&owner.battle&&owner.battle!=key.pair.battle)bridge_.teardown();
             else bridge_.release(CancelReason92::Owner);
         }
-        if(clicks_.overflowed()){bridge_.release(CancelReason92::InputOverflow);clicks_.clear();++errors_;}
+        // Lost or stale input cannot be scored, but is not a combat event.
+        if(clicks_.overflowed()){
+            if(!strict_){bridge_.release(CancelReason92::InputOverflow);++errors_;}
+            clicks_.clear();
+        }
         Click click;
         while(clicks_.pop(click)){
             auto current=bridge_.snapshot();
             if(!current.active||click.battle!=point.battle||click.serial!=current.serial)continue;
             if(!std::isfinite(click.simulation)||click.simulation<processed_-(click.visible93?.025:1e-8)||click.simulation>point.horizon+1e-8){
-                bridge_.release(CancelReason92::ClickTimestamp);++errors_;continue;
+                if(!strict_){bridge_.release(CancelReason92::ClickTimestamp);++errors_;}
+                continue;
             }
             bridge_.input_sample(click.paused?0.:std::max(0.,click.simulation-processed_),click.serial,
                                  click.left,click.right,click.paused,click.focused,click.visible93?&click.shown93:nullptr);
@@ -53,7 +58,7 @@ class Session {
 public:
     Session(Reader reader,SelectionCalls selection,BridgeCalls calls,uint32_t engine,
             OutcomeBindings outcomes={},bool clock_verified=false,bool preserve_special=false,bool prepared_mode=false,bool strict=false,bool presented_input93=false):
-        bridge_(reader,selection,calls,engine,outcomes,preserve_special,prepared_mode,strict),clock_verified_(clock_verified),presented_input93_(presented_input93){}
+        bridge_(reader,selection,calls,engine,outcomes,preserve_special,prepared_mode,strict),clock_verified_(clock_verified),strict_(strict),presented_input93_(presented_input93){}
     void levels(bool left,bool right){left_=left;right_=right;}
     bool enqueue(const Click& click){return clicks_.push(click);}
     uint32_t prepare(uint32_t witness,uint64_t generation,Owner owner,const ClockFrame& frame,bool focused,bool allow_prompt=true){
