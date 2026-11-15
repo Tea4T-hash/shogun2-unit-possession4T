@@ -20,13 +20,7 @@ static void bow_sample142(bool click,bool active){
  ReleaseSRWLockExclusive(&bow_input_lock142);
  if(fire)InterlockedExchange(&state->fire_request,1);
 }
-// Called only after native ownership/ready/reload/queue guards. No actor or
-// weapon-definition writes: bind one numeric power observation to this shot.
-static bool bow_bind142(uintptr_t record,bool mounted){
- bow_ticket142={};if(!is_bow_projectile(record))return true;
- bow142::Release release;
- AcquireSRWLockExclusive(&bow_input_lock142);release=bow_release142;bow_release142={};ReleaseSRWLockExclusive(&bow_input_lock142);
- if(!release.serial||!bow142::same(release.key,bow_key142()))return false;
+static float bow_duration142(bool mounted){
  auto db=field<uintptr_t>(possessed,0x23c),array=db?field<uintptr_t>(db,0xc):0;
  auto clip=array?field<uintptr_t>(array,(mounted?758:126)*4):0,asset=clip?field<uintptr_t>(clip,4):0;
  // +90 is the first RELEASE EVENT, not asset duration. Foot raise126
@@ -35,7 +29,28 @@ static bool bow_bind142(uintptr_t record,bool mounted){
  unsigned frames=asset?field<unsigned>(asset,0x64):0;float step=field<float>(base,0x15b2448);
  float duration=mounted&&asset&&field<unsigned char>(asset,0x94)==1?field<float>(asset,0x90):
      frames>=2&&frames<=30000&&std::isfinite(step)&&step>0&&step<=.25f?(frames-1)*step:0;
- if(!std::isfinite(duration)||duration<.05f||duration>30)return false;
+ return std::isfinite(duration)&&duration>=.05f&&duration<=30?duration:0.f;
+}
+static float bow_power142(bool mounted,double now){
+ AcquireSRWLockShared(&bow_input_lock142);
+ const double held=bow_input142.held_for(bow_key142(),now);
+ ReleaseSRWLockShared(&bow_input_lock142);
+ if(held<0)return 0.f;
+ // The meter is optional. Unreadable metadata must not affect possession.
+ __try {
+  const float duration=bow_duration142(mounted);
+  return duration>0?bow142::factor(held,duration):0.f;
+ }__except(EXCEPTION_EXECUTE_HANDLER){return 0.f;}
+}
+// Called only after native ownership/ready/reload/queue guards. No actor or
+// weapon-definition writes: bind one numeric power observation to this shot.
+static bool bow_bind142(uintptr_t record,bool mounted){
+ bow_ticket142={};if(!is_bow_projectile(record))return true;
+ bow142::Release release;
+ AcquireSRWLockExclusive(&bow_input_lock142);release=bow_release142;bow_release142={};ReleaseSRWLockExclusive(&bow_input_lock142);
+ if(!release.serial||!bow142::same(release.key,bow_key142()))return false;
+ const float duration=bow_duration142(mounted);
+ if(duration<=0)return false;
  bow_ticket142={release.key,record,bow142::factor(release.seconds,duration),release.serial};return true;
 }
 static float bow_speed142(uintptr_t record,float native_speed){
