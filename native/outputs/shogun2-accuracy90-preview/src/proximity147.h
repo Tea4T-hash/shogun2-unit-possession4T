@@ -56,14 +56,22 @@ static bool proximity_retire147(Proximity147& p){
     if(!reinterpret_cast<Retire>(base+0x169130)(reinterpret_cast<void*>(p.unit+0xb64),p.independent))return false;
     p.independent=0;InterlockedIncrement(&proximity_retired147);return true;
 }
-static bool proximity_transfer147(Proximity147& p,uintptr_t target){
+static bool proximity_transfer147(Proximity147& p,uintptr_t target,bool returning=false){
     if(!squad_registered130(target,p.unit,p.environment))return false;
     auto source=field<uintptr_t>(p.actor,0x3b4);
-    if(source==target)return squad_matches130(target,p.actor)==1;
-    if(source&&!squad_registered130(source,p.unit,p.environment))return false;
-    // clear=0: native membership lifecycle, preserve combat/formation tasks.
-    // Manual locomotion or the subsequent native planner owns those tasks.
-    original_member_transfer130(reinterpret_cast<void*>(target),p.actor,0);
+    const bool officer=field<uintptr_t>(p.actor,0)==base+0x15dbfb4;
+    if(source==target){
+        if(squad_matches130(target,p.actor)!=1)return false;
+        if(!returning)return true;
+        // Leave ordinary soldiers' unrelated tasks to finish on their own.
+        // An officer can keep a personal task after possession has ended.
+        if(!officer&&field<unsigned char>(p.actor,0x384)==1&&
+           field<uintptr_t>(p.actor,0x2f8)!=base+0x15dd7ac)return false;
+    }else if(source&&!squad_registered130(source,p.unit,p.environment))return false;
+    // The native regroup path clears the old task and requests a new slot.
+    // The release caller already excludes combat, recovery and special motion.
+    const bool reset_formation=returning&&(source==target||officer);
+    original_member_transfer130(reinterpret_cast<void*>(target),p.actor,reset_formation?1u:0u);
     return field<uintptr_t>(p.actor,0x3b4)==target&&squad_matches130(target,p.actor)==1;
 }
 static bool proximity_near147(const Proximity147& p,uintptr_t formation,bool& within){
@@ -89,6 +97,44 @@ static bool proximity_identity147(const Proximity147& p,uintptr_t current){
         unit_member130(current,p.actor)&&field<unsigned>(p.actor,0x1c8)==p.actor_id&&field<uintptr_t>(p.actor,0x20c)==p.config&&
         field<uintptr_t>(p.actor,0x214)==current&&field<unsigned char>(p.actor,0xf0)==1;
 }
+struct ReformPoint70 {float position[3];uintptr_t surface;unsigned surface_id;};
+struct ReformDestination70 {
+    uintptr_t unit_reference;
+    ReformPoint70 point;
+    unsigned short facing, reserved;
+    float width;
+};
+struct ReformList70 {unsigned capacity,count;const ReformDestination70* entries;};
+static_assert(sizeof(ReformPoint70)==20&&sizeof(ReformDestination70)==32&&sizeof(ReformList70)==12);
+
+static bool reform_near_release70(const Proximity147& p,uintptr_t formation){
+    // 42dfd0 reads the stock unit pose at +440. Reuse that exact point,
+    // heading and width in the single-unit apply path of 45e930. The caller's
+    // acknowledgment event, UI marker and move sound are outside 4668f0.
+    if(!enabled||!state||state->stop||state->release||state->mode!=IDLE||
+       possession_lease.active||state->lease_generation!=p.generation||
+       field<uintptr_t>(p.unit,0xb9c)!=formation||field<unsigned>(p.unit,0x9ec))return false;
+    const auto pose=field<uintptr_t>(p.unit,0x440);
+    if(!pose||!field<uintptr_t>(p.unit,0xc))return false;
+    ReformDestination70 destination{};
+    destination.unit_reference=p.unit+0xc;
+    memcpy(&destination.point,reinterpret_cast<const void*>(pose+0x10),sizeof destination.point);
+    destination.width=field<float>(pose,0x24);
+    destination.facing=field<unsigned short>(pose,0x28);
+    if(!std::isfinite(destination.point.position[0])||!std::isfinite(destination.point.position[1])||
+       !std::isfinite(destination.point.position[2])||!std::isfinite(destination.width)||destination.width<=0)return false;
+    const unsigned char apply[]={0x83,0xec,0x64,0x53,0x8b,0x5c,0x24,0x78};
+    const unsigned char move[]={0x81,0xec,0x94,0,0,0,0x56,0x8b,0xf1};
+    if(memcmp(reinterpret_cast<const void*>(base+0x4668f0),apply,sizeof apply)||
+       memcmp(reinterpret_cast<const void*>(base+0x187000),move,sizeof move))return false;
+    // An empty native queue means append begins immediately. The native append
+    // branch leaves any other command state intact and queues one ordinary walk.
+    const ReformList70 groups{},units{1,1,&destination};
+    using Apply=void(__stdcall*)(uintptr_t,unsigned,unsigned,const ReformList70*,const ReformList70*,unsigned);
+    reinterpret_cast<Apply>(base+0x4668f0)(p.environment,0,1,&groups,&units,1);
+    return field<unsigned>(p.unit,0x9ec)==1;
+}
+
 static void proximity_sync147(uintptr_t current,uintptr_t env,uintptr_t phase,unsigned phase_id){
     // Invoked only inside the native unit callback's existing member lock.
     for(auto& p:proximity_records147)if(p.actor){
@@ -96,7 +142,7 @@ static void proximity_sync147(uintptr_t current,uintptr_t env,uintptr_t phase,un
         if(p.unit!=current)continue;
         if(!proximity_identity147(p,current)){if(proximity_retire147(p))proximity_forget147(p);continue;}
         if(!member_owned130(p.actor)||p.actor!=locomotion_actor()||p.generation!=possession_lease.generation){
-            if((dismount_native_motion143()&&current==unit)||field<uintptr_t>(p.actor,0x688)||native_recovery103(p.actor)||wall_subject97(p.actor)||native_airborne_subject99(p.actor)||native_routing(current))continue;
+            if((dismount_native_motion143()&&current==unit)||field<uintptr_t>(p.actor,0x18)||field<uintptr_t>(p.actor,0x688)||native_recovery103(p.actor)||wall_subject97(p.actor)||native_airborne_subject99(p.actor)||native_routing(current))continue;
             auto target=squad_registered130(p.formation,current,env)?p.formation:field<uintptr_t>(current,0xb9c);
             if(target==p.independent){
                 // Last surviving soldier: create the ordinary native formation
@@ -107,7 +153,15 @@ static void proximity_sync147(uintptr_t current,uintptr_t env,uintptr_t phase,un
                 target=reinterpret_cast<Factory>(base+0x166d60)(reinterpret_cast<void*>(current),policy);
                 if(!squad_registered130(target,current,env)){InterlockedIncrement(&proximity_errors147);continue;}
             }
-            if(target!=p.independent&&proximity_transfer147(p,target)){
+            bool within=false;
+            const bool release_in_range=p.joined&&target==p.formation&&field<uintptr_t>(p.actor,0x3b4)==target&&
+                proximity_near147(p,target,within)&&within;
+            // The unit thread can see a pending release before the input
+            // thread drops the lease. Keep the near record until that handoff.
+            if(release_in_range&&state->release&&state->mode==POSSESSED&&possession_lease.active&&
+               p.generation==possession_lease.generation&&p.actor==locomotion_actor())continue;
+            if(target!=p.independent&&proximity_transfer147(p,target,true)){
+                if(!release_in_range||!reform_near_release70(p,target))reissue_officer_slot68(p.actor,target,current,env);
                 if(field<uintptr_t>(current,0xb9c)==p.independent)reinterpret_cast<UnitTick130>(base+0x16b180)(reinterpret_cast<void*>(current));
                 if(proximity_retire147(p))proximity_forget147(p);
             }
@@ -158,13 +212,17 @@ static void proximity_sync147(uintptr_t current,uintptr_t env,uintptr_t phase,un
     }
     InterlockedExchange(&proximity_joined_generation147,within?LONG(p->generation):0);
 }
+static uintptr_t independent_group_locked65(uintptr_t actor){
+    auto p=proximity_find147(actor);
+    if(!p||p->joined||!p->independent||p->generation!=possession_lease.generation||
+       !proximity_identity147(*p,unit)||!squad_registered130(p->independent,unit,environment)||
+       field<uintptr_t>(actor,0x3b4)!=p->independent||squad_matches130(p->independent,actor)!=1)return 0;
+    return p->independent;
+}
 static bool proximity_independent200(uintptr_t actor){
     bool result=false;const bool locked=!member_sync_active130;
     if(locked)AcquireSRWLockShared(&member_lock130);
-    __try{auto p=proximity_find147(actor);result=p&&proximity_identity147(*p,unit)&&
-        p->generation==possession_lease.generation&&!p->joined&&p->independent&&
-        squad_registered130(p->independent,unit,environment)&&
-        field<uintptr_t>(actor,0x3b4)==p->independent&&squad_matches130(p->independent,actor)==1;}
+    __try{result=independent_group_locked65(actor)!=0;}
     __finally{if(locked)ReleaseSRWLockShared(&member_lock130);}return result;
 }
 static void proximity_log147(std::ostream& log){
@@ -173,6 +231,7 @@ static void proximity_log147(std::ostream& log){
     joins=proximity_joins147;leaves=proximity_leaves147;created=proximity_created147;retired=proximity_retired147;errors=proximity_errors147;
     log<<"{\"event\":\"formation_proximity147\",\"tick_ms\":"<<GetTickCount64()<<",\"joins\":"<<joins<<",\"leaves\":"<<leaves<<",\"groups_created\":"<<created<<",\"groups_retired\":"<<retired<<",\"pending\":"<<proximity_count147<<",\"errors\":"<<errors<<"}\n";
 }
+#include "../../../deck/acquisition203.h"
 static uintptr_t __fastcall target_squad147(void* context,void*){
     __try{
         auto current=reinterpret_cast<uintptr_t>(context),target=field<uintptr_t>(current,0x34);
@@ -184,9 +243,11 @@ static uintptr_t __fastcall target_squad147(void* context,void*){
             }
         }
     }__except(EXCEPTION_EXECUTE_HANDLER){InterlockedIncrement(&proximity_errors147);}
-    return original_target_squad147(context);
+    auto native_result203=original_target_squad147(context);
+    __try{return acquisition_group203(reinterpret_cast<uintptr_t>(context),native_result203);}__except(EXCEPTION_EXECUTE_HANDLER){return native_result203;}
 }
 static void create_proximity147(){
+    create_acquisition203();
     const unsigned char target[]={0x8b,0x41,0x34,0x85,0xc0,0x74,0x0a,0x8b,0x80,0xb4,3,0,0};
     const unsigned char factory[]={0x83,0xec,0x10,0x53,0x56,0x57,0xff,0x74,0x24,0x2c};
     require(!memcmp(reinterpret_cast<void*>(base+0x1679c0),target,sizeof target)&&!memcmp(reinterpret_cast<void*>(base+0x1668e0),factory,sizeof factory),"Native independent group/target signatures differ");
