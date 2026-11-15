@@ -69,10 +69,24 @@ inline uint32_t rebuild(uint32_t witness,const NativeVerdict& desired,const Nati
             }
         }
         if(answer&0xff)return answer;
-        if(at<uint8_t>(witness,0xc)!=1||at<uint32_t>(witness,0x80)!=desired.outcome||
-           at<uint32_t>(witness,0x84)!=desired.attacker_address||at<uint32_t>(witness,0x88)!=desired.defender_address||
-           at<uint32_t>(plans[0].actor,0x688)!=witness||at<uint32_t>(plans[1].actor,0x688)!=witness){stage=5;return 1;}
-        stage=6;return answer;
+        // Native prepare can keep the selected animation while waiting for
+        // alignment. It has not yet assigned both actor backlinks in that state.
+        const auto active=at<uint8_t>(witness,0xc);
+        const bool waiting=!route152&&!active&&at<uint8_t>(witness,0xd0)==1&&
+            at<uint8_t>(witness,0xd1)==0&&at<uint32_t>(witness,0x98)!=0;
+        const auto first=at<uint32_t>(witness,0x30),second=at<uint32_t>(witness,0x34);
+        stage=5;
+        if((active!=1&&!waiting)||at<uint32_t>(witness,0x38)!=2||
+           !((first==a&&second==b)||(first==b&&second==a))||
+           at<uint32_t>(witness,0x80)!=desired.outcome||at<uint32_t>(witness,0x84)!=desired.attacker_address||
+           at<uint32_t>(witness,0x88)!=desired.defender_address)return 1;
+        for(unsigned i=0;i<2;++i){
+            const auto actor=plans[i].actor,link=at<uint32_t>(actor,0x688);
+            if(at<uint32_t>(actor,0)!=table[i]||at<uint8_t>(actor,0xf0)!=1||
+               at<uint32_t>(actor,0x1c8)!=serial[i]||at<uint32_t>(actor,0x214)!=unit[i]||
+               (link!=witness&&(!waiting||link)))return 1;
+        }
+        stage=waiting?8:6;return answer;
     }__except(EXCEPTION_EXECUTE_HANDLER){stage=7;return 1;}
 }
 } }
