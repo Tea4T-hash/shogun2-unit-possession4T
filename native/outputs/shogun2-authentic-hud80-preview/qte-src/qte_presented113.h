@@ -2,6 +2,19 @@
 #include "qte_presentation93.h"
 #include "../../shogun2-possession-cleanup-v46/src/overlay_surface106.h"
 namespace qte {
+// Select one presenter per prompt. An acknowledgement can be late or missing
+// during a frame, but that must never put two copies of the timing bar on screen.
+class QtePresenter96 {
+    uint64_t lease_{},battle_{},serial_{};
+    bool native_{};
+public:
+    bool use_native(uint64_t lease,uint64_t battle,uint64_t serial,bool available){
+        if(lease_!=lease||battle_!=battle||serial_!=serial){
+            lease_=lease;battle_=battle;serial_=serial;native_=available;
+        }
+        return native_;
+    }
+};
 // Numeric image history shared by the render and input workers. Input reads the
 // native acknowledgement directly; it need not wait for another GDI render poll.
 class PresentedImages113 {
