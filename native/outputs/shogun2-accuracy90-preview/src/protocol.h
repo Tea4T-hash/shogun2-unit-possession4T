@@ -68,7 +68,7 @@ struct Status {
     unsigned char original_code[16],restored_code[16];
 };
 enum { IDLE=0, ARMED=1, POSSESSED=2, DISABLED=3 };
-enum { FORWARD=1, BACKWARD=2, LEFT=4, RIGHT=8, TURN_LEFT=16, TURN_RIGHT=32, RUN=64 };
+enum { FORWARD=1, BACKWARD=2, LEFT=4, RIGHT=8, TURN_LEFT=16, TURN_RIGHT=32, RUN=64, WALK_OVERRIDE=128 };
 inline void mapping_name(wchar_t* out,DWORD pid){swprintf_s(out,80,L"Local\\Shogun2PossessionPOC46-%lu",pid);}
 
 
