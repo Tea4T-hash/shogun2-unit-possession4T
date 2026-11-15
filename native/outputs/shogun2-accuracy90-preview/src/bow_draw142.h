@@ -19,10 +19,14 @@ struct Input {
   bool pressed=down&&!previous,released=!down&&previous;previous=down;
   if(!active||!bow||!std::isfinite(now)||!same(key,current)){drawing=false;key=current;}
   if(active&&pressed&&bow){key=current;began=now;drawing=true;}
-  if(active&&released&&bow&&drawing&&same(key,current)&&now>=began){
-   release={key,++serial,std::min(now-began,60.)};drawing=false;return true;
+  if(active&&released&&bow){
+   const double held=held_for(current,now);
+   if(held>=0){release={key,++serial,held};drawing=false;return true;}
   }
   if(!down)drawing=false;return false;
+ }
+ double held_for(Key current,double now)const{
+  return drawing&&same(key,current)&&std::isfinite(now)&&now>=began?std::min(now-began,60.):-1.;
  }
  void cancel(){drawing=false;key={};}
 };
