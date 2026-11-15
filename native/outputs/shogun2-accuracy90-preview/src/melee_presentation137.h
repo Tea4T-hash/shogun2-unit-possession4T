@@ -9,7 +9,7 @@ inline unsigned ready(bool mounted){return mounted?30u:10u;}
 static bool melee_presentation_owned137(uintptr_t actor){
     __try {
         if(!enabled||!state||state->stop||state->release||state->mode!=POSSESSED||actor!=possessed||
-           equipment_slot81!=equipment81::Melee||!field<unsigned char>(unit,0xead)||
+           equipment_slot81!=equipment81::Melee||equipment_personal_override214||!field<unsigned char>(unit,0xead)||
            field<unsigned char>(actor,0xf0)!=1||native_airborne_subject99(actor)||!followed(actor,false)||
            !personal_weapon_mode(field<unsigned>(actor,0x1f0),weapon_mounted()))return false;
         // Unlike firing eligibility, presentation must survive empty ammunition.
