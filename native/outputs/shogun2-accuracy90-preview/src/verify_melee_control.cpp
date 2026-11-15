@@ -50,8 +50,20 @@ int main(){void* memory=nullptr;try{
     field<float>(possessed,0x8c)=17;field<float>(possessed,0xd8)=-31;
     require(finish_melee_handoff78(possessed)&&!melee_handoff78.pending&&intents==calls+1&&intent_x==9&&intent_z==11,
         "Handoff did not adopt the exact current native endpoint");
+    require(!melee_handoff78.take_resume(possessed,possession_lease.generation+1,field<unsigned>(possessed,0x1c8),field<unsigned>(unit,4)),
+        "Melee resume leaked to a foreign lease");
     require(field<float>(possessed,0x48)==9&&field<float>(possessed,0x50)==11&&field<float>(possessed,0x8c)==0&&field<float>(possessed,0xd8)==0&&!finish_melee_handoff78(possessed),
         "Handoff rewound position, kept residual motion or replayed twice");
+    // Native motion completion can publish a fresh speed after cleanup.
+    field<float>(possessed,0x1ac)=field<float>(possessed,0x94)=12;
+    field<float>(possessed,0x160)=4;field<float>(possessed,0x104)=2;
+    field<float>(base,0x15de874)=-.02f;
+    const bool resume=melee_handoff78.take_resume(possessed,possession_lease.generation,field<unsigned>(possessed,0x1c8),field<unsigned>(unit,4));
+    float speed=4;
+    require(resume&&apply_native_speed_step(possessed,{0,1,0},true,.02f,1,speed,resume)&&std::abs(speed-.08f)<.001f,
+        "Native melee momentum accelerated the first manual step");
+    require(!melee_handoff78.take_resume(possessed,possession_lease.generation,field<unsigned>(possessed,0x1c8),field<unsigned>(unit,4)),
+        "Melee resume applied twice");
     r.heartbeat=GetTickCount64()-501;PossessionMeleeCommitment63(&r);require(!apply_melee_motion(possessed),"Expired channel retained steering");
     r.heartbeat=GetTickCount64();r.lease++;PossessionMeleeCommitment63(&r);require(!apply_melee_motion(possessed),"Different possession lease retained steering");
     melee60::Request off;PossessionMeleeCommitment63(&off);
