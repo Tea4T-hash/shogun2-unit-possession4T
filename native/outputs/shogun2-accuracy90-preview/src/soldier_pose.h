@@ -145,7 +145,7 @@ static void apply_soldier_pose(uintptr_t holder,uintptr_t result){
         float pitch=weapon_pose_pitch(is_bow_projectile(projectile)?3:record_id,native_clip,state->pitch);if(!std::isfinite(pitch))return;
         // Identify the verified rifle from its catalog even while lowered.
         // The current actor clip can still describe the previous draw.
-        bool carbine_profile=equipment_slot81==equipment81::Ranged&&mounted&&projectile&&!is_bow_projectile(projectile)&&carbine_socket_profile(possessed,binding,MOUNTED_FORWARD_LEVEL);
+        bool carbine_profile=equipment_ranged_selected81()&&mounted&&projectile&&!is_bow_projectile(projectile)&&carbine_socket_profile(possessed,binding,MOUNTED_FORWARD_LEVEL);
         // This callback hands model-space matrices to native attachments and skinning.
         // Camera evaluation uses a separate temporary array and is left intact.
         unsigned mounted_spine_index=0;
@@ -185,7 +185,7 @@ static void apply_soldier_pose(uintptr_t holder,uintptr_t result){
         }else {mounted_held_palette.reset();mounted_acquisition88.reset();}
         for(unsigned k=0;k<3;++k)pose_pivot[k]=(field<float>(array,indices[0]*48+12+k*16)+field<float>(array,indices[1]*48+12+k*16))*0.5f;
         memcpy(pose_world,reinterpret_cast<void*>(holder+0x24),48);
-        bool aiming=equipment_ranged_selected81()&&state->aiming&&(GetAsyncKeyState(VK_RBUTTON)&0x8000)&&state->weapon_phase!=WEAPON_RELOAD;
+        bool aiming=equipment_ranged_selected81()&&state->aiming&&(deck181::key_state(VK_RBUTTON)&0x8000)&&state->weapon_phase!=WEAPON_RELOAD;
         if(carbine_profile&&aiming&&!mounted_carbine_pose_aim(possessed,aiming)){
             aiming=false;InterlockedIncrement(&mounted_carbine_predraw_blocks72);
         }
