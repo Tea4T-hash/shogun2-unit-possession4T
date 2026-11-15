@@ -1,4 +1,5 @@
 #pragma once
+#include "escape218.h"
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -44,6 +45,7 @@ inline bool read_sample(DWORD process,Sample& out){auto& r=reader();if(r.pid&&r.
 // Merge numeric first-party controller intent with the existing input consumers.
 // No SendInput, OS key state mutation or Steam user configuration changes.
 inline volatile LONG native_key_pending{};
+inline deck218::Escape native_escape218;
 struct ShortcutQueue183 {
  SRWLOCK lock=SRWLOCK_INIT;struct Item{unsigned action{};uint64_t tick{};};Item items[16]{};unsigned count{};bool gap{};
  void clear(){AcquireSRWLockExclusive(&lock);count=0;gap=false;ReleaseSRWLockExclusive(&lock);}
@@ -64,6 +66,7 @@ inline void merge_rts_keys194(unsigned char* keys,const Sample& s,const deck183:
 }
 inline void native_keys(unsigned char* keys,bool valid,uintptr_t image=0){
  if(!valid||!keys)return;
+ native_escape218.apply(keys,valid,GetForegroundWindow(),GetTickCount64());
  LONG pending=InterlockedExchange(&native_key_pending,0);if(pending&1)keys[0x25]|=0x80;if(pending&2)keys[0x1]|=0x80;
  static thread_local bool owned_modifiers{};
  Sample s;if(!read_sample(GetCurrentProcessId(),s)||s.context!=unsigned(deck174::Context::RTS)){

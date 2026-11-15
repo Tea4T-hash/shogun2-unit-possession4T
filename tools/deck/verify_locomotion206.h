@@ -32,6 +32,62 @@
   require(field<unsigned>(h,0x1d0)==(moving?8u:33u)&&field<unsigned>(h,0x1d8)==27,"Horse idle pose/clock differs");++idles206;
  }
  field<uintptr_t>(h,0x474)=0;fixture_vx203=3;fixture_vz203=0;
+ auto prior_play62=original_play;
+ original_play=reinterpret_cast<PlayAnimation>(base+0x3e8b50);
+ for(auto transition:{std::pair<unsigned,unsigned>{11,16},{29,30},{34,35},{39,40}}){
+  auto gait=transition.first,stop=transition.second;
+  unsigned walking_clip62[4]{stop,0,0,0};
+  clips[stop]=reinterpret_cast<uintptr_t>(walking_clip62);
+  fixture_vx203=3;state->input=FORWARD;state->heartbeat=GetTickCount64();
+  tick206(reinterpret_cast<void*>(h));
+  field<unsigned>(h,0x1d4)=gait;
+  fixture_vx203=1;state->input=0;tick206(reinterpret_cast<void*>(h));
+  require(field<uintptr_t>(h,0x474)==clips[stop]&&field<unsigned>(h,0x1d4)==stop&&field<float>(h,0x8c)==1,
+      "Native horse stop did not start during deceleration");
+  field<unsigned>(h,0x1d8)=7;tick206(reinterpret_cast<void*>(h));
+  require(field<unsigned>(h,0x1d8)==7&&field<uintptr_t>(h,0x474)==clips[stop],"Horse interrupted its own braking animation");
+  fixture_vx203=3;state->input=FORWARD;tick206(reinterpret_cast<void*>(h));
+  require(!field<uintptr_t>(h,0x474)&&field<unsigned>(h,0x1d0)==8,"Horse stop did not yield to resumed motion");
+  clips[stop]=0;
+ }
+ // Exercise the new forward-to-reverse transition with native clip playback.
+ std::array<unsigned,26> animation95{};animation95[0x64/4]=2;
+ std::array<unsigned,14> track95{};
+ std::array<unsigned,14> frames95{};
+ track95[0x34/4]=reinterpret_cast<uintptr_t>(frames95.data());
+ std::array<unsigned,4> brake95{40,reinterpret_cast<uintptr_t>(animation95.data()),reinterpret_cast<uintptr_t>(track95.data()),0};
+ std::array<unsigned,4> back95{horse_step_backward95,reinterpret_cast<uintptr_t>(animation95.data()),reinterpret_cast<uintptr_t>(track95.data()),0};
+ clips[40]=reinterpret_cast<uintptr_t>(brake95.data());clips[horse_step_backward95]=reinterpret_cast<uintptr_t>(back95.data());
+ state->input=FORWARD|RUN;state->heartbeat=GetTickCount64();
+ fixture_vx203=6.f;fixture_vz203=0.f;tick206(reinterpret_cast<void*>(h));
+ field<unsigned>(h,0x1d4)=39;
+ state->input=BACKWARD|RUN;fixture_vx203=1.f;tick206(reinterpret_cast<void*>(h));
+ require(field<uintptr_t>(h,0x474)==clips[40]&&horse_root_owns_motion95(h,BACKWARD|RUN),
+     "Gallop to reverse skipped the native braking clip");
+ require(!horse_root_owns_motion95(h,FORWARD),"Braking cannot yield to resumed forward motion");
+ require(personal_travel_input91(BACKWARD|RUN,true,false,true)==BACKWARD,
+     "Mounted backstep accepted sprint or Follow Me speed");
+ field<unsigned>(h,0x1d8)=1;tick206(reinterpret_cast<void*>(h));
+ require(field<uintptr_t>(h,0x474)==clips[40]&&field<unsigned>(h,0x1d8)==1,
+     "Reverse restarted or interrupted the braking clip");
+ // The provider ends the stop and brings the horse to rest.
+ reinterpret_cast<UnitTick130>(base+0x3dd9b0)(reinterpret_cast<void*>(h));
+ fixture_vx203=0.f;tick206(reinterpret_cast<void*>(h));
+ require(field<uintptr_t>(h,0x474)==clips[horse_step_backward95]&&horse_root_owns_motion95(h,BACKWARD),
+     "Settled horse failed to enter the native backstep");
+ require(horse_root_owns_motion95(h,0),"Released backstep dropped its root motion");
+ state->input=FORWARD;fixture_vx203=1.f;tick206(reinterpret_cast<void*>(h));
+ require(!field<uintptr_t>(h,0x474)&&field<unsigned>(h,0x1d0)==8,
+     "Backstep failed to yield to forward travel");
+ clips[40]=clips[horse_step_backward95]=0;
+ // Missing step registration and residual lateral velocity must not block reverse.
+ horse_input62={};field<unsigned short>(h,0x64)=0;
+ field<float>(h,0x8c)=.2f;field<float>(h,0x94)=0.f;
+ require(!horse_braking96(h)&&!horse_root_owns_motion95(h,BACKWARD),"Lateral residual motion suppressed reverse");
+ field<float>(h,0x94)=.02f;require(horse_braking96(h),"Forward momentum skipped braking");
+ field<float>(h,0x94)=-.1f;require(!horse_braking96(h),"Existing reverse motion suppressed continued reverse");
+ original_play=prior_play62;
+ std::cout<<"PASS possession62: four original native horse stop transitions and restarts\n";
  // Each forbidden case runs the actual completion hook but must leave pose/gait.
  auto refuse206=[&](){field<unsigned>(h,0x1d0)=99;field<unsigned>(h,0x244)=2;
   state->heartbeat=GetTickCount64();tick206(reinterpret_cast<void*>(h));

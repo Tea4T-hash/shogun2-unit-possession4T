@@ -18,6 +18,14 @@ end
 local function ui(c,name,...)
  return native(name,function(...)return c[name](c,...)end,...)
 end
+local function visible_component(id)
+    local address=ui(root,"Find",id)
+    if address and ui(UIComponent(address),"Visible")then return address end
+end
+local function observe_tooltip(id)
+    local address=visible_component(id)
+    if address then api.decorate214("tooltip:"..tostring(address))end
+end
 local function finite(v)return type(v)=="number"and v==v and(v-v)==0 end
 local function absolute(v)return v<0 and-v or v end
 -- The game's math namespace is a native binding, not the ordinary complete
@@ -159,6 +167,46 @@ end
 local clan_request189=false
 local clan_wait189=0
 local clan_back189=false
+local function click_campaign_button(button)
+    if ui(button,"Visible")~=true or ui(button,"IsInteractive")~=true then return false end
+    local state=ui(button,"CurrentState")
+    if type(state)~="string"or state:lower():find("inactive")or state:lower():find("disabled")then return false end
+    local x,y=ui(button,"Position");local w,h=ui(button,"Width"),ui(button,"Height")
+    if not(finite(x)and finite(y)and finite(w)and finite(h))or w<1 or h<1 or w>256 or h>256 then return false end
+    local sw,sh=screen_size();local lw,lh=ui(root,"Width"),ui(root,"Height")
+    if not(dimensions(sw,sh)and dimensions(lw,lh))then return false end
+    x=(x+w/2)*sw/lw;y=(y+h/2)*sh/lh
+    if x<0 or y<0 or x>=sw or y>=sh then return false end
+    return type(api.click183)=="function"and api.click183(tostring(x-x%1)..","..tostring(y-y%1))
+end
+local function campaign_component(owner,id)
+    local address=ui(owner,"Find",id)
+    if type(address)~="userdata"and not(finite(address)and address>0)then return end
+    local component=native("UIComponent",UIComponent,address)
+    if component and ui(component,"Id")==id then return component end
+end
+local function campaign_start()
+    -- ToggleCinematicBorders creates this stock root child and hides the map HUD.
+    -- Escape can dismiss the advisor without the campaign's click-up cleanup.
+    local ok,cinematic=pcall(function()
+        local bars=campaign_component(root,"cinematic_bars")
+        return bars~=nil and ui(bars,"Visible")~=false
+    end)
+    if not ok then return end
+    if not cinematic then
+        if type(api.back188)=="function"then api.back188(true)end
+        return
+    end
+    -- If the advisor is absent or the click is busy, leave the intro alone.
+    pcall(function()
+        local advisor=campaign_component(root,"advice_interface")
+        if not advisor or ui(advisor,"Visible")~=true then return end
+        local close=campaign_component(advisor,"minimise_button")
+        if close and ui(close,"Parent","advice_interface")==ui(advisor,"Address")then
+            click_campaign_button(close)
+        end
+    end)
+end
 local function clan_button189()
     if not clan_request189 then return end
     clan_wait189=clan_wait189+1
@@ -173,16 +221,7 @@ local function clan_button189()
         local ptr=ui(root,"Find","button_clan")
         if not ptr then return end
         local c=native("UIComponent",function()return UIComponent(ptr)end)
-        if ui(c,"Id")~="button_clan"or ui(c,"Visible")~=true or ui(c,"IsInteractive")~=true then return end
-        local state=ui(c,"CurrentState")
-        if type(state)~="string"or state:lower():find("inactive")or state:lower():find("disabled")then return end
-        local x,y=ui(c,"Position");local w,h=ui(c,"Width"),ui(c,"Height")
-        if not(finite(x)and finite(y)and finite(w)and finite(h))or w<1 or h<1 or w>256 or h>256 then return end
-        local sw,sh=screen_size();local lw,lh=ui(root,"Width"),ui(root,"Height")
-        if not(dimensions(sw,sh)and dimensions(lw,lh))then return end
-        x=(x+w/2)*sw/lw;y=(y+h/2)*sh/lh
-        if x<0 or y<0 or x>=sw or y>=sh then return end
-        if type(api.click183)=="function"and api.click183(tostring(x-x%1)..","..tostring(y-y%1))then clan_request189=false end
+        if ui(c,"Id")=="button_clan"and click_campaign_button(c)then clan_request189=false end
     end)
     -- An unavailable/transitioning button cannot poison other native controls.
     if not good then clan_request189=false end
@@ -197,6 +236,44 @@ local function campaign_buttons183()
     -- Other panels/end turn retain native keyboard shortcuts. Clan uses the
     -- stock button's current geometry; no panel creation or script call here.
 
+end
+-- Original region_details arrows call their region_info ancestor's native
+-- PreviousRegion/NextRegion callbacks. General map selection cannot refresh an
+-- already-open region-details panel. Resolve the current owner, never cache it.
+local function city_owner214()
+    for _,id in ipairs({"region_info","region_details"})do
+        local ptr=ui(root,"Find",id)
+        if ptr then
+            local details=native("UIComponent",function()return UIComponent(ptr)end)
+            if ui(details,"Visible")==true then
+                for _,arrow_id in ipairs({"arrow R","arrow L"})do
+                    local arrow=ui(details,"Find",arrow_id)
+                    if arrow then
+                        local button=native("UIComponent",function()return UIComponent(arrow)end)
+                        local parent=ui(button,"Parent","region_info")
+                        if parent then
+                            local owner=native("UIComponent",function()return UIComponent(parent)end)
+                            if ui(owner,"Id")=="region_info"and ui(owner,"Visible")==true then return owner end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+local function campaign_cycle214(forward)
+    local open=native("PanelManager.OpenPanels",function()return PanelManager.OpenPanels()end)
+    if type(open)~="boolean"then return end
+    if open then
+        local owner=city_owner214()
+        if owner then
+            local callback=forward and"NextRegion"or"PreviousRegion"
+            native("region_info."..callback,function()return owner:LuaCall(callback)end)
+        end
+        return -- No map selection can leak into another native modal.
+    end
+    if forward then native("NextAutoEntitySelection",function()return CampaignUI.NextAutoEntitySelection()end)
+    else native("PreviousAutoEntitySelection",function()return CampaignUI.PreviousAutoEntitySelection()end)end
 end
 local menu_extent209
 local function campaign_setup_fit209()
@@ -257,9 +334,29 @@ local function tick()
             -- Original native OpenPanels returns the manager's modal-open bool.
             -- Observe only: the stock input phase owns all panel opens/closes.
             local ok,open=pcall(function()return native("PanelManager.OpenPanels",function()return PanelManager.OpenPanels()end)end)
-            api.panel188(ok and type(open)=="boolean"and(open and"open"or"map")or"unknown")
+            if type(api.decorate214)=="function"then
+                local corner=ui(root,"Find","hud_right")
+                if corner then api.decorate214("corner:"..tostring(corner))end
+                -- Identify current campaign hover templates for the native
+                -- draw pass. Their geometry and font state stay native.
+                for _,id in ipairs({"Tooltip","STW_tech_tooltip","TechTreeItem_Tooltip",
+                    "campaign_map_tooltip","Diplomacy_region_tooltip","Minister_tooltip",
+                    "recruitment_effects_tooltip","tax_breakdown_tooltip",
+                    "trade_route_tooltip","unitcard_tooltip","clan_level_tooltip"})do
+                    observe_tooltip(id)
+                end
+                -- These native popups are created as root siblings under
+                -- their runtime IDs, independent of the common Tooltip.
+                if ok and open==true then
+                    if visible_component("technology")then observe_tooltip("TechTooltipPopup")end
+                    if visible_component("clan")then observe_tooltip("EffectBundleInfoPopup")end
+                end
+            end
+            local city=ok and open and city_owner214()
+            api.panel188(ok and type(open)=="boolean"and(open and(city and"city"or"open")or"map")or"unknown")
         end
         refresh_frames=refresh_frames+1;if refresh_frames>=60 then refresh_frames=0;if navigation.refresh then navigation.refresh()end end
+        if campaign and api.pause(true)then campaign_start();return end
         if api.cancel(true)then
             if campaign then
                 if type(api.back188)=="function"then api.back188(true)end
@@ -268,9 +365,8 @@ local function tick()
         end
         if campaign then
             campaign_buttons183()
-            if api.pause(true)then if type(api.back188)=="function"then api.back188(true)end;return end
-            if api.next(true)then native("NextAutoEntitySelection",function()return CampaignUI.NextAutoEntitySelection()end)end
-            if api.previous(true)then native("PreviousAutoEntitySelection",function()return CampaignUI.PreviousAutoEntitySelection()end)end
+            if api.next(true)then campaign_cycle214(true)end
+            if api.previous(true)then campaign_cycle214(false)end
             if api.camera then api.camera(true)else
             local dx,dy,turn=0,0,0
             for i=1,32 do

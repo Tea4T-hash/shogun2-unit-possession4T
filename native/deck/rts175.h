@@ -55,7 +55,7 @@ public:
     void sample(const deck174::Frame& f,const ContextProof& proof,Host& host,uint64_t now) {
         if(!proof.permits_rts()||!live_||!(identity_==proof.identity)||!host.current(identity_)||
             !deck174::valid(f,now)||now-f.sample_us>uint64_t(config_.stale_ms)*1000){++rejected;reset(host);return;}
-        if(config_.community_rts)host.modifiers((f.buttons&deck174::bit(deck174::Button::L4))!=0,(f.buttons&(deck174::bit(deck174::Button::L5)|deck174::bit(deck174::Button::L3)))!=0);
+        if(config_.community_rts)host.modifiers((f.buttons&deck174::bit(deck174::Button::L4))!=0,(f.buttons&deck174::bit(deck174::Button::L3))!=0);
         deck174::Facts facts;facts.focused=facts.device=facts.battle=true;
         // Router timestamps use the sample's acquisition time. Checking against
         // the real callback time above prevents a queued old command from firing.

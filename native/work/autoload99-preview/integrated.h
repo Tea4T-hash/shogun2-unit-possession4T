@@ -1,3 +1,4 @@
+#include "../../deck/legend_resources184.h"
 #pragma once
 #include "../../outputs/shogun2-possession-cleanup-v46/src/identity.h"
 #include "../../outputs/shogun2-possession-cleanup-v46/src/protocol.h"
@@ -6,6 +7,8 @@
 #include "game_audio162.h"
 #include "../../common/startup_error167.h"
 #include "../../common/startup_gate168.h"
+#include "../../deck/device192.h"
+#include "../../deck/startup_handoff222.h"
 #include <shlobj.h>
 #include <regex>
 #include <filesystem>
@@ -60,6 +63,10 @@ static std::wstring extract(HMODULE module,int id,const wchar_t* name,const char
 #ifdef S2FP_LOCAL_ASSETS
 static void cache_local159(const std::wstring& source,const std::wstring& target,unsigned kind,bool share_bytes=false){
     assets159::Store input;require(input.load(source,kind),"Local game resources missing or corrupt; run the local-assets setup again");
+    // The validator is no longer used. Close its map and file before creating
+    // or renaming a hard-link alias: Proton sharing applies to the same inode.
+    // Keep immutable resource readers and all hash/foreign-file guards intact.
+    input.clear();
     if(GetFileAttributesW(target.c_str())==INVALID_FILE_ATTRIBUTES){
         auto stage=target+L".local159.pending166";
         bool owned=false;
@@ -79,7 +86,9 @@ static void cache_local159(const std::wstring& source,const std::wstring& target
 }
 #endif
 static uint32_t local_u32(uintptr_t address){uint32_t value=0;SIZE_T read=0;require(address>=65536&&ReadProcessMemory(GetCurrentProcess(),reinterpret_cast<void*>(address),&value,4,&read)&&read==4,"Battle not ready");return value;}
-static bool battle_ready(uintptr_t base){try{auto root=local_u32(base+0x1bc8180);auto env=local_u32(root+0x110);auto common=local_u32(env+8);auto phase=local_u32(common+0xb4);auto id=local_u32(phase+0x14);return id>=5&&id<=8;}catch(...){return false;}}
+#include "../../deck/device192.h"
+#include "../../deck/battle_ready181.h"
+static bool battle_ready(uintptr_t base){try{if(device192::enabled())return deck181::battle_ready(base,local_u32);auto root=local_u32(base+0x1bc8180);auto env=local_u32(root+0x110);auto common=local_u32(env+8);auto phase=local_u32(common+0xb4);auto id=local_u32(phase+0x14);return id>=5&&id<=8;}catch(...){return false;}}
 static bool other_adapter(){Handle snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE,GetCurrentProcessId()));require(snap.h!=INVALID_HANDLE_VALUE,"Module inventory failed");MODULEENTRY32W entry{};entry.dwSize=sizeof entry;
     require(Module32FirstW(snap.h,&entry)!=0,"Module inventory unavailable");do{std::wstring name=entry.szModule;std::transform(name.begin(),name.end(),name.begin(),towlower);if(name.find(L"possession-v")==0)return true;}while(Module32NextW(snap.h,&entry));return false;}
 // A failed later component must not leave an interactive partial installation.
@@ -129,7 +138,7 @@ static void retire_old_runtimes173(){
         FindClose(f);
     }catch(...){}
 }
-static DWORD WINAPI integrated_worker(void* argument){bool owned_adapter168=false,owned_qte168=false,owned_gate168=false;try{
+static DWORD WINAPI integrated_worker(void* argument){bool owned_adapter168=false,owned_qte168=false,owned_gate168=false;deck222::StartupGuard keyboard_startup222;try{
     wchar_t exe[MAX_PATH];require(GetModuleFileNameW(nullptr,exe,MAX_PATH)>0,"Game path unavailable");
     const wchar_t* name=wcsrchr(exe,L'\\');name=name?name+1:exe;
     if(_wcsicmp(name,L"shogun2.exe")&&_wcsicmp(name,L"shogun2.retail.exe")){InterlockedExchange(&autoload_stage,1);return 0;}
@@ -160,6 +169,7 @@ static DWORD WINAPI integrated_worker(void* argument){bool owned_adapter168=fals
     }
 #endif
 #endif
+    if(device192::enabled())deck184::publish_resources(runtime_folder);
     auto adapter=extract(static_cast<HMODULE>(argument),101,L"possession-v46.dll",EMBEDDED_ADAPTER_SHA);
     auto hud=extract(static_cast<HMODULE>(argument),102,L"possession-hud.exe",EMBEDDED_HUD_SHA);
     auto qte=extract(static_cast<HMODULE>(argument),103,L"qte-playable-v79.dll",EMBEDDED_QTE_SHA);
@@ -187,6 +197,8 @@ static DWORD WINAPI integrated_worker(void* argument){bool owned_adapter168=fals
     }
     require(startup168::pending(),"Cannot coordinate component startup");
     owned_gate168=true;
+    // Drain frontend keyboard ownership before the adapter validates it.
+    require(keyboard_startup222.acquire(device192::enabled()),"Native input owner did not yield before gameplay startup");
     auto adapter_module168=LoadLibraryW(adapter.c_str());require(adapter_module168!=nullptr,"Embedded possession engine failed to load");record(5,"Possession engine loaded; waiting for initialization");
     owned_adapter168=true;
     wchar_t map_name[80];mapping_name(map_name,GetCurrentProcessId());bool ready=false;
@@ -209,6 +221,7 @@ static DWORD WINAPI integrated_worker(void* argument){bool owned_adapter168=fals
     CloseHandle(child.hThread);DWORD result=WaitForSingleObject(child.hProcess,1500);if(result==WAIT_OBJECT_0){DWORD code=0;GetExitCodeProcess(child.hProcess,&code);CloseHandle(child.hProcess);require(code==0,"Embedded HUD exited with an error");}else CloseHandle(child.hProcess);
     require(startup168::ready(),"Cannot publish complete component startup");
     record(6,"Ready: equipment81, authentic HUD81 and restyled QTE79 started automatically");
+    keyboard_startup222.release();
 #ifdef S2FP_LOCAL_ASSETS
     // This existing loader worker owns the audio stream for the game process.
     // Keep only the verified PCM alive until the voice handle has closed.

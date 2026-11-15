@@ -35,7 +35,7 @@ for f in ['buffer.c', 'hook.c', 'trampoline.c', 'hde/hde32.c']:
 
 # 2. The four components
 base = ['bcrypt.lib', 'user32.lib', 'gdi32.lib']
-cpp(N / 'shogun2-accuracy90-preview/src/adapter.cpp', BIN / NAMES[0], hooks, base + ['d3d11.lib', 'd3d9.lib', 'dxgi.lib', 'd3dcompiler.lib'], ['/LD'])
+cpp(N / 'shogun2-accuracy90-preview/src/adapter.cpp', BIN / NAMES[0], hooks, base + ['d3d11.lib', 'd3d9.lib', 'dxgi.lib', 'd3dcompiler.lib', 'gdiplus.lib'], ['/LD'])  # kit v21: gdiplus (v0.36 adapter)
 cpp(N / 'shogun2-ammunition83-preview/hud-src/hud.cpp', BIN / NAMES[1], (), base + ['gdiplus.lib', 'ole32.lib', 'winmm.lib'])
 cpp(N / 'shogun2-authentic-hud80-preview/qte-src/playable_runtime.cpp', BIN / NAMES[2], hooks, base + ['gdiplus.lib', 'ole32.lib'], ['/LD'])
 cpp(ROOT / 'tools/installer/prepare_local_assets159.cpp', BIN / NAMES[3], (),
@@ -54,27 +54,40 @@ rc.write_text(''.join(f'{i} RCDATA "{(BIN / n).as_posix()}"\n' for i, n in zip([
 res = OUT / 'payload165.res'; sh(['rc', '/nologo', '/fo', res, rc])
 dll = BIN / 's2up-workshop165.dll'
 sh(['cl', '/nologo', '/std:c++17', '/EHsc', '/O2', '/MT', '/W4', '/DNOMINMAX', '/DS2FP_LOCAL_ASSETS', '/DPOSSESSION_WORKSHOP_BUILD',
-    '/LD', ROOT / 'tools/workshop/entry165.cpp', res, '/Fo' + str(OBJ / 'entry165.obj'), '/Fe' + str(dll),
-    '/link', 'bcrypt.lib', 'shell32.lib', 'user32.lib', 'winmm.lib'])
+    '/LD', ROOT / 'tools/workshop/entry165.cpp', res, *hooks, '/Fo' + str(OBJ / 'entry165.obj'), '/Fe' + str(dll),
+    '/link', 'bcrypt.lib', 'shell32.lib', 'user32.lib', 'winmm.lib', 'gdiplus.lib', 'gdi32.lib'])  # kit v21: v0.37 bridge hooks the Deck UI
 
 # 4. Float Lua 5.1 compiler (official source, fingerprint-checked)
-# The official site sometimes times out on GitHub runners: retry, then use the official mirror.
-# The fingerprint check below guarantees the exact same file whichever source answers.
+# The official site sometimes times out on GitHub runners.
+# Order: a copy committed to the repo (tools/workshop/lua-5.1.5.tar.gz), then the official
+# site and public mirrors with retries. The fingerprint check below guarantees the exact
+# same file whichever source answers; anything else is rejected.
 LUA_SHA = '2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333'
+LUA_LOCAL = ROOT / 'tools/workshop/lua-5.1.5.tar.gz'
 LUA_URLS = ['https://www.lua.org/ftp/lua-5.1.5.tar.gz',
-            'https://www.tecgraf.puc-rio.br/lua/mirror/ftp/lua-5.1.5.tar.gz']
+            'https://mirrors.mit.edu/macports/distfiles/lua/lua-5.1.5.tar.gz',
+            'https://distfiles.macports.org/lua/lua-5.1.5.tar.gz',
+            'https://downloads.sourceforge.net/project/luabinaries/5.1.5/Docs%20and%20Sources/lua-5.1.5.tar.gz',
+            'https://ftp.osuosl.org/pub/blfs/conglomeration/lua/lua-5.1.5.tar.gz']
 data = None
+if LUA_LOCAL.exists():
+    got = LUA_LOCAL.read_bytes()
+    if hashlib.sha256(got).hexdigest() == LUA_SHA:
+        data = got; print('Lua source from repo copy', LUA_LOCAL, flush=True)
+    else:
+        print('Repo copy of Lua has the wrong fingerprint; ignoring it', flush=True)
 for attempt in range(3):
+    if data: break
     for url in LUA_URLS:
         try:
-            got = urllib.request.urlopen(url, timeout=60).read()
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (build script)'})
+            got = urllib.request.urlopen(req, timeout=60).read()
             if hashlib.sha256(got).hexdigest() == LUA_SHA:
                 data = got; print('Lua source from', url, flush=True); break
             print('Fingerprint mismatch from', url, flush=True)
         except Exception as error:
             print('Lua download failed from', url, '-', error, flush=True)
-    if data: break
-    time.sleep(20)
+    if not data: time.sleep(20)
 assert data is not None and hashlib.sha256(data).hexdigest() == LUA_SHA, 'Lua source fingerprint'
 with tarfile.open(fileobj=io.BytesIO(data)) as t: t.extractall(OUT / 'lua', filter='data')
 src = OUT / 'lua/lua-5.1.5/src'; conf = src / 'luaconf.h'; text = conf.read_text()

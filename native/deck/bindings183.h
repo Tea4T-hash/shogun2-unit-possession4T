@@ -1,5 +1,6 @@
 #pragma once
 #include "input174.h"
+#include "commander_wheel84.h"
 namespace deck183 {
 using deck174::Button;using deck174::Frame;using deck174::bit;
 // Button policy only. Camera vectors, rates, deadzones and native setters are
@@ -9,6 +10,26 @@ struct HoldOnce {
  uint64_t since{};bool latched{};
  void reset(){since=0;latched=false;}
  bool sample(bool held,uint64_t now,unsigned ms){if(!held){reset();return false;}if(!since)since=now;if(now<since){reset();return false;}if(!latched&&now-since>=uint64_t(ms)*1000){latched=true;return true;}return false;}
+};
+enum class PressAction {None,Tap,Hold};
+struct TapHold {
+ uint64_t started{};
+ bool active{},fired{};
+ void reset(){*this={};}
+ PressAction sample(bool held,bool pressed,uint64_t now,unsigned hold_ms){
+  if(pressed){started=now;active=true;fired=false;}
+  if(!active)return PressAction::None;
+  if(now<started){reset();return PressAction::None;}
+  if(!fired&&now-started>=uint64_t(hold_ms)*1000){
+   if(held)fired=true;
+   else reset();
+   return PressAction::Hold;
+  }
+  if(held)return PressAction::None;
+  const bool tap=!fired;
+  reset();
+  return tap?PressAction::Tap:PressAction::None;
+ }
 };
 struct CampaignButtons {
  HoldOnce end_turn,save;
@@ -32,9 +53,9 @@ struct Chord {unsigned scan{},control{};};
 inline constexpr Chord chords[]={{0x1e,1},{0x1c,0},{0x13,0},{0x21,0},{0x22,0},{0x22,1},
  {2,0},{3,0},{4,0},{5,0},{2,1},{3,1},{4,1},{5,1}};
 inline constexpr unsigned WheelHeld=254,WheelUp=250,WheelDown=251,WheelLeft=252,WheelRight=253;
+inline constexpr unsigned CommanderPage=245,WalkPace=246;
 inline int wheel_sector(const Frame& f,float threshold){
- if(f.buttons&bit(Button::Up))return 0;if(f.buttons&bit(Button::Down))return 1;if(f.buttons&bit(Button::Left))return 2;if(f.buttons&bit(Button::Right))return 3;
- auto v=f.right_stick;if(!deck174::unit(v)||std::max(std::fabs(v.x),std::fabs(v.y))<threshold)return -1;
- return std::fabs(v.y)>=std::fabs(v.x)?(v.y>0?0:1):(v.x<0?2:3);
+ const auto v=f.right_stick;
+ return deck174::unit(v)?commander76::order_point(v.x,-v.y,threshold):-1;
 }
 }

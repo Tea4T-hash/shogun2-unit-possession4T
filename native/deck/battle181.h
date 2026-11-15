@@ -2,11 +2,14 @@
 // Included in the existing private adapter namespace, after the native host.
 #include "presentation182.h"
 #include "presentation188.h"
+#include "formation218.h"
 namespace controller181 {
 static deck181::Controls controls;
 static deck181::Channel channel;
 static deck182::Presentation glyphs;
 static deck181::Output previous;
+static formation218::FormationPad fine218;
+static void cancel_formation(){fine218.cancel();}
 static deck202::LookRate look202;
 static deck201::LookQueue look201;static volatile LONG& hide_key=deck181::native_key_pending;
 static float wheel{};
@@ -14,14 +17,19 @@ static unsigned sampled_lease{},sampled_actor{},sampled_unit{};
 static unsigned hud_stage188{};static bool configured{};static volatile LONG reset_requested{},menu_open{};
 static deck174::Context context(){if(menu_open)return deck174::Context::Menu;return state&&state->mode==POSSESSED&&!state->stop&&!state->release?deck174::Context::Possession:deck174::Context::RTS;}
 static void clear_input(){
+ InterlockedExchange(&commander76::deck_rts_wheel,0);
+ InterlockedExchange(&commander76::deck_sector,-1);
+ commander76::deck_pointer.store({});
  InterlockedExchange(&reset_requested,1);deck181::Sample empty;channel.publish(empty);look201.clear();look202.clear();
 }
-static deck181::Output sample(const deck174::Frame& frame){
+static deck181::Output sample(const deck174::Frame& frame,deck174::Context mode){
  if(!configured){controls=deck181::Controls(config);configured=true;}
  unsigned lease=state?state->lease_generation:0,actor=state?state->actor_id:0,unit=state?state->unit_id:0;
  if(InterlockedExchange(&reset_requested,0)||lease!=sampled_lease||actor!=sampled_actor||unit!=sampled_unit)controls.reset();
  sampled_lease=lease;sampled_actor=actor;sampled_unit=unit;
- auto output=controls.sample(frame,context(),frame.sample_us);
+ const auto commander=commander76::exchange.state();
+ const auto generation=mode==deck174::Context::RTS&&commander.available&&!commander.possessed?commander.generation:0;
+ auto output=controls.sample(frame,mode,frame.sample_us,generation,commander.targets,state&&state->follow!=0);
  if(output.accepted&&!output.help_blocked&&frame.focused&&output.context==deck174::Context::Possession&&!output.held(deck181::F10)&&!output.held(deck181::Escape))
   look202.publish({lease,actor,unit},frame.epoch,frame.sample_us,{output.stick_rate.x,output.stick_rate.y},config.stale_ms*1000);
  else look202.clear();
@@ -39,6 +47,10 @@ static void present(){
  });
 }
 static void cancel_window(){
+ InterlockedExchange(&commander76::deck_rts_wheel,0);
+ InterlockedExchange(&commander76::deck_sector,-1);
+ commander76::deck_pointer.store({});
+ fine218.cancel();
  if(previous.held(deck181::Q))command_native_cancel100();
  if(state&&previous.context==deck174::Context::Possession){InterlockedExchange(&state->aiming,0);}
  deck181::native_shortcuts183.clear();previous={};wheel=0;orbit_button154(false);look201.clear();look202.clear();
@@ -54,6 +66,7 @@ struct MenuHost {
  void reset_cursor(){cursor.reset();}
  void release_owned(bool left,bool right){ContextProof p;if(native_context(p,true)&&p.identity==identity&&native_window_proc&&input_window&&(buttons||left||right)){CallWindowProcW(native_window_proc,input_window,WM_CANCELMODE,0,0);if(left||(buttons&MK_LBUTTON))CallWindowProcW(native_window_proc,input_window,WM_LBUTTONUP,0,MAKELPARAM(-1,-1));if(right||(buttons&MK_RBUTTON))CallWindowProcW(native_window_proc,input_window,WM_RBUTTONUP,0,MAKELPARAM(-1,-1));}buttons=0;wheel=0;cursor.reset();}
 };
+static bool pause214(const ContextProof& proof);
 static deck178::Menu178 menu_policy;static uint64_t menu_buttons{};static bool in_menu{};
 static void menu_dispatch(const deck181::Queued& queued,const ContextProof& proof){
  MenuHost host{proof.identity};bool back=false;
@@ -61,7 +74,7 @@ static void menu_dispatch(const deck181::Queued& queued,const ContextProof& proo
  cancel_window();in_menu=true;
  auto menu_frame=deck188::menu_frame188(queued.frame);
  bool good=menu_policy.sample(menu_frame,queued.frame.sample_us,config,host,back);
- if(good){bool pause=(queued.frame.buttons&deck174::bit(deck174::Button::Menu))&&!(menu_buttons&deck174::bit(deck174::Button::Menu));if(back||pause)InterlockedOr(&hide_key,2);menu_buttons=queued.frame.buttons;}else menu_buttons=0;
+ if(good){bool pause=(queued.frame.buttons&deck174::bit(deck174::Button::Menu))&&!(menu_buttons&deck174::bit(deck174::Button::Menu));if(back||pause)pause214(proof);menu_buttons=queued.frame.buttons;}else menu_buttons=0;
 }
 
 static bool hud_toggle188(const ContextProof& proof,bool possessed_mode){
@@ -92,6 +105,28 @@ static bool keyboard_hud198(UINT message,WPARAM key,LPARAM flags,const ContextPr
  if(message==WM_KEYDOWN&&!(flags&(1L<<30))&&keyboard_fps84())hud_toggle188(proof,true);
  return true;
 }
+static native214::BattleSpeed speed214;
+static bool pause214(const ContextProof& proof){
+ if(!proof.owner_thread||!proof.focused||!input_window||!native_window_proc)return false;
+ // Original native Escape dispatch also reaches a script's Esc_Key_Pressed.
+ // Queue into the original DI poll, after possession's keyboard filter, so
+ // START opens/skips native UI without becoming an F10/depossession action.
+ return deck181::native_escape218.request(input_window,GetTickCount64());
+}
+static bool fire_at_will_eligible(uintptr_t unit,unsigned char& eligible){
+ if(!native214::admit(base,128))return false;
+ __try{
+  // Original Fire at Will button predicate in 122a090.
+  eligible=reinterpret_cast<unsigned char(__fastcall*)(uintptr_t)>(base+0x15c2e0)(unit);
+  return true;
+ }__except(EXCEPTION_EXECUTE_HANDLER){return false;}
+}
+static void invoke_fire_mode(uintptr_t root,unsigned action,float value){
+ __try{
+  using NativeAction=void(__thiscall*)(void*,unsigned,float);
+  reinterpret_cast<NativeAction>(base+0x10dfb80)(reinterpret_cast<void*>(root),action,value);
+ }__except(EXCEPTION_EXECUTE_HANDLER){}
+}
 static void dispatch(const deck181::Queued& queued,const ContextProof& proof){
  const auto& output=queued.output;
  if(!deck174::valid(queued.frame,clock_us())||clock_us()-queued.frame.sample_us>uint64_t(config.stale_ms)*1000){cancel_window();clear_input();return;}
@@ -102,15 +137,29 @@ static void dispatch(const deck181::Queued& queued,const ContextProof& proof){
  if(output.help_blocked){cancel_window();return;}
  if(output.context==deck174::Context::RTS){
   bool hide=output.held(deck181::K)&&!previous.held(deck181::K),pause=output.held(deck181::Escape)&&!previous.held(deck181::Escape);
-  if(previous.context!=deck174::Context::RTS)cancel_window();if(hide)hud_toggle188(proof,false);if(pause)InterlockedOr(&hide_key,2);previous=output;
+  if(previous.context!=deck174::Context::RTS)cancel_window();
+  if(hide)hud_toggle188(proof,false);if(pause)pause214(proof);
+  const auto commander=commander76::exchange.state();
+  const bool commander_rts=proof.permits_rts()&&commander.available&&!commander.possessed&&
+      output.commander_rts_generation&&commander.generation==output.commander_rts_generation&&
+      commander_rts76().environment==proof.identity.environment;
+  InterlockedExchange(&commander76::deck_rts_wheel,commander_rts&&output.held(deck183::WheelHeld));
+  InterlockedExchange(&commander76::deck_sector,commander_rts?output.commander_sector:-1);
+  commander76::deck_pointer.store(commander_rts?output.wheel_pointer:commander76::WheelPointer{});
+  if(commander_rts&&output.commander_confirm)
+   commander76::exchange.request(output.commander_sector,commander.generation);
+  previous=output;
   if(proof.permits_rts()){
+   if(output.fine216.active||output.fine216.released||output.fine216.cancel||fine218.pending_release())
+    fine218.sample(base,proof.identity.root,proof.identity.environment,output.fine216,[&](){ContextProof current;return native_context(current)&&current.permits_rts()&&current.identity==proof.identity;},
+                   (owned_mouse_flags&(MK_LBUTTON|MK_RBUTTON))!=0);
    for(unsigned i=0;i<deck183::ShortcutCount;++i)if(output.shortcuts&(1u<<i))deck181::native_shortcuts183.put(i,GetTickCount64());
-   if(output.fire_at_will){
-    // Same native action1 used by10ce0e0 for battle_both_fire_at_will_toggle.
-    // Reuse Halt's selection/queue preflight, not a guessed per-unit write.
-    native_halt(base,proof.identity.root,proof.identity.environment,[](uintptr_t at){return field<uintptr_t>(at,0);},[&](){ContextProof current;return native_context(current)&&current.permits_rts()&&current.identity==proof.identity;},
-     [&](uintptr_t root,unsigned,float){reinterpret_cast<void(__thiscall*)(void*,unsigned,float)>(base+0x10dfb80)(reinterpret_cast<void*>(root),1,0.f);});
-   }
+   if(output.fire_at_will||output.skirmish)
+    native_fire_mode(base,proof.identity.root,proof.identity.environment,output.skirmish,
+     [](uintptr_t at){return field<uintptr_t>(at,0);},
+     [](uintptr_t at,unsigned char& value){return native214::value(at,value);},fire_at_will_eligible,
+     [&](){ContextProof current;return native_context(current)&&current.permits_rts()&&current.identity==proof.identity;},
+     invoke_fire_mode);
   }
   if(proof.permits_rts()&&state&&state->mode==ARMED&&output.held(deck181::F10)){
    InterlockedExchange(&entry_attempted,1);InterlockedExchange(&entry_pending,0);entry_failed(181);return;
@@ -130,18 +179,28 @@ static void dispatch(const deck181::Queued& queued,const ContextProof& proof){
  if(output.context!=deck174::Context::Possession||!proof.focused||!proof.owner_thread||proof.blocked||!state||state->mode!=POSSESSED||state->release||state->stop||dead_view()||
     queued.lease!=state->lease_generation||queued.actor!=state->actor_id||queued.unit!=state->unit_id){cancel_window();return;}
  if(output.held(deck181::F10)){command_native_cancel100();InterlockedExchange(&state->release,1);cancel_window();return;}
+ InterlockedExchange(&commander76::deck_rts_wheel,0);
+ const auto commander=commander76::exchange.state();
+ InterlockedExchange(&commander76::deck_sector,output.commander_sector);
+ commander76::deck_pointer.store(output.wheel_pointer);
+ if(output.commander_confirm&&commander.available&&commander.possessed)
+  commander76::exchange.request(output.commander_sector,commander.generation);
  if(output.held(deck181::P)){AcquireSRWLockExclusive(&view_lock152);++view_input152.toggles;ReleaseSRWLockExclusive(&view_lock152);}
  if(output.held(deck181::M)&&!previous.held(deck181::M)&&!charge_input_locked146())InterlockedExchange(&mount_request154,LONG(state->lease_generation));
  if(output.held(deck181::K)&&!previous.held(deck181::K))hud_toggle188(proof,true);
- if(output.held(deck181::Escape)&&!previous.held(deck181::Escape))InterlockedOr(&hide_key,2);
+ if(output.held(deck181::Escape)&&!previous.held(deck181::Escape))pause214(proof);
+ if(output.toggle_slow214||output.toggle_pause214)speed214.apply(base,proof.identity.root,proof.identity.environment,output.toggle_pause214);
  if(output.held(deck181::Cancel)&&!previous.held(deck181::Cancel)&&command_placing100)command_native_cancel100();
- const unsigned commands[]={'Q','E','Z','C','R','F',VK_LBUTTON,VK_RBUTTON};
+ for(const auto order:output.wheel_orders)commander_order101(input_window,order);
+ if(output.skirmish)command_window_fire62(command100::Input::Skirmish);
+ else if(output.held('R')&&!previous.held('R'))command_window_fire62(command100::Input::Fire);
+ const unsigned commands[]={'Q','E','Z','C','F',VK_LBUTTON,VK_RBUTTON};
  for(unsigned key:commands)if(output.held(key)!=previous.held(key)){
   UINT message=key==VK_LBUTTON?(output.held(key)?WM_LBUTTONDOWN:WM_LBUTTONUP):key==VK_RBUTTON?(output.held(key)?WM_RBUTTONDOWN:WM_RBUTTONUP):(output.held(key)?WM_KEYDOWN:WM_KEYUP);
   weapon_window_proc(input_window,message,key==VK_LBUTTON||key==VK_RBUTTON?0:key,0);
  }
  orbit_button154(output.held(deck181::Middle));
- // Only displacement sources (pad/gyro) retain the existing worker path.
+ // Trackpad displacement retains the existing worker path.
  // Stick turning is integrated by the owned camera callback, never twice.
  look201.add(output.look.x-output.stick_delta.x,output.look.y-output.stick_delta.y);
  wheel+=output.zoom*4.f;int notches=int(wheel);wheel-=notches;if(notches&&third_person152)view_wheel152(short(std::clamp(notches,-8,8)*WHEEL_DELTA));

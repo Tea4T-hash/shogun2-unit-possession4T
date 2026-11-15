@@ -18,7 +18,7 @@ INSTALL = NATIVE / 'work/installer-siege99'
 LOCAL = True
 COMMON = ['/nologo', '/std:c++17', '/EHsc', '/O2', '/MT', '/W4']
 BASE_LIBS = ['bcrypt.lib', 'user32.lib', 'gdi32.lib']
-ADAPTER_LIBS = BASE_LIBS + ['d3d11.lib', 'd3d9.lib', 'dxgi.lib', 'd3dcompiler.lib']
+ADAPTER_LIBS = BASE_LIBS + ['d3d11.lib', 'd3d9.lib', 'dxgi.lib', 'd3dcompiler.lib', 'gdiplus.lib']
 QTE_LIBS = BASE_LIBS + ['gdiplus.lib', 'ole32.lib']
 SETUP_LIBS = [
     'bcrypt.lib',

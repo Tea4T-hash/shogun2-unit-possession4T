@@ -9,6 +9,7 @@
 #include "defaults175_generated.h"
 #include "ownership177.h"
 #include "cursor178.h"
+#include "../../tools/deck/pack174_generated.h"
 #include <gdiplus.h>
 #include <fstream>
 
@@ -58,6 +59,27 @@ static void exact_file(const std::wstring& path,const void* data,size_t size){
     DWORD written{};bool ok=WriteFile(file,data,DWORD(size),&written,nullptr)&&written==size&&FlushFileBuffers(file);CloseHandle(file);
     if(!ok)throw std::runtime_error("Controller cache write incomplete");
 }
+// Steam stores the selected bundled layout as game://deck-native174.vdf.
+// Before the runtime manifest override exists, the configurator looks in the
+// game directory. Keep the same exact default available to that resolver.
+static void write_configurator_layout(const std::filesystem::path& root){
+    const auto* bytes=reinterpret_cast<const unsigned char*>(defaults175::bindings);
+    workshop165::create_exact(root/L"deck-native174.vdf",
+        std::vector<unsigned char>(bytes,bytes+sizeof(defaults175::bindings)-1));
+}
+static void mirror_configurator_layout() noexcept {
+    if(!deck174::paths::proton())return;
+    try{
+        wchar_t path[32768]{};
+        const DWORD count=GetModuleFileNameW(nullptr,path,DWORD(std::size(path)));
+        if(!count||count>=std::size(path))return;
+        const std::filesystem::path executable(std::wstring(path,count));
+        if(_wcsicmp(executable.filename().c_str(),L"Shogun2.exe")!=0)return;
+        const auto root=executable.parent_path();
+        if(!std::filesystem::is_regular_file(root/L"Empire.Retail.dll"))return;
+        write_configurator_layout(root);
+    }catch(...){} // A read-only library or foreign layout must not break input.
+}
 static bool prepare(bool deferred_lease=false){
     if(!device192::enabled())return false;
     if(prepared)return owner==GetCurrentThreadId();owner=GetCurrentThreadId();failed=false;
@@ -66,6 +88,7 @@ static bool prepare(bool deferred_lease=false){
     exact_file(directory+L"\\deck-actions174.vdf",defaults175::manifest,sizeof(defaults175::manifest)-1);
     exact_file(directory+L"\\deck-native174.vdf",defaults175::bindings,sizeof(defaults175::bindings)-1);
     manifest=directory+L"\\deck-actions174.vdf";
+    mirror_configurator_layout();
     if(!deferred_lease&&!lease.acquire(deck177::Owner::Frontend))throw std::runtime_error("Another native frontend controller is active");
     prepared=true;glyphs_ready=glyph_error=false;glyph_attempts=0;next_glyph=0;last_poll=next_attempt=0;normalizer.reset();return true;
 }

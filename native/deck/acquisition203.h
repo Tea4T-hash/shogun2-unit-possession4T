@@ -41,8 +41,10 @@ static uintptr_t __fastcall charge_pick203(void* context,void*,uintptr_t observe
     }__except(EXCEPTION_EXECUTE_HANDLER){return result;}
 }
 #include "acquisition207.h"
+#include "acquisition65.h"
 static void create_acquisition203(){
     create_acquisition207();
+    create_ranged_group65();
     const unsigned char first[]={0x8b,0x41,0x18,0xf3,0x0f,0x10,0x25};
     const unsigned char tail[]={0x56,0x8b,0x90,0x9c,0x0b,0,0};
     require(!memcmp(reinterpret_cast<void*>(base+0x174ec0),first,sizeof first)&&field<uintptr_t>(base+0x174ec7,0)==base+0x15c2764&&!memcmp(reinterpret_cast<void*>(base+0x174ecb),tail,sizeof tail),"Native charge candidate selector differs");

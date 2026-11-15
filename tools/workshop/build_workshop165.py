@@ -180,10 +180,15 @@ def main():
         '/DS2FP_LOCAL_ASSETS',
         '/DPOSSESSION_WORKSHOP_BUILD',
     ]
-    libs = ['bcrypt.lib', 'shell32.lib', 'user32.lib', 'winmm.lib']
+    libs = ['bcrypt.lib', 'shell32.lib', 'user32.lib', 'winmm.lib', 'gdiplus.lib', 'gdi32.lib']
     res = out / 'payload165.res'
     dll = bin_dir / 's2up-workshop165.dll'
     fixture = bin_dir / 's2up-workshop165-fixture.dll'
+    vendor=ROOT/'native/outputs/shogun2-accuracy90-preview/vendor'
+    hooks=[]
+    for source in ['buffer.c','hook.c','trampoline.c','hde/hde32.c']:
+        obj=out/('bridge-'+Path(source).stem+'.obj');hooks.append(obj)
+        run('bridge-'+Path(source).stem, [['cl','/nologo','/O2','/MT','/W3','/I'+str(vendor/'include'),'/c',vendor/'src'/source,'/Fo'+str(obj)]])
     run(
         'compile',
         [
@@ -192,7 +197,7 @@ def main():
                 *common,
                 '/LD',
                 work / 'entry165.cpp',
-                res,
+                res,*hooks,
                 '/Fo' + str(out / 'entry165.obj'),
                 '/Fe' + str(dll),
                 '/link',
@@ -203,7 +208,7 @@ def main():
                 '/DS2UP165_LUA_FIXTURE',
                 '/LD',
                 work / 'entry165.cpp',
-                res,
+                res,*hooks,
                 '/Fo' + str(out / 'entry165-fixture.obj'),
                 '/Fe' + str(fixture),
                 '/link',

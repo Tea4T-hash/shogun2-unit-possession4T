@@ -3,6 +3,7 @@
 #include "presentation188.h"
 static bool deck_help_gate188(){deck188::Presentation presentation;return enabled&&state&&state->ready&&!state->stop&&GetTickCount64()-state->heartbeat<500&&deck188::read_presentation188(GetCurrentProcessId(),presentation)&&presentation.help!=0;}
 static bool deck_header_gate186(){
+ if(native214::modal(base))return false;
  if(!enabled||!state||!state->ready||state->stop||state->release||GetTickCount64()-state->heartbeat>500)return false;
  deck181::Sample input;if(!deck181::read_sample(GetCurrentProcessId(),input)||(input.context!=unsigned(deck174::Context::RTS)&&input.context!=unsigned(deck174::Context::Menu)))return false;
  __try{

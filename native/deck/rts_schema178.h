@@ -11,7 +11,7 @@ inline CameraAxes178 camera_axes178(const Frame& f,const Config& c){
 }
 // Camera feel remains based on the accepted Allyn-derived implementation.
 // Buttons now follow the owner's complete table: RT selects, LT orders,
-// L4 ranges/queues, L5 adds/assigns. Bumpers no longer add camera yaw.
+// L4 ranges/queues, L3 adds to selection. Bumpers no longer add camera yaw.
 class RtsRouter178 {
     Config config_;Normalizer normalizer_;uint64_t buttons_{};deck190::SteadyClick click_;
     bool selecting_{},selection_additive_{},ordering_{},left_{},right_{},pad_seed_{},zoom_seed_{};
@@ -29,10 +29,12 @@ public:
         auto down=[&](Button b){return (edge.down&bit(b))!=0;};
         const bool left=left_?f.left_trigger>config_.trigger_release:f.left_trigger>=config_.trigger_press;
         const bool right=right_?f.right_trigger>config_.trigger_release:f.right_trigger>=config_.trigger_press;
-        const bool select=right; // Right pad click is intentionally unassigned.
-        const bool additive=held(Button::L5)||held(Button::L3);
-        if(down(Button::B)){
-            if(selecting_||ordering_)emit(Action::OrderCancel);
+        const bool select=right; // Right-pad click holds native Space via controls181.
+        const bool additive=held(Button::L3);
+        const bool halt=down(Button::A);
+        if(halt||down(Button::B)){
+            if(halt)emit(Action::Halt);
+            else if(selecting_||ordering_)emit(Action::OrderCancel);
             click_.reset();selecting_=ordering_=false;order_released_=0;
             // A held trigger must not restart a cancelled gesture.
             left_=left;right_=right;buttons_=f.buttons;return batch;
@@ -57,10 +59,9 @@ public:
         if(camera.pitch)emit(Action::CameraPitch,{0,camera.pitch});
         const float shoulder_zoom=float(held(Button::L1))-float(held(Button::R1));
         if(shoulder_zoom)emit(Action::CameraZoom,{0,shoulder_zoom});
-        if(held(Button::LeftPadTouch)){
-            if(zoom_seed_){float delta=f.left_pad.y-zoom_.y;if(delta)emit(Action::ScrollZoom,{0,delta});}
-            zoom_=f.left_pad;zoom_seed_=true;
-        }else zoom_seed_=false;
+        // Left-pad swiping is intentionally inert; clicked direction/turn
+        // gestures are owned by fine216 and native selection orders.
+        zoom_seed_=false;
         left_=left;right_=right;buttons_=f.buttons;return batch;
     }
 };

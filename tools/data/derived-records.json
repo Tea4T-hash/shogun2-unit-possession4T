@@ -4892,6 +4892,7 @@
           "{56,L\"overcharge_engine\",L\"Overheat Engine\",L\"ui/ability_icons/data__overcharge_engine_icon.png\"},"
         ],
         "record33": [
+          "{57,L\"kneel_fire_ability\",L\"Crouch Fire\",L\"ui/ability_icons/data__kneel_fire_ability_icon.png\"},",
           "{58,L\"kill_zone\",L\"Kill Zone\",L\"ui/ability_icons/data__kill_zone_icon.png\"},"
         ],
         "record34": [
@@ -4919,7 +4920,7 @@
           "{68,L\"shrapnel_shot\",L\"Shrapnel Shot \",L\"ui/ability_icons/data__shrapnel_shot_icon.png\"},"
         ]
       },
-      "expected_sha256": "c30346eb746e7bd52df631ded5b3aafa24eaf4d3b444eeb24cd318ce333dc42a"
+      "expected_sha256": "77f25839b7bac1228662739797d98c51b166483b262af5c63f9d30f97964fddc"
     },
     {
       "path": "native/outputs/shogun2-accuracy90-preview/src/personal_weapon_catalog.h",

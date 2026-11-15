@@ -1,5 +1,6 @@
 static float fixture_vx203{},fixture_vz203{};static bool fixture_mark203{},fixture_zero_intent204{};
 static bool __fastcall can_run203(void*,void*){return true;}
+static void __fastcall fixture_reload203(void*,void*){}
 static bool __fastcall special_gait203(void*,void*){return false;}
 static void __fastcall integration203(void* value,void*){
  auto a=reinterpret_cast<uintptr_t>(value);float target[]={field<float>(a,0x48)+fixture_vx203*.04f,field<float>(a,0x50)+fixture_vz203*.04f};

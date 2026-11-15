@@ -15,6 +15,7 @@
 #include "../../native/common/engine_contract172.h"
 #include "asset_recipe159.generated.h"
 #include "localization167.h"
+#include "../../native/deck/proton_paths174.h"
 using Microsoft::WRL::ComPtr;
 using Bytes159=std::vector<unsigned char>;
 static void need159(bool value,const char* why){if(!value)throw std::runtime_error(why);}
@@ -37,12 +38,7 @@ struct OutputCleanup166 {
         RemoveDirectoryW(folder.c_str());
     }catch(...) {}}
 };
-static void plain159(const std::filesystem::path& p){
-    auto absolute=std::filesystem::absolute(p).lexically_normal();need159(absolute.wstring().size()>3&&absolute.wstring()[1]==L':',"Use a local drive path");
-    std::filesystem::path current;for(auto& part:absolute){current/=part;auto attr=GetFileAttributesW(current.c_str());
-        if(attr!=INVALID_FILE_ATTRIBUTES)need159(!(attr&FILE_ATTRIBUTE_REPARSE_POINT),"Reparse resource path refused; original preserved");
-        else need159(GetLastError()==ERROR_FILE_NOT_FOUND||GetLastError()==ERROR_PATH_NOT_FOUND,"Cannot inspect resource path");}
-}
+static void plain159(const std::filesystem::path& p){deck174::paths::plain(p);}
 static unsigned u16_159(const unsigned char* b){return unsigned(b[0])|(unsigned(b[1])<<8);}
 struct Pack159 {
     std::filesystem::path path;std::map<std::string,std::pair<uint64_t,unsigned>> entries;
@@ -63,7 +59,7 @@ struct Pack159 {
 static std::vector<Bytes159> local_fonts167(const std::filesystem::path& game){
     auto english=game/L"data/local_en.pack";
     if(std::filesystem::exists(english)){
-        plain159(english);Pack159 pack(english);std::vector<Bytes159> fonts;
+        deck174::paths::read_file(english);Pack159 pack(english);std::vector<Bytes159> fonts;
         for(unsigned id:fonts159){auto bytes=pack.get(inputs159[id]);need159(locale167::font(bytes),"English native font is incompatible");fonts.push_back(std::move(bytes));}
         return fonts;
     }
@@ -71,7 +67,7 @@ static std::vector<Bytes159> local_fonts167(const std::filesystem::path& game){
     for(const auto& entry:std::filesystem::directory_iterator(game/L"data")){
         if(locale167::pack_name(entry.path().filename().wstring())){
             need159(candidates.size()<32,"Too many installed localization packs");
-            plain159(entry.path());if(entry.is_regular_file())candidates.push_back(entry.path());
+            deck174::paths::read_file(entry.path());if(entry.is_regular_file())candidates.push_back(entry.path());
         }
     }
     std::sort(candidates.begin(),candidates.end());
@@ -125,12 +121,12 @@ static Bytes159 wave159(const std::filesystem::path& mp3){
 }
 int wmain(int argc,wchar_t** argv){try{
     need159(argc==3,"Use prepare-local-assets <game-folder> <new-staging-folder>");std::filesystem::path game=argv[1],out=argv[2];
-    need159(game.is_absolute()&&out.is_absolute(),"Use absolute local paths");plain159(game);plain159(out);plain159(game/L"Empire.Retail.dll");
+    need159(game.is_absolute()&&out.is_absolute(),"Use absolute local paths");deck174::paths::read_directory(game);plain159(out);deck174::paths::read_file(game/L"Empire.Retail.dll");
     (void)engine172::admit((game/L"Empire.Retail.dll").wstring());
     need159(!std::filesystem::exists(out),"Existing resource output preserved; use a new directory");auto g=std::filesystem::weakly_canonical(game).wstring(),o=std::filesystem::weakly_canonical(out.parent_path()).wstring();
     std::transform(g.begin(),g.end(),g.begin(),towlower);std::transform(o.begin(),o.end(),o.begin(),towlower);need159(o!=g&&o.rfind(g+L"\\",0)!=0,"Resource staging must be outside the game directory");
     std::filesystem::create_directories(out);OutputCleanup166 cleanup{out};std::map<std::wstring,std::unique_ptr<Pack159>> packs;std::map<unsigned,Bytes159> inputs;std::map<unsigned,Picture159> images;
-    auto input=[&](unsigned i)->const Bytes159&{auto found=inputs.find(i);if(found!=inputs.end())return found->second;auto& spec=inputs159[i];auto& p=packs[spec.pack];if(!p){plain159(game/L"data"/spec.pack);p=std::make_unique<Pack159>(game/L"data"/spec.pack);}return inputs.emplace(i,p->get(spec)).first->second;};
+    auto input=[&](unsigned i)->const Bytes159&{auto found=inputs.find(i);if(found!=inputs.end())return found->second;auto& spec=inputs159[i];auto& p=packs[spec.pack];if(!p){deck174::paths::read_file(game/L"data"/spec.pack);p=std::make_unique<Pack159>(game/L"data"/spec.pack);}return inputs.emplace(i,p->get(spec)).first->second;};
     auto picture=[&](unsigned i)->const Picture159&{auto found=images.find(i);if(found==images.end())found=images.emplace(i,tga159(input(i))).first;return found->second;};
     Bundle159 hud(1),qte(2);
     auto atlas=[&](Bundle159& bundle,const Image159* rows,size_t count,unsigned number,unsigned limit){unsigned w=0,h=0;for(size_t i=0;i<count;++i)if(rows[i].atlas==int(number)){w=std::max(w,unsigned(rows[i].x+rows[i].w+2));h=std::max(h,unsigned(rows[i].y+rows[i].h+2));}need159(w&&h&&w<=limit&&h<=limit,"Atlas placement exceeds accepted dimensions");Picture159 result{w,h,Bytes159(size_t(w)*h*4)};

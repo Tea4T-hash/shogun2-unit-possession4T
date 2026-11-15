@@ -3,8 +3,8 @@
 #include <windows.h>
 #include <filesystem>
 #include "../../native/work/autoload99-preview/integrated.h"
-#include "pack165.h"
-#include "ui_compat168.h"
+#include "../deck/pack174_generated.h"
+#include "../deck/ui_compat174_generated.h"
 #include "../../native/work/autoload99-preview/workshop_assets165.h"
 static HMODULE module165;
 static INIT_ONCE host_once165=INIT_ONCE_STATIC_INIT,start_once165=INIT_ONCE_STATIC_INIT;
@@ -66,8 +66,18 @@ static BOOL CALLBACK bind165(PINIT_ONCE,void*,void**){try{
 #endif
 }catch(const std::exception& error){get_top165=nullptr;failure165(error.what());}return TRUE;}
 static bool caller165(void* state){InitOnceExecuteOnce(&host_once165,bind165,nullptr,nullptr);return get_top165&&get_top165(state)==1;}
+#include "../../native/deck/frontend181.h"
 extern "C" __declspec(dllexport) int __cdecl s2up_workshop_prepare165(void* state){StateGuard165 guard;try{
     if(!caller165(state))return 0;
+    
+#ifndef S2UP165_LUA_FIXTURE
+    require(device192::select(),"Device profile unavailable");
+    if(device192::enabled()){
+        require(deck205::edges.install(reinterpret_cast<uintptr_t>(GetModuleHandleW(L"Empire.Retail.dll")),true),"Native Deck cursor-edge camera suppression unavailable");
+        require(deck185::install_ui185(reinterpret_cast<uintptr_t>(GetModuleHandleW(L"Empire.Retail.dll"))),"Native Deck UI scaling unavailable");
+        deck85::install_tooltips(reinterpret_cast<uintptr_t>(GetModuleHandleW(L"Empire.Retail.dll")));
+    }
+#endif
     prepared165=false;if(root_guard165!=INVALID_HANDLE_VALUE){CloseHandle(root_guard165);root_guard165=INVALID_HANDLE_VALUE;}
     auto selection_path168=game165+L"\\used_mods.txt";
     std::wstring selection_text169;

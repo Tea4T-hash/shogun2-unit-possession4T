@@ -18,14 +18,14 @@ struct GroupGesture {
  int active{-1};bool fired{},blocked{};uint64_t began{};
  void reset(){*this={};}
  // Result: 0..3 recall, 4..7 assign, -1 no action. A hold never recalls first.
- int sample(unsigned mask,bool assign_modifier,uint64_t now){
+ int sample(unsigned mask,uint64_t now){
   if(!mask){int action=active>=0&&!fired&&!blocked?active:-1;reset();return action;}
   if(blocked)return -1;
   if(mask&(mask-1)){active=-1;blocked=true;return -1;}
   int direction=0;while(!(mask&(1u<<direction)))++direction;
   if(active<0){active=direction;began=now;}
   if(active!=direction||now<began){active=-1;blocked=true;return -1;}
-  if(!fired&&(assign_modifier||now-began>=550000)){fired=true;return direction+4;}
+  if(!fired&&now-began>=550000){fired=true;return direction+4;}
   return -1;
  }
 };

@@ -3,6 +3,8 @@
   "family": "original-steam-x86-2023",
   "contract_id": "2ab5c4c36b4ed492cf1e3c653f0841bb5ba427b8cefd337eed36f4dbfe93083c",
   "source_files": {
+    "native/common/card_image217.h": "3988beb1ef8c17fb368ae421d5266365622a88956190aab78eec797c81fc120c",
+    "native/common/card_pack217.h": "6b3c155a07de3d8090e0b7457ef944b00129febb5b9f7f080a57be83ad5b6761",
     "native/common/component_error168.h": "6955bf23ffbbdbae54f90bdb8f6a6def85917b9b2559a8bfc93e8288baf72be0",
     "native/common/engine_contract172.h": "4953611fd54df6dce6e859533e5bb286cb5b5bbf5f869e7db3ef95d265975c41",
     "native/common/engine_profiles170.h": "80561e11a652203bf6c2a2cd4b9b5f2c7eb85ff9fe5397435876da0cbe54337a",
@@ -16,23 +18,112 @@
     "native/common/startup_error167.h": "02e5ecb97359cb9678d706c4a3a71ff13b654e70c285223fc381ee085f0ca3a5",
     "native/common/startup_gate168.h": "d1cf567f2fb5d4c08437f5a664b5e439e283b21c7e90f050efd0b4ea8c771dad",
     "native/common/startup_view160.h": "f56c37d7d7d57c28549df09b5688fbd530c172ac4b69fe49588eabe3a188cb50",
-    "native/outputs/shogun2-accuracy90-preview/src/ability_catalog141.h": "403a1c287156ca6ff2c2112855b5beff7a3c495964549bc3bade4fe403282d58",
-    "native/outputs/shogun2-accuracy90-preview/src/ability_input141.h": "ca45d7f5bf6d25776bbaf5ab924309ed8fbb1388c201b59fef3e4c19b9370b62",
-    "native/outputs/shogun2-accuracy90-preview/src/ability_native141.h": "3a60d371700427877ca96ff5fdb55481de94fbd9235560f0b3d92e6f3bb71efa",
+    "native/common/unit_activity215.h": "2b3e047b1e61fbee21229255f290a97d12db29a8d3ad409ab779f82ee0885671",
+    "native/deck/acquisition203.h": "e90cb1b87ea0082a724a2ae37e95a4dc233101f690a4b285e7a8d0274dd68d6f",
+    "native/deck/acquisition207.h": "33b9bd4664285378e2b042de7b1b823de197b557f7df7cc47fad77c19489a573",
+    "native/deck/acquisition208.h": "8ee926c43bfe04600fbb97bdafc7b15b9db0866abc4f9e4bca62f6e289d9fcbe",
+    "native/deck/acquisition65.h": "eb55665a9c8b29b27c53f5b142a2df9ff5ce1470f90af1fe92f3bd9d635cead0",
+    "native/deck/adapter175.h": "b80b72d29ea27a8a37486a49fa8b4f4e61179c889b63a4af0d49eed3d384f12d",
+    "native/deck/battle181.h": "514d4138eb58695d27b5dabbd2626faf66ac4172e9e7c509bf8408152e2c6653",
+    "native/deck/battle_panels223.h": "a8e1a60ee6a6be0d7b2b32f12d5ea9e5ac37d59d06ea1c14af1ebead2bb560d3",
+    "native/deck/battle_ready181.h": "b402e16e99ae2a628cfbd439e7352e2eda2cd616a95de18aadd9578b6ec5763c",
+    "native/deck/battle_speech226.h": "45e07e913af11095d7af67615c6e46054063f5fb5a8f04f81f928c1ec49536d1",
+    "native/deck/binding_profiles182.h": "ccecafd02297b44e108219559d9b00ad6a1366b7c409215e67dfa5034e0610fa",
+    "native/deck/bindings175_generated.h": "50d369f2db7c44efaa40d1ada6cda10c88000707c890059b651281b350fb3194",
+    "native/deck/bindings183.h": "730d3d9953e33a4e1065460b83f5c50340be8440bd1dde2cc845f6628b210244",
+    "native/deck/camera_edges205.h": "f9941aaeb68b5a964d4242a4e03f9f9c1c05f6f813a2c6ecae6adcd7b5d2699c",
+    "native/deck/campaign181.h": "75f934a328700c6922f8721f2bfdbea888427fd79c083706d0b641d487303ba7",
+    "native/deck/campaign_keys185.h": "877d1a30380cf0dde5cf33ece9e0e73a1d5edea9e25a730332c9a10491369e89",
+    "native/deck/channel181.h": "12aff64c6fce1af2d2f7d12f13454a753173fd130c1251d2c363decee67baa68",
+    "native/deck/click190.h": "2865a78cf92762e29f4a6162bca572e7a7ec97e53dca3c6fea8eb947ccaf7216",
+    "native/deck/command_display184.h": "cf0c5200a1bba5a3c48bb10898f9d7e3cf1dd86b7e9c827eeba168b6a6843000",
+    "native/deck/commander76.h": "96577575ac22921ff3172b36a10602de8020bd9270f6e4cfc6d9ee0a6fbff3a1",
+    "native/deck/commander_display76.h": "24add17d64a9a25f6382c9c051f4bfc28d30680042481129962b1e0701293b6b",
+    "native/deck/commander_wheel84.h": "2fabb25b1d33ed261308be52010d671346e88e750ac34c3678cacae0c7b97917",
+    "native/deck/config174.h": "c9565a1c5d610e9525ce4066cec6455510301c46721a45b527cbbc6f69d2d6e0",
+    "native/deck/context181.h": "86fdd8a5fa798c88342872a60aba2801e24117209473c59c91780bb8235d164b",
+    "native/deck/controls181.h": "ea22e56cc2c8370c58771934780ffa2015003439aa24bef3db997d3aba6b162e",
+    "native/deck/cursor178.h": "f2b797b3540f413c0a13f9f83ce0ad4a47eb52b14f41c1b53de6f9b95f75d80a",
+    "native/deck/cursor194.h": "684a14889d46bf96b43d791aa8df5b0fb02a7ba471f88b9b1e28c2d7250f5b7c",
+    "native/deck/cursor_idle185.h": "3c6128fa4343b11b03d2302957836b9cbf3ab9995bc1c360cf027f7e16e2b33f",
+    "native/deck/defaults175_generated.h": "fbed9afa5ecb05045fd7985f2438c75c9e5386792031b19b8d1bb560a2bd3fb3",
+    "native/deck/device192.h": "b224182afdf18939620eb11c33959ea02f2984bf352f84e6b37245497e4df7ea",
+    "native/deck/escape218.h": "744a85293f06e01ddeb26132224dc5b19ad6370a610132558853bb29082273b8",
+    "native/deck/fine216.h": "cacb2419f35bd9b94092901c28156ee081cbc52bb8deffc23e2abfbce23eaf66",
+    "native/deck/formation218.h": "18386a909329d3bc2e2b5895e8cc27a763ff5da7dc60a4e147f972ad0f25fc25",
+    "native/deck/framing203.h": "4b8ab284926acb93c149f23f626c709697b7e60ee0fb765d6ea34620553775ff",
+    "native/deck/frontend177.h": "63dd78cee773dcdb43b7d67a17b4f979715cf61ed8fe8bfb6fec8d1bfa71028c",
+    "native/deck/frontend181.h": "0f105632b425018bdcdec6c051839cf97348ac6245d27dcdce3cf5c457a93508",
+    "native/deck/glyphs181.h": "4cb73abd452bd963ba4b364668e63d72207b2d4a5417ac4e836608cb3878b71f",
+    "native/deck/handoff181.h": "c2bcffe961a75e03b9be82714e44089b643dd00bcddc3a2b3744df04765037da",
+    "native/deck/help_draw188.h": "4881db4c8ddecdfeda5fdc39099c8bbff0a9c31c3622edc49e3980c44be1a8fe",
+    "native/deck/help_header186.h": "18c2c525143d69923989d4731336c723f2c105429847fef831b272ade64d20d6",
+    "native/deck/help_input188.h": "af26556ea3c7b21aff8635ce791a96eae57bdff324975c22ea3a6714ffc679c5",
+    "native/deck/help_renderer188.h": "f92518a3c07becf02667af7f8887b56961ce147552f4836d21abba0539d14fb5",
+    "native/deck/help_rts186.h": "43928914ffb0e0822cfa35116dc173c5ca707efbd61f2dfc4add40e6c21dbe1e",
+    "native/deck/hud_cycle198.h": "4079d0859ea07fb4317b49e798d53c70bd370288765442fe16acd868790a6af2",
+    "native/deck/input174.h": "f1b781761f51179c12ff3560332aac1aa27c7e4dd16e43894d00658c672c8a2a",
+    "native/deck/input_trace181.h": "6976323396f872ace7e8023f9f0c89f04a79f43a288208271670f8f70d1239c2",
+    "native/deck/keyboard_handoff196.h": "d67fcf6c84c3f90c2c30c8cfd64172dd5ad9455d69bec84ebb2077b5ebb2b1b4",
+    "native/deck/legend_resources184.h": "20d3f22c5751b2dc0a719cfc93ffc1c3a179e09a9b694edc669993f3292d3949",
+    "native/deck/locomotion203.h": "d86309b4a69a142fd7b3c56c3f84b7e85f227923e3398051265b7dbeb9ab4c7d",
+    "native/deck/look201.h": "efc6bbdfa17b7686bc84f8379336122736656f3cd47d60445227f33b2873b34b",
+    "native/deck/look202.h": "de360004e19958fbcfd8703d891029fccdb416cb98fa6318bc95d96fd330a09e",
+    "native/deck/mailbox175.h": "7f640b44a01c8e518ee72e38fb1105904945beb0dae84361b7399b02a8112a21",
+    "native/deck/menu178.h": "f13a6d7252ea887d0a303cd9d5249a7ce358f72a420be182705fa6b74ea9a479",
+    "native/deck/menu179.h": "e32c3ff6a4e3681d4b7aa177d063e94934eb205053d6c2d4d4ad3bbf890643ef",
+    "native/deck/native185_generated.h": "b1321898bae5a5757db11c0ddab1742fded2b6242e4c984bacf02ce7037d5275",
+    "native/deck/native214.h": "f34bdc8086f9e58673994a84f7260299628a5149bd0a0c45c098bbe741419657",
+    "native/deck/native214_generated.h": "e45710e3088bbfaae350774a1c72ae48ad32b78720a3261f75519abea60c7bfb",
+    "native/deck/native_guard175.h": "d5289f6478dcaa2f5e401e6fefbb45d4083805c1c075d93e0f3e7d62440055e2",
+    "native/deck/native_input185.h": "b1cdcad76e078a829ad9ea94648d6fb119140b132a2fdcfea846753da3783618",
+    "native/deck/native_modifiers188.h": "42bc2438900f38182228bde049b0aba45cb9aefed4c2f7315af760b775e6980f",
+    "native/deck/native_ui185.h": "eb5e9ac32918d5562adf4843b741358c4553311892f8fd3229e90d0083c666d7",
+    "native/deck/navigation182.h": "420e5dffb5fb3b5b1332850e256c6c71f9450489803103e9584feed2b1ce7a9a",
+    "native/deck/orders175.h": "eb4867eff78aed41d6a8d43a8ec02468060e815dafe0458355ede699584c5565",
+    "native/deck/overlay_gate181.h": "c887d097eb856aa73c478fcf41ce6fc1cc35faca3a3b77d5a1b9c4af92b3cb92",
+    "native/deck/ownership177.h": "1724fb972125b9f36b1a5106ae7cfe1515d333bd04071fa3dc8417d632eb5b7c",
+    "native/deck/presentation182.h": "5aa667a23a19c7380e103dc70e5bd4caf2506f6b2ed1c3051477a5e470213361",
+    "native/deck/presentation188.h": "5e703f52458154392210b3eecfb9e5c0c615509ce5cc1d8916ba7ca1c48d81d4",
+    "native/deck/proton_paths174.h": "4d381af9dbb4cf9f726edce150b7369bfb87ded1edd6ef92f7831a83b55185b3",
+    "native/deck/qol193.h": "639aed932095cf4fb90e614e5843c74045570610555610a8abb47e7563264e2d",
+    "native/deck/recovery218.h": "f395dbe6358d5c509d1aca4ab82e70a492e2d4372a4852e56f0fbc7adfb09311",
+    "native/deck/router174.h": "3f0d9f621c62e0cd4faefdf391ff5df6dc84e6859286188ff786f056d7196d67",
+    "native/deck/rts175.h": "c4c1023c66ed7e93cb7c8e8dd5713a3fa1837e73564790de5412dea651d7b2de",
+    "native/deck/rts_schema178.h": "849df5551fdab8fc461e0e8078e7090686cbeff03fc5dc7347cf419c4e363348",
+    "native/deck/selection189.h": "1c861b5d585ad01126df237bd37077bf7965667d58969877cff6d2b29dcc38a3",
+    "native/deck/shortcut_click184.h": "f3099007b40c86e2b12a79a7fddd02b7ba845303bae266dcafd3389b8ef64cdc",
+    "native/deck/shoulder_zoom195.h": "cbbf0fc37d4b2a01f78a14475446b795beb867856c3d3058b3541cfc0d80f199",
+    "native/deck/startup_handoff222.h": "6217e16055c7edb7cfaf8b88bcf9546f81c6890487190e981f7b713307b4784b",
+    "native/deck/steam_input174.h": "630b8cc0ac7fe00709c0c05c33f1a2b9ec11b235e26d1ccf9af04f99a341b70f",
+    "native/deck/terrain224.h": "92ccd35f85a2900f6e731ebb0ec62e0576eaf7bfbccb58b34b4d20b1dab6ccf9",
+    "native/deck/tooltip85.h": "b6a40a4d569444c4f6fe8ae1e3869c4f290a31a9a6c470ba80856a73297ab7ec",
+    "native/deck/ui174.h": "f13e3c8305b46d56aab546f33713b504befad5f6d5ffcf986c6a70dc124d6f18",
+    "native/deck/ui214.h": "a15680dc5e0b9236dd8f1bcab869f7d344d0e5e9d51eefdc9eba1ba6eec366b1",
+    "native/deck/view_help186.h": "70038a334dd4d5159b31e4535fa28cef51fe4d1ec0a113bee94c28eaf33ff58f",
+    "native/deck/viewport181.h": "aac237fd3baf7c998ccfdcc28f607f7651ea8c7e99bb60c087ca838f7b70ffee",
+    "native/deck/wheel197.h": "d6ec859b21c453b4aadbc38947462a1a652cac2dd6826cb2e4bebf55fb97876a",
+    "native/deck/zoom181.h": "42be30b850a0deca93563c9d1201070e538f473c6f3fd7b1488916e403d88ea1",
+    "native/deck/zoom181_generated.h": "2017f8190f5bb27d3edfd6d77e198ac92ced345d92634f7348054eb56920f1d1",
+    "native/outputs/shogun2-accuracy90-preview/src/ability_catalog141.h": "9f45c2d6fe9319d23bc0d8ad1ae187998dcd42ecb5a72779c8b1d51d50d059ac",
+    "native/outputs/shogun2-accuracy90-preview/src/ability_input141.h": "5f34ebb0dad44f514040d7a9826a5252010199bbbe576574f481f7c30651825a",
+    "native/outputs/shogun2-accuracy90-preview/src/ability_native141.h": "db0139573b98be5c0236cbdb41fb551bd6353b1df5fde3267193c3d10f269bea",
     "native/outputs/shogun2-accuracy90-preview/src/ability_protocol141.h": "4202a1b0a3d25ffd17b45970e7432fbc8cbbf59267c704047ebbf71eeab96988",
     "native/outputs/shogun2-accuracy90-preview/src/ability_target143.h": "6d9693ccb9c299a214e141549359b11598252d4127414957ce579f806fee3543",
-    "native/outputs/shogun2-accuracy90-preview/src/accuracy_geometry90.h": "5673022f01e4ee9f01c898b684993ef6fc215624f8061f182eb454a0d7cafcad",
+    "native/outputs/shogun2-accuracy90-preview/src/accuracy_geometry90.h": "21ab85a646a6ad166d39963539a875fa983f8c257accb18bb1bf876252657b82",
     "native/outputs/shogun2-accuracy90-preview/src/accuracy_protocol90.h": "3638afd2116e4f15defaac0259137873fdeee0e801cef4133d373069c2f40c01",
-    "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp": "47d6480460bf5e2454dcb6a70c09586d583d06b8d71d4a938860639ab31c64c1",
+    "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp": "942d5eadf232a02efc80f77379752cf2fd715329fd4327732d70568361779dbf",
     "native/outputs/shogun2-accuracy90-preview/src/aim_geometry.h": "43db980409c92a967a376d9d0763bfa5cbdf4cc18d5b3a6c762fd3e7f14cdf33",
     "native/outputs/shogun2-accuracy90-preview/src/ammunition_mapping83.h": "665b865cc700b90ad07ab02414d4498b29655e3d5bf92c3faa28f7516f4b0be7",
     "native/outputs/shogun2-accuracy90-preview/src/ammunition_protocol83.h": "7b0962975b377a3a24fd6c27cbea55a36c1078eaf371ae48e12293654116db2b",
-    "native/outputs/shogun2-accuracy90-preview/src/ammunition_publish83.h": "91b64f35d020ae12862d1df68ece6b45e43099bb98a0121d4dd55a27232cdf36",
+    "native/outputs/shogun2-accuracy90-preview/src/ammunition_publish83.h": "3b522f99327948c568420cb309e82ea6c6b3adffbdab4a37e4624846356253d5",
     "native/outputs/shogun2-accuracy90-preview/src/animation_look104.h": "a7e5dc8263316980656da4a88a9b1b474766feb03a9c0c2569d8e7cb87158521",
-    "native/outputs/shogun2-accuracy90-preview/src/animation_view.h": "d3831b0d3f92faf78ac0c66a966c87c3405cb7cc8ab738056a3f3841e7280733",
+    "native/outputs/shogun2-accuracy90-preview/src/animation_view.h": "f4cf5ccf772baa9e38696082113020cb1587c6d26fa01c873bd8aa86f789cdd4",
+    "native/outputs/shogun2-accuracy90-preview/src/arrow_camera107.h": "7baebd9f00769953c4fe65e17725f5c5ad57d48be0ef4ca1fffeafea24bd8bca",
+    "native/outputs/shogun2-accuracy90-preview/src/arrow_camera_native107.h": "1f3a3789cc1603f2bf3557e6e14129360894bbcd13010003b808029d3561ac84",
     "native/outputs/shogun2-accuracy90-preview/src/arrow_render_geometry.h": "506e1940661b23226d4f78c854892142de82f7dbbfdbe686e70ffce34cb6a061",
-    "native/outputs/shogun2-accuracy90-preview/src/bow_draw142.h": "a6f3750daa4ba66e43bee27827775e3bfd4e87aae68bbb8ccc972c01ab385469",
-    "native/outputs/shogun2-accuracy90-preview/src/bow_input142.h": "ffa5d353666c95868e2aa580913133aef82228f170113ef09c7116c8525c60b8",
+    "native/outputs/shogun2-accuracy90-preview/src/bow_draw142.h": "61682ca2a1de351dd6c04d3d5688a9214f7706313a3680a4142c537c90d9614f",
+    "native/outputs/shogun2-accuracy90-preview/src/bow_input142.h": "b802889acbec7d07f203d1164e35b615b362a811066d4d09d36aa19c73c0263c",
     "native/outputs/shogun2-accuracy90-preview/src/camera_choice97.h": "ee28f2195931c85d6ecd31f0c8bc5f5340110646706ede2404a0ebee2ac3c9d8",
     "native/outputs/shogun2-accuracy90-preview/src/camera_entry_gate.h": "7555f2d401fd9f3846c8d3aa6c608eb2113d72cc7c8100c070ac38227f62c1fc",
     "native/outputs/shogun2-accuracy90-preview/src/camera_pick150.h": "7c72fd088e10f2d8c28ded43b90eeb80f5f3706cdcf6b37157295e6f49019b6b",
@@ -40,32 +131,34 @@
     "native/outputs/shogun2-accuracy90-preview/src/climb_protocol97.h": "8d1b295045f53dae6823b27f611c8eb7a48ad72f5f8e09b2477bb147a79f4c1f",
     "native/outputs/shogun2-accuracy90-preview/src/combat_focus125.h": "1b7a6da9e43516740e370a0220d4cb9f789ccf130cfa1517e0dfd25737046dbf",
     "native/outputs/shogun2-accuracy90-preview/src/combat_turn126.h": "5a33b7a5981f82ded4362fb97d8f7e94ff2754b5e6179af7a1fcf7c0fb1badea",
-    "native/outputs/shogun2-accuracy90-preview/src/command_input100.h": "a2c77dee4da1d48da9c4495b39119b9bf6c721b1037c1aadb6555fa09db60c9b",
-    "native/outputs/shogun2-accuracy90-preview/src/command_policy100.h": "a88bad36a4a32c14e47b984c0368e69fbfcb3d4821988a1245987eba451b7ff3",
-    "native/outputs/shogun2-accuracy90-preview/src/command_protocol100.h": "22fa0ac260f596bc074ac37b5ed5a1a0f882731a5a1efa231acac45f14dfbcde",
+    "native/outputs/shogun2-accuracy90-preview/src/command_input100.h": "cb6753a6031ae046a7f4f06c7dda3d62ff22eb5c3dc889e5b27a97842e2c43e2",
+    "native/outputs/shogun2-accuracy90-preview/src/command_policy100.h": "b478d642de7f5370ec851bccffa71ee8fc23ef2c7382d662009ab11220f9896e",
+    "native/outputs/shogun2-accuracy90-preview/src/command_protocol100.h": "420fb8a078156b8fd25995e7a11dd6c01a3ef2abe60881decb5ec02062b37102",
+    "native/outputs/shogun2-accuracy90-preview/src/commander_input76.h": "ac5ec50450828f8a294bfce9a774a0067fee274f48e3b632f862a73e11c981bc",
     "native/outputs/shogun2-accuracy90-preview/src/cone_geometry.h": "f5a1e2fff0628c851629e3980f05a5e57b2eb6d25d38fbb5695253803f2e6bb8",
     "native/outputs/shogun2-accuracy90-preview/src/control_metrics.h": "0014136b2e20cf1cfa197f0383bd0f26871c9d30ebe815416acb6753092b1892",
     "native/outputs/shogun2-accuracy90-preview/src/death_pose_geometry.h": "ce182b2ef06e870bff2d6d0e7317b2c2cbe3c1c4dd545d023f7955af63f88dcd",
     "native/outputs/shogun2-accuracy90-preview/src/decoded_rig_profiles89.h": "aada78960fe73af38cc7fe7dfadf3cbe0bd976fe81857c43b942ab503da03501",
     "native/outputs/shogun2-accuracy90-preview/src/dismount143.h": "d44da7eb1bf34c7c36adb33701011dbfc96e65142347c21a721aa8bb330b0e7a",
-    "native/outputs/shogun2-accuracy90-preview/src/equipment_input81.h": "60bbfb25ff2b9373a0d77536792f43d77cf4ff39b6cb7f855ee0649196a8adb9",
-    "native/outputs/shogun2-accuracy90-preview/src/equipment_native81.h": "9d52d319a82c2a04ecec6b97219425f6465ad92182d52bbfaf7eb7865d8b566c",
+    "native/outputs/shogun2-accuracy90-preview/src/equipment_input81.h": "a0cc81dfc6ceda3472002eabf9e591e798a7d865cc1228c5f4ca6f89060ed9dd",
+    "native/outputs/shogun2-accuracy90-preview/src/equipment_native81.h": "21b0389fabc9e3f00f5d3b8f82ebcf23c1447879f2485d06b7a22c2cb56102e8",
     "native/outputs/shogun2-accuracy90-preview/src/equipment_policy81.h": "624f46ba9c012788adc3f3cc03a4dddf1a0ce78dbbe019a65dadebf26e56676e",
-    "native/outputs/shogun2-accuracy90-preview/src/equipment_protocol81.h": "15ed360d3799d6fab398732d12d1be3757eb9011904e2aee2d5b2409be266ff9",
+    "native/outputs/shogun2-accuracy90-preview/src/equipment_protocol81.h": "07acfeac7f4c0119cb381e2328aabe8024ea38e7a6542199d26b370fdf76c7cb",
     "native/outputs/shogun2-accuracy90-preview/src/fatigue_action.h": "c38227dc9d9df57610fe27d19915c020be5ae1c11d1e0e9ae85d0dbc7bf4c5d2",
-    "native/outputs/shogun2-accuracy90-preview/src/first_person_interface.h": "a17104dc1d5487abf04f6fcd2c68febfd8bd0884fba08b8dcf7be60df17ef48d",
+    "native/outputs/shogun2-accuracy90-preview/src/first_person_interface.h": "9b8e78a53700340bf214d947ffa33421ad7070183925a52365303cf7edd408f0",
     "native/outputs/shogun2-accuracy90-preview/src/first_person_presentation101.h": "427120d450688fe8e193c64c8bc0595535075b03d3bbdfcdc96ecc017a533f2d",
     "native/outputs/shogun2-accuracy90-preview/src/follow_voice125.h": "228bf8d4828a1d442eef29141b52a300cbcf65b8d6f563e6a7305d9cb944008d",
     "native/outputs/shogun2-accuracy90-preview/src/formation_arrival129.h": "ab332081d8a6dcb4452774f5b846d17911957e0e1586908dd252c5ff0cdaf45c",
-    "native/outputs/shogun2-accuracy90-preview/src/friendly_fire109.h": "2f7ba82e6323cbaad1a067fdadc29601df68ae1d836826e50c81306ca1dabdf4",
-    "native/outputs/shogun2-accuracy90-preview/src/hud_visibility148.h": "8968c096c7c268293ffbb2bc6c2165b6a5fde744d0dcb3d6d9ded4b1093478e4",
+    "native/outputs/shogun2-accuracy90-preview/src/friendly_fire109.h": "f3866f0aace817f4ed85d09825c3d8fb218f6d122ced298c1463fdea55d74048",
+    "native/outputs/shogun2-accuracy90-preview/src/general_influence67.h": "768a56e65699d455b7686921ecc0d74bf4b313df95442cb51a0fe6794b9b82f8",
+    "native/outputs/shogun2-accuracy90-preview/src/hud_visibility148.h": "35b1ef2dbe88cec46b08b78f02316e65bc28e55cec86b31542a2833df38c5399",
     "native/outputs/shogun2-accuracy90-preview/src/identity.h": "01d37028885c43a0e399278070830ced7df438a3eb26aafff2e75fc21c803bfb",
     "native/outputs/shogun2-accuracy90-preview/src/keyboard_policy84.h": "4297a0312ab64b3fe82df4516bb7b9871c32e0864bea370a25a9d221a1d68001",
     "native/outputs/shogun2-accuracy90-preview/src/legacy_v34.h": "342d9b5f07373373947f7701efe9f4830a390159c9607ac420199e0171d10e2e",
-    "native/outputs/shogun2-accuracy90-preview/src/look_pitch96.h": "fc125d61faa0f49ed1c03b4a0c858454a03a2f2604a30b688569c40472fd8b26",
+    "native/outputs/shogun2-accuracy90-preview/src/look_pitch96.h": "74abef7e26ddd8613ef7c076f6a39a0b6a179d0467b001dd651318cc7591622c",
     "native/outputs/shogun2-accuracy90-preview/src/manual_dispersion.h": "092b281733ceba4679be1027a509de7c11461dde5b5d7a8931ed22cf7e5f68cf",
     "native/outputs/shogun2-accuracy90-preview/src/melee_control.h": "cac48d33b066828ed18c773cad2b332207d54f0cd7ad9ea2800eb8d3287e6d09",
-    "native/outputs/shogun2-accuracy90-preview/src/melee_presentation137.h": "b0a235dff05d7e2bf5d7bcf384e5ce05ced8fb0b67ed7cac598a852e499c69ef",
+    "native/outputs/shogun2-accuracy90-preview/src/melee_presentation137.h": "8d96e1d581e69f628278deae496dbc2f8ea40b45e1762be7f6428b13b65ad2e1",
     "native/outputs/shogun2-accuracy90-preview/src/miles_zero123.h": "171b36abea51e86cb4a91585cecfa70c933be4c599ba1a89bee34a9715677247",
     "native/outputs/shogun2-accuracy90-preview/src/mount154.h": "b19bbdbec5057d987635647bca0f7bfd30311ab682baaaefe02f15548dcc7678",
     "native/outputs/shogun2-accuracy90-preview/src/mounted_blend_clock88.h": "1bdba49296f6795ea559f9ec488e413c5d19bdeeb730f71821c6cc54f7463f1f",
@@ -78,24 +171,24 @@
     "native/outputs/shogun2-accuracy90-preview/src/mounted_settle_geometry88.h": "301342e76121f1d5bc6f97ffdbf089b8874f028a445d69a45b6a62da51ad366e",
     "native/outputs/shogun2-accuracy90-preview/src/mounted_shot87.h": "c862e6441d9e0d3d371d49a80cded31760f375677a31dff053906b789fef862d",
     "native/outputs/shogun2-accuracy90-preview/src/mounted_transition_geometry.h": "31c81e591dfacc6a87782ef41928c7854b33cffc657c12eedf6603f41c85f3d8",
-    "native/outputs/shogun2-accuracy90-preview/src/movement_math.h": "149bc209bf28f9b1fd280e16c7980e855c24c6cdcf03ab46a2dcb355e808ed9b",
-    "native/outputs/shogun2-accuracy90-preview/src/native_accuracy90.h": "a652a17f0773814767cde8ff7bff2293e1fcf6f21d79db065d27927f3a6a5acb",
+    "native/outputs/shogun2-accuracy90-preview/src/movement_math.h": "2dea71f9050e16f99c397ca27458d7304f5d099c44c359e23a31f232d955426a",
+    "native/outputs/shogun2-accuracy90-preview/src/native_accuracy90.h": "03382b45eb3af8cab70a7800fb2fce225996a90a619ad070cf6ea634bd9e2823",
     "native/outputs/shogun2-accuracy90-preview/src/native_advance100.h": "38345a4be766d8e8a0fbd3db6f712d10dbdd2d5f6f0ad62b896c52bb3bec1932",
     "native/outputs/shogun2-accuracy90-preview/src/native_air99.h": "7547e243db013ad70dfdfa216d7afe0a65a06e854171bde8e2cf13ebff27b064",
     "native/outputs/shogun2-accuracy90-preview/src/native_audio143.h": "589de89c391736ed45829b644a5eb687f68d2654329e05bb45509997e166e484",
-    "native/outputs/shogun2-accuracy90-preview/src/native_bow.h": "8d73b2fa86bff36727eb1a392b9c069fa14ae6a18d9b3ac9c24baea0632b7b4b",
+    "native/outputs/shogun2-accuracy90-preview/src/native_bow.h": "569d9ef40fa0d3495622194fc5b82cdd633f21655a286c72d5568d5df413f9ae",
     "native/outputs/shogun2-accuracy90-preview/src/native_charge139.h": "6458f1fdfa5167923f867e5da9feb897d5654fc376ed2132813f5452f4ebd65d",
     "native/outputs/shogun2-accuracy90-preview/src/native_charge146.h": "e6f00244582adb874b3e4d279ee161a265c0169f721eca23b44a6019ad736b3e",
-    "native/outputs/shogun2-accuracy90-preview/src/native_charge148.h": "e22a415587eea6323d51d4c9a6358375ccc86b4ee96b481624491380e5991ae4",
-    "native/outputs/shogun2-accuracy90-preview/src/native_commands100.h": "e48cc254537f23ab00e93a02d4e362e807773940efe79f8b8ce7a552b5055bd0",
+    "native/outputs/shogun2-accuracy90-preview/src/native_charge148.h": "28755ca93e5cbbd2dd4425b011a869c165ef8f6ecaeceabd8b5472b1e126e4ed",
+    "native/outputs/shogun2-accuracy90-preview/src/native_commands100.h": "31be9fade540c5e3748f51218860001e148dd510074bdfd675065c3f97497c87",
     "native/outputs/shogun2-accuracy90-preview/src/native_context103.h": "ec5784414a41c4fe8320a530260a1af552c9be8f3f018fdeaf8d38121ffb3916",
-    "native/outputs/shogun2-accuracy90-preview/src/native_fatigue.h": "f92ef74aa5de201004cb065c972f2928cf343a6d161ae9a12df42237c61c8baf",
-    "native/outputs/shogun2-accuracy90-preview/src/native_keyboard84.h": "f6b6247bdb903cee0d28c5cf298d65d05d5d438d2b8069e267924968001bfaa3",
-    "native/outputs/shogun2-accuracy90-preview/src/native_movement.h": "e9ecefc205ed60495cd4c062c001f175a8a9d2ad942650426ce1cf68d87b77ae",
+    "native/outputs/shogun2-accuracy90-preview/src/native_fatigue.h": "d47bc3c84bcde50eb208a308ef991925dc7491fe49a9da8da9750bdafe27aa12",
+    "native/outputs/shogun2-accuracy90-preview/src/native_keyboard84.h": "2941b191cd0a4b9b3b146deceee268ff967c8f0a82f6dc32da99fb19993fd3da",
+    "native/outputs/shogun2-accuracy90-preview/src/native_movement.h": "db7161a5bd17b4d65dcba004976529a7c8de7773597be3f77ec50e32483ac2a5",
     "native/outputs/shogun2-accuracy90-preview/src/native_orders.h": "abc355ae5816427304428ca386d3c8ee8a42d032f1a6d49a127f4fb7f9891a08",
-    "native/outputs/shogun2-accuracy90-preview/src/native_overlay106.h": "68cbbd75d86c09df32dd63a22be3ff9bebc2fb928c241762271c67a1359a2c0e",
+    "native/outputs/shogun2-accuracy90-preview/src/native_overlay106.h": "c6ae60e48dbe412fc5a028ecd79f6d0b35802d34ed92f55267918072a46e8931",
     "native/outputs/shogun2-accuracy90-preview/src/native_recovery103.h": "8347ecacff37946fb8acf04d4143adde58fea7b270fe030966b002aa64ac387d",
-    "native/outputs/shogun2-accuracy90-preview/src/native_speed_modifiers.h": "18b936e2c346a54d53d30fe9544dc0c41c1477e6ffa15edca63b258cdfbfbcc6",
+    "native/outputs/shogun2-accuracy90-preview/src/native_speed_modifiers.h": "95983180346b0dcacdfd741c5cbd4de98e9c91137891662554dfd46f5ddbaab5",
     "native/outputs/shogun2-accuracy90-preview/src/native_subject.h": "5a3ee1fd8dbc6180fe975926a24ea03f87b6d6aa6ce2b04d9b79d0513c5bc973",
     "native/outputs/shogun2-accuracy90-preview/src/native_terrain.h": "24ccd74488ceedfea5a0f6bc3743b4e1e62e0d17de063216853d7ede69098b60",
     "native/outputs/shogun2-accuracy90-preview/src/native_wall97.h": "bb6aaee7f82c1151fab552ea7222eebd619eb96b38c726febed5efb64e0b17b3",
@@ -103,47 +196,49 @@
     "native/outputs/shogun2-accuracy90-preview/src/orders.h": "8f949ba3cead997f883827596357c5339b57ad14415721e85396605edce5d2ef",
     "native/outputs/shogun2-accuracy90-preview/src/personal_input199.h": "e167de3eacbb723daed682c4aaf4c7434ac4af8964337c97e2a6ac9f4a7b87e5",
     "native/outputs/shogun2-accuracy90-preview/src/personal_weapon_catalog.h": "632d7731a72178c4380d377ab7e41fc2323256cdbb370c8f9d6e889439dfb168",
+    "native/outputs/shogun2-accuracy90-preview/src/personal_weapon_metadata122.h": "bfa298f3abc7a158892cc507dde9436dce0648b4d82f1be592e14c2e84db8537",
     "native/outputs/shogun2-accuracy90-preview/src/personal_weapon_profile.h": "65a34afa3bfbf9fca0d64c7c5d6ef8828d59b6d79cd9773884dcca697a6b62a8",
     "native/outputs/shogun2-accuracy90-preview/src/pose_geometry.h": "75df7d25376a3b072bdd2b53be986b1a8c7c29ef4230f3b9f486b641d443a3a9",
     "native/outputs/shogun2-accuracy90-preview/src/possession_entry125.h": "150f0889a7940e245b52c86bbe2b46b07a2527db184b7ab1a9c1c032439f7548",
     "native/outputs/shogun2-accuracy90-preview/src/possession_lease.h": "24c5a138fb18f54e6341c2a3944e83b77c731c1ac6d28fd6bd1cdb8238b23e1b",
-    "native/outputs/shogun2-accuracy90-preview/src/protocol.h": "4491892ab8a40f3aa757258f40c3d2f204ddb2d12b480ac6aae0888a617fb02b",
-    "native/outputs/shogun2-accuracy90-preview/src/proximity147.h": "8382a22c3659708a895e83dfebdea6489691dcc0e72591e5152180fdca6098f3",
+    "native/outputs/shogun2-accuracy90-preview/src/protocol.h": "00eb16506ba5baa4958107d4ce2578885d109cd642a71d39c0b52cea86b14a8f",
+    "native/outputs/shogun2-accuracy90-preview/src/proximity147.h": "eba194e369de95864d33ce459be0e69ebeee70b4cc5d3d5d4e46c33c711eaaa6",
     "native/outputs/shogun2-accuracy90-preview/src/ranged_position128.h": "b5285f7cac07b7f54be8a7c02344f64f4168cc6287d4ed8442765eebf07bda32",
     "native/outputs/shogun2-accuracy90-preview/src/ranged_task_completion.h": "94f96b613e34cd8d7ecf401a18422874d94a25a6616c4361d496c187e4999e86",
     "native/outputs/shogun2-accuracy90-preview/src/rapid_advance132.h": "9d2205c518d577754d8d07a4c2325ec9e22d00f4d9107955d29ba0dc8b0113cf",
-    "native/outputs/shogun2-accuracy90-preview/src/rapid_pace136.h": "7024fc72b2e818accb760e7e3fe8de76488ddff908ad39aa03e54c1749b98715",
+    "native/outputs/shogun2-accuracy90-preview/src/rapid_pace136.h": "4b4bac27dfa262d05da421f8e7a0fd7c6c26a7e6cc8e3d7f5ff814d1c69a93d1",
     "native/outputs/shogun2-accuracy90-preview/src/raw_mouse.h": "cd9b1f6aba2c803283851cd47662cb3dcd6db9ffeeb2d225a74e31c9d9d41520",
+    "native/outputs/shogun2-accuracy90-preview/src/revolver65.h": "2339bb6b8fcbf5b86722dfc3eea02d6cb0b0961a7fa80139fcaf5da004c58fe7",
     "native/outputs/shogun2-accuracy90-preview/src/rts_camera90.h": "a986d90c2d8e8bc0ec021e0b1e14dfd7478789770edaaca39a1e50a49e7bba8f",
     "native/outputs/shogun2-accuracy90-preview/src/rts_camera_native90.h": "d86a9e3cb76454b7d764ce13b0773cd94fdbe10ea610f6ebbe8db63a16d6472b",
     "native/outputs/shogun2-accuracy90-preview/src/seated_bow_asset.h": "d141758690d2b1f83d9b70329d2e43d10d1e65bc8ee7cc37cf57bf763e2c425a",
     "native/outputs/shogun2-accuracy90-preview/src/seated_weapon_geometry.h": "e8e02bc7c307864450aab06d50f88a7d5badd7d1175e5be3e5e2db9c5ce63a1c",
     "native/outputs/shogun2-accuracy90-preview/src/self_visibility100.h": "1673e69075250761a6d2e1974586ed61cff152ab288e751f455ba89bc728173b",
-    "native/outputs/shogun2-accuracy90-preview/src/soldier_pose.h": "2809e09c118692dc53f2f94990b3d760e1489ed4d1938ef34e159e429e46e89a",
-    "native/outputs/shogun2-accuracy90-preview/src/steering.h": "0d5e3fda4ef44df669d3c652b09f1a768a8743dcf3f9eee4d73a125e1586d7fe",
+    "native/outputs/shogun2-accuracy90-preview/src/soldier_pose.h": "ad03661ddd4d894e9864e8ae95c460e9f33cc1ba05acc957b9d8b103cb890b82",
+    "native/outputs/shogun2-accuracy90-preview/src/steering.h": "6f0c4f5e308645ea45520b7facd2ebd122bb6218b49cc2e744480c59e75d3ce3",
     "native/outputs/shogun2-accuracy90-preview/src/terrain_math.h": "f3ea1893e176e93604d841d79301cb4bf5b53699b34e9bac152ec44590e9b9f9",
-    "native/outputs/shogun2-accuracy90-preview/src/third_person152.h": "e3cdc07cb380efd3ed27ebe6dcfe3e846ca51de8efd325b04ecce28be5e98185",
-    "native/outputs/shogun2-accuracy90-preview/src/throw_stop_scope83.h": "fad5b532bf29a24cf9c41449c7680b5202e0769e1428c6d0057616a065bf38a6",
-    "native/outputs/shogun2-accuracy90-preview/src/unit_detach130.h": "264e3ecf78ac54dde8dffbb311b34dc4bb81b54aee5828d43433114012b43c66",
+    "native/outputs/shogun2-accuracy90-preview/src/third_person152.h": "6a0a6879c4c3aa6e575751ca059842ab1bd67c3a09880ce96853e7054f89612f",
+    "native/outputs/shogun2-accuracy90-preview/src/throw_stop_scope83.h": "0982e1c404091b683ff74d1d77edcb2e31ce35b02b0926c693029e7ad64e1426",
+    "native/outputs/shogun2-accuracy90-preview/src/unit_detach130.h": "52114fcc50e7777b26dc02e6a9ba8145ffff8deb780af51cbd61663d4c15745e",
     "native/outputs/shogun2-accuracy90-preview/src/unit_detach_combat130.h": "f98c49a9ca04d45f41cf7c0d2b85ae940625af357afc03ca894672340c1d9d4a",
     "native/outputs/shogun2-accuracy90-preview/src/unit_weapon131.h": "8ee8852f1928df14ceeadaf4adf57554b0ac1c50ff22e9bab631f0a5af3dc1c0",
-    "native/outputs/shogun2-accuracy90-preview/src/view152.h": "2e882684dae717b808c665ce2380cdd599cc57102a30a41f8007a5350cc48275",
-    "native/outputs/shogun2-accuracy90-preview/src/weapon_animation.h": "a34c29287a25dbbf98614aeb5585c66ae5f8a3ee0839124fc4794c6e56302458",
+    "native/outputs/shogun2-accuracy90-preview/src/view152.h": "5a580b835780c1a63129cc552e18a1e716d384ded7f45fba230ab5f6c73e11a2",
+    "native/outputs/shogun2-accuracy90-preview/src/weapon_animation.h": "fe5278030c87ca5e18fd1febb15f1b9c4bfb0ce66ff6ce14072a11a9ac49e6a2",
     "native/outputs/shogun2-accuracy90-preview/src/weapon_observation82.h": "25053d0a3034b8c9006e90860377e10b3a78712adf2b027092e387d41ac87237",
     "native/outputs/shogun2-accuracy90-preview/vendor/include/MinHook.h": "c3608e584bd9659aebdbb4c8c82585605989193623f240552d35c43311b3d31a",
-    "native/outputs/shogun2-ammunition83-preview/hud-src/accuracy_geometry90.h": "5673022f01e4ee9f01c898b684993ef6fc215624f8061f182eb454a0d7cafcad",
+    "native/outputs/shogun2-ammunition83-preview/hud-src/accuracy_geometry90.h": "8730d2506ad3c58b2f2e7c36f309b5fc9f295216a13c0ffbe487714e08151b91",
     "native/outputs/shogun2-ammunition83-preview/hud-src/accuracy_protocol90.h": "3638afd2116e4f15defaac0259137873fdeee0e801cef4133d373069c2f40c01",
-    "native/outputs/shogun2-ammunition83-preview/hud-src/hud.cpp": "436f89cddaa3a4595aa529a8f138f5d540cab2696baccc6b14ee940fda63e26c",
-    "native/outputs/shogun2-ammunition83-preview/hud-src/hud_renderer.h": "49c98d2e1dad175bed0e7d84c0e3be87b95c5aa2b92648cc617ee9762e332b2c",
-    "native/outputs/shogun2-ammunition83-preview/hud-src/hud_state89.h": "ded5ed4e2d5d6e73b588093b30ee2dd9b0903ff6560fdc88a715d2b27534d84b",
+    "native/outputs/shogun2-ammunition83-preview/hud-src/hud.cpp": "7ba2b7b15d029fef1430d951f88ea6dff6a2e59f5994bff8b4157a0926e04fee",
+    "native/outputs/shogun2-ammunition83-preview/hud-src/hud_renderer.h": "a0fdeab401560b21b2bb81d9875677a15d172649bbe86b39053a536391348d51",
+    "native/outputs/shogun2-ammunition83-preview/hud-src/hud_state89.h": "d34961525a9b1a753b895a383a3dbbbc4c74d0662d875c696acf1741c2004d5e",
     "native/outputs/shogun2-ammunition83-preview/hud-src/hud_surface100.h": "c269a2653ab83159db05feaf8d63c1a2963895e33796458d7bf020ee13171fce",
-    "native/outputs/shogun2-ammunition83-preview/hud-src/native_font.h": "6aebf273f3ceaf8e6a35bdb4a003b4bccdab8cae07482c9b719df6777a119784",
+    "native/outputs/shogun2-ammunition83-preview/hud-src/native_font.h": "7b7a4affaeece63a151803ade708d9468e2ee70fdfc9833db8657f57488ade1f",
     "native/outputs/shogun2-ammunition83-preview/hud-src/qte-sprites.generated.h": "ac9a240a20e2460bd4a39c59d1687d94fba233b956ac87072533d6abc220b515",
     "native/outputs/shogun2-ammunition83-preview/hud-src/sprites.generated.h": "4250329472eb8d32b2f55d1f56a6bf80b0fc1714aa6902ecda42cfa2bd7d0e24",
     "native/outputs/shogun2-ammunition83-preview/hud-src/unit_art.generated.h": "2006effcd8bf5845756a4517652e7f1f9ae3276ffd83aca180cdc3ece8505b8c",
-    "native/outputs/shogun2-ammunition83-preview/hud-src/weapon_mode133.h": "adc8270610398a51119779ab082d0c79c7c336251e0881cee936f8d3a85c328d",
+    "native/outputs/shogun2-ammunition83-preview/hud-src/wheel_surface121.h": "9e9d43a06694178ec1aa3b0003d74b62a294245b30b0ae5407f829f4429df7ce",
     "native/outputs/shogun2-ammunition83-preview/src/ammunition_protocol83.h": "7b0962975b377a3a24fd6c27cbea55a36c1078eaf371ae48e12293654116db2b",
-    "native/outputs/shogun2-ammunition83-preview/src/equipment_protocol81.h": "15ed360d3799d6fab398732d12d1be3757eb9011904e2aee2d5b2409be266ff9",
+    "native/outputs/shogun2-ammunition83-preview/src/equipment_protocol81.h": "f43c74e0afd88524d6ca1f65b59c1ce9f2cdfc4cbeaac918f62bcbb4132ed16c",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/battle_epoch151.h": "44141b88ba183cabfdbeab7a8c22af10ab528296daeddced24f5c383e6f0d1e3",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/encounter_admission.h": "ad5bcca512e9da68a9572cd5eca3e2ac009d5e1bdc557e0a5c8dfd00faf2b14a",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/melee_commitment.h": "04ceafdc68737be79441b58408be43a2948ddad2ffe09aded06fa8c3bce4bdc2",
@@ -156,25 +251,25 @@
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/native_qte_abi.h": "fa5a2b1496b5d3e6a43b3573cff6e6c9fa9ea5c59702ecbb97ee0362f0ffe0b4",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/native_registry94.h": "3cf3277ee57262acac05b52f772e7e6779bcc0e67d73694fc25d650d1e12acf8",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/native_reservation.h": "dce1379347794291cd27e429f91898b64c49499baa776393342d4170a45b72bd",
-    "native/outputs/shogun2-authentic-hud80-preview/qte-src/native_retarget.h": "0b3554191311bdeda60a0e757b624d25a674093f8981bf94e948d3cab1398e1a",
+    "native/outputs/shogun2-authentic-hud80-preview/qte-src/native_retarget.h": "8ea6574a6be7ab4f005b4880b3f2d0a01663aeeeb86ddd3e86506ad817b0d188",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/native_selection_prefix.h": "aa58fb55da7dc53843a081611497d470f3d852fde77c5e406ba735e411237a96",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/native_unit_context.h": "42367194a2d9018d6cc034fcb9d91430c051690251954bc85788468c4ddeca78",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/observer_protocol.h": "4c5fb287f4bf4a9a2dd3846da11798bdb1120d450f00dc1d0e40bd8697f1ae32",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/playable_protocol.h": "7158f8c31c560a0227638f71f13787a5a127368d5295538bab248265b97d9a47",
-    "native/outputs/shogun2-authentic-hud80-preview/qte-src/playable_runtime.cpp": "df1d6673c4544def37ac6099dbf110c9c92a06de5bf3e7feeab6730cff3a1bad",
+    "native/outputs/shogun2-authentic-hud80-preview/qte-src/playable_runtime.cpp": "66cc75f5aff89a77fd59b00e55525fde092d1302576f4b668e57b15ec022686d",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/possession_observation.h": "6f1672a8881cc918ac19727014f663c1f7763f27dfb82ed959606b5e46bf3de0",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_core.h": "acca2690a9566d72e54cd8e8f086b25b6f7de9fc9ffe8c97193406190be4c562",
-    "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_native_bridge.h": "74787e98a48fdd9ee56c7bad2f3134de9e25c845b1269b6afc96e0a525036496",
+    "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_native_bridge.h": "7eea87be7429864b2e3ae6e91286e9d680fa7a3efc5180290fde95458ea9e80a",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_pair_gate.h": "bbfbe67eec90cabebbe7fa942f6637aaf6938b383140ba6e3028dcafd6942486",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_presentation93.h": "9c3f03931ef99328ba0a6da9d8dbfd92cf7db433c0b1c89de9d8610bf98593d1",
-    "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_presented113.h": "9998ffaba5aa5f9b4d6154eb387bebda852eb9d60f1246db97d94642802473a9",
+    "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_presented113.h": "8843ed20b73e5b7a5b3e6570d65c6a3f1d76cd4a2e81998a02105ba706a5b228",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_render.h": "f5f81d2832a2daa828ca6a3bd7a028d7e21ce7877e60fb9640a1d80b331112ef",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_service94.h": "ef8b9ab59f903ff03a7b2966f282bd817f194b7d9bab82b858adb8eb0468c552",
-    "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_session.h": "d2f8969e9256657dff361397abbb740287c433761db40122c9eab5b745e8bca7",
+    "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_session.h": "582bbaaa35579badf71f85a62159eeda115afde10db09057ecf66bc6af134ae8",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_timeline.h": "1fe289a7a05334b214966e4efd191e1fdd10e92c8c081e47e0907f90cc56acdf",
     "native/outputs/shogun2-authentic-hud80-preview/qte-src/qte_transport.h": "6113d64bb6e37df5da4c37c59983a4782ea38b91bf4568ad88514fdd9aa98160",
-    "native/outputs/shogun2-authentic-hud80-preview/qte-src/strict_melee_gate.h": "bf7796751106b8cacedc5eff25453d1fea6a724e1feec6374488ea5ac70ef650",
-    "native/outputs/shogun2-authentic-hud80-preview/src/hud_renderer.h": "e277215f93bbe05a68881d4298bf5e31c72c0a0f137971548c25dfd0af6b973e",
+    "native/outputs/shogun2-authentic-hud80-preview/qte-src/strict_melee_gate.h": "cc11510b6692c51d544a653e8e81b98faa891b5de93f7c31011c30f15af86acc",
+    "native/outputs/shogun2-authentic-hud80-preview/src/hud_renderer.h": "97cc824698c990602530985c0ed35c5228ad678fc70bc0495fa354972d7fe9d9",
     "native/outputs/shogun2-authentic-hud80-preview/src/native_font.h": "33c282577c022bc495b79a9620f9b8057c3a228f82139cb131f18a0c60917d42",
     "native/outputs/shogun2-authentic-hud80-preview/src/qte-sprites.generated.h": "ac9a240a20e2460bd4a39c59d1687d94fba233b956ac87072533d6abc220b515",
     "native/outputs/shogun2-authentic-hud80-preview/src/sprites.generated.h": "4250329472eb8d32b2f55d1f56a6bf80b0fc1714aa6902ecda42cfa2bd7d0e24",
@@ -185,20 +280,23 @@
     "native/outputs/shogun2-possession-cleanup-v46/src/charge_protocol146.h": "fe0aebb2063a345ad7f95ccd33fe665e61fe15d8ea62aa27a91ca0f8504a52f2",
     "native/outputs/shogun2-possession-cleanup-v46/src/friendly_fire_protocol109.h": "6833af8fd53fdcc322981e87f1320b62667d65a739f2a9b65f074691417a9313",
     "native/outputs/shogun2-possession-cleanup-v46/src/game_window105.h": "def0be3e21fd68295d03189cc23c3426059d5f5be7b76cbf6317d83750cc9e84",
-    "native/outputs/shogun2-possession-cleanup-v46/src/hud_layout108.h": "9fd581199801e1e3456af8646b37041d62dbc848a760d44f279741ec7c6b347c",
+    "native/outputs/shogun2-possession-cleanup-v46/src/hud_layout108.h": "6e6e5096c976337da152945cfecdccd889a0d6fd46e709e73920be67ab087f08",
     "native/outputs/shogun2-possession-cleanup-v46/src/hud_visibility148.h": "f2a2d079fc6be12a8fa2511cdd1875c4db95b00617666958cdcb42c1e022d6cc",
     "native/outputs/shogun2-possession-cleanup-v46/src/identity.h": "01d37028885c43a0e399278070830ced7df438a3eb26aafff2e75fc21c803bfb",
-    "native/outputs/shogun2-possession-cleanup-v46/src/overlay_surface106.h": "cfbfd23555a512032917adc94421bef592f6a98593c323d14d9dce8fba6e3dd0",
+    "native/outputs/shogun2-possession-cleanup-v46/src/overlay_surface106.h": "7ac234c20a7102fcca8a042d3577494afa9154845509bee28b0b330d6364ec5b",
     "native/outputs/shogun2-possession-cleanup-v46/src/protocol.h": "4491892ab8a40f3aa757258f40c3d2f204ddb2d12b480ac6aae0888a617fb02b",
     "native/outputs/shogun2-possession-cleanup-v46/src/qte_meter108.h": "d30322a8312c23d00bf8a52aec7eaed4d82e18dbaef90caf4f7f56c83b6f82b4",
     "native/outputs/shogun2-possession-cleanup-v46/vendor/include/MinHook.h": "62dff05e63155c6bf8135c36a0d79dedbdcaaede9da26fe38daf0bea34323e38",
+    "native/vendor/bcdec/bcdec.h": "134520764d96f70a27db814173616c89ad85db95fbd3328417c7a8c77e7ca189",
     "native/work/autoload99-preview/game_audio162.h": "2a321f2a5c03cd89ce3a144786ecfbdd4b50d75a9cf3d74bfd9e1c696d39c9a5",
-    "native/work/autoload99-preview/integrated.h": "de99f2c1ce41524510718f6e64eb5afa049219b1ab8d7768f640828910b62e26",
+    "native/work/autoload99-preview/integrated.h": "8dd4651a2b3d1173881ce3549fac2cdfbb68de10cf7a01726fa06487f6507bae",
     "native/work/autoload99-preview/workshop_assets165.h": "3eb2938263db9a10b744ae098b0fe2668d6990ce33c85b09578fd3d891e8f30b",
+    "tools/deck/pack174_generated.h": "adaad592f8be9fa7aab7193f6bfed3d3a7fc8f1d39c6a9f93e79769ea8bcf698",
+    "tools/deck/ui_compat174_generated.h": "2ca266220c9b8514e9bde79b2cff083ba8c3a96b68fda927c824f3c73e881b90",
     "tools/installer/asset_recipe159.generated.h": "3d608613252f91e9db45e8fad4344374a06369914c815cfb3acea6ac14a89319",
     "tools/installer/localization167.h": "b4a73a2654e03647b42b17230858e06992b0aaa7555c26c7d1194d927d0d5a11",
-    "tools/installer/prepare_local_assets159.cpp": "110029c8eb4d638727a27fbdf06368f57ff0b563eee64f8709e160b32c9c9051",
-    "tools/workshop/entry165.cpp": "83b21d5dbc477a46db5fd43dd17c2f852b78b0edb150d60b87ff6dc00724e7ad",
+    "tools/installer/prepare_local_assets159.cpp": "cc7e19c7e12a75491038cbd7e14fbc0ebca0ba0eda96fe2e81f094dbd4827831",
+    "tools/workshop/entry165.cpp": "63b3d528eca1dae8beda6d0f13be0c82c76a4635a4b405f50182885a407a34e9",
     "tools/workshop/pack165.h": "c586f77379fda3336618ff7a94f66d4cd8860c3a723a96c75c4d8aec8694f79f",
     "tools/workshop/ui_compat168.h": "7155ccb453564edd6ef0b4447a44e821af43458301759bf24db47104e5834216"
   },
@@ -26705,6 +26803,20 @@
   ],
   "bindings": [
     {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/native_charge148.h",
+      "line": 126,
+      "value": "0x3d21f0",
+      "function": "0x3d21f0",
+      "classification": "Original radial perception query in an existing protected engine region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/native_movement.h",
+      "line": 43,
+      "value": "0x18b310",
+      "function": "Native main-squad gait speed",
+      "classification": "Original 18b310 gait query used by 1bc880; exact native routine in existing immutable region"
+    },
+    {
       "source": "native/common/soldier_roles.h",
       "line": 8,
       "value": "0x15dfec8",
@@ -29890,6 +30002,13 @@
       "classification": "conservative numeric seed; not a claimed ABI proof"
     },
     {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/proximity147.h",
+      "line": 69,
+      "value": "0x15dd7ac",
+      "function": null,
+      "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
       "source": "native/outputs/shogun2-accuracy90-preview/src/unit_detach130.h",
       "line": 141,
       "value": "0x3ca8f0",
@@ -31008,6 +31127,1791 @@
       "value": "0xea2d60",
       "function": "0xea2d60",
       "classification": "conservative numeric seed; not a claimed ABI proof"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 132,
+      "value": "0xfff0",
+      "function": null,
+      "classification": "QoL214/HUD215 dependency inside unchanged immutable guard region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 137,
+      "value": "0x170d284",
+      "function": null,
+      "classification": "QoL214/HUD215 dependency inside unchanged immutable guard region"
+    },
+    {
+      "source": "native/deck/native214.h",
+      "line": 41,
+      "value": "0x28254",
+      "function": null,
+      "classification": "QoL214/HUD215 dependency inside unchanged immutable guard region"
+    },
+    {
+      "source": "native/deck/native214.h",
+      "line": 41,
+      "value": "0x281e8",
+      "function": null,
+      "classification": "QoL214/HUD215 dependency inside unchanged immutable guard region"
+    },
+    {
+      "source": "native/deck/native214.h",
+      "line": 47,
+      "value": "0x321880",
+      "function": null,
+      "classification": "QoL214/HUD215 dependency inside unchanged immutable guard region"
+    },
+    {
+      "source": "native/deck/native214.h",
+      "line": 53,
+      "value": "0x10e58a0",
+      "function": null,
+      "classification": "QoL214/HUD215 dependency inside unchanged immutable guard region"
+    },
+    {
+      "source": "native/vendor/bcdec/bcdec.h",
+      "line": 492,
+      "value": "0xffff",
+      "function": null,
+      "classification": "Vendor image-decoder numeric constant, conservatively registered; not an engine ABI reference"
+    },
+    {
+      "source": "native/vendor/bcdec/bcdec.h",
+      "line": 494,
+      "value": "0x8000",
+      "function": null,
+      "classification": "Vendor image-decoder numeric constant, conservatively registered; not an engine ABI reference"
+    },
+    {
+      "source": "native/vendor/bcdec/bcdec.h",
+      "line": 508,
+      "value": "0x7fff",
+      "function": null,
+      "classification": "Vendor image-decoder numeric constant, conservatively registered; not an engine ABI reference"
+    },
+    {
+      "source": "native/vendor/bcdec/bcdec.h",
+      "line": 549,
+      "value": "0x7c00",
+      "function": null,
+      "classification": "Vendor image-decoder numeric constant, conservatively registered; not an engine ABI reference"
+    },
+    {
+      "source": "native/vendor/bcdec/bcdec.h",
+      "line": 510,
+      "value": "0x4000",
+      "function": null,
+      "classification": "Vendor image-decoder numeric constant, conservatively registered; not an engine ABI reference"
+    },
+    {
+      "source": "native/deck/native214.h",
+      "line": 51,
+      "value": "0x170b5c0",
+      "function": null,
+      "classification": "Revision41 source dependency; covered by unchanged immutable guard; native function evidence freshly decoded with Ghidra; numeric literals also include data/false-positive candidates"
+    },
+    {
+      "source": "native/deck/native214.h",
+      "line": 62,
+      "value": "0x10e0a00",
+      "function": null,
+      "classification": "Revision41 source dependency; covered by unchanged immutable guard; native function evidence freshly decoded with Ghidra; numeric literals also include data/false-positive candidates"
+    },
+    {
+      "source": "native/deck/native214.h",
+      "line": 63,
+      "value": "0x10e20c0",
+      "function": null,
+      "classification": "Revision41 source dependency; covered by unchanged immutable guard; native function evidence freshly decoded with Ghidra; numeric literals also include data/false-positive candidates"
+    },
+    {
+      "source": "native/deck/native214.h",
+      "line": 64,
+      "value": "0x10e3380",
+      "function": null,
+      "classification": "Revision41 source dependency; covered by unchanged immutable guard; native function evidence freshly decoded with Ghidra; numeric literals also include data/false-positive candidates"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 1239,
+      "value": "0x3d8b00",
+      "function": null,
+      "classification": "Reviewed native projectile leader protection call, role query, or exact general vtable in an unchanged protected region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/friendly_fire109.h",
+      "line": 103,
+      "value": "0x3a61db",
+      "function": null,
+      "classification": "Reviewed native projectile leader protection call, role query, or exact general vtable in an unchanged protected region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/friendly_fire109.h",
+      "line": 107,
+      "value": "0x15dbd68",
+      "function": null,
+      "classification": "Reviewed native projectile leader protection call, role query, or exact general vtable in an unchanged protected region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/friendly_fire109.h",
+      "line": 154,
+      "value": "0x3d8b00",
+      "function": null,
+      "classification": "Reviewed native projectile leader protection call, role query, or exact general vtable in an unchanged protected region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/friendly_fire109.h",
+      "line": 156,
+      "value": "0x3a61d6",
+      "function": null,
+      "classification": "Reviewed native projectile leader protection call, role query, or exact general vtable in an unchanged protected region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/proximity147.h",
+      "line": 62,
+      "value": "0x15dbfb4",
+      "function": null,
+      "classification": "Combat67 Ghidra-reviewed native general influence or officer identity within existing immutable engine region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/general_influence67.h",
+      "line": 9,
+      "value": "0x15dbd68",
+      "function": null,
+      "classification": "Combat67 Ghidra-reviewed native general influence or officer identity within existing immutable engine region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/general_influence67.h",
+      "line": 30,
+      "value": "0x15d352c",
+      "function": null,
+      "classification": "Combat67 Ghidra-reviewed native general influence or officer identity within existing immutable engine region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/general_influence67.h",
+      "line": 87,
+      "value": "0x1aaed0",
+      "function": null,
+      "classification": "Combat67 Ghidra-reviewed native general influence or officer identity within existing immutable engine region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/general_influence67.h",
+      "line": 134,
+      "value": "0x2b68c0",
+      "function": null,
+      "classification": "Combat67 Ghidra-reviewed native general influence or officer identity within existing immutable engine region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/general_influence67.h",
+      "line": 136,
+      "value": "0x1587d0",
+      "function": null,
+      "classification": "Combat67 Ghidra-reviewed native general influence or officer identity within existing immutable engine region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/general_influence67.h",
+      "line": 138,
+      "value": "0x459b40",
+      "function": null,
+      "classification": "Combat67 Ghidra-reviewed native general influence or officer identity within existing immutable engine region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/general_influence67.h",
+      "line": 140,
+      "value": "0x1b3d30",
+      "function": null,
+      "classification": "Combat67 Ghidra-reviewed native general influence or officer identity within existing immutable engine region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/unit_detach130.h",
+      "line": 108,
+      "value": "0x15dbfb4",
+      "function": null,
+      "classification": "Combat68 exact officer class within unchanged immutable engine region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/proximity147.h",
+      "line": 128,
+      "value": "0x4668f0",
+      "function": "0x4668f0",
+      "classification": "Ghidra-verified native in-place formation application; retained original engine contract region"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/proximity147.h",
+      "line": 129,
+      "value": "0x187000",
+      "function": "0x187000",
+      "classification": "Ghidra-verified native in-place formation application; retained original engine contract region"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 114,
+      "value": "0x506ef0",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 115,
+      "value": "0x506f01",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 116,
+      "value": "0x4db700",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 117,
+      "value": "0x5465f0",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 118,
+      "value": "0x546630",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 119,
+      "value": "0x525cb0",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 120,
+      "value": "0x51ffd8",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 121,
+      "value": "0x514680",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 122,
+      "value": "0x523cf0",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 123,
+      "value": "0x51a7a0",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 124,
+      "value": "0x21af60",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 125,
+      "value": "0x21b040",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 126,
+      "value": "0x228e00",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 127,
+      "value": "0x228d50",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 128,
+      "value": "0x50b1b0",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 129,
+      "value": "0x1b9be0",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 147,
+      "value": "0x170d284",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 155,
+      "value": "0x28248",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 156,
+      "value": "0x28254",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 361,
+      "value": "0x506f06",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 367,
+      "value": "0x51ffdd",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/commander_input76.h",
+      "line": 11,
+      "value": "0x170d284",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/commander_input76.h",
+      "line": 15,
+      "value": "0x28248",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/commander_input76.h",
+      "line": 16,
+      "value": "0x28254",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/commander_input76.h",
+      "line": 17,
+      "value": "0x281e8",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/commander_input76.h",
+      "line": 20,
+      "value": "0x281fc",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/commander_input76.h",
+      "line": 21,
+      "value": "0x15d26fc",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/commander_input76.h",
+      "line": 24,
+      "value": "0x15d1a74",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 174,
+      "value": "0x506fc2",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 175,
+      "value": "0x51f670",
+      "function": null,
+      "classification": "Commander76 Ghidra-reviewed call window or numeric seed inside existing immutable engine guards"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 235,
+      "value": "0x170d184",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 256,
+      "value": "0x17b8954",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 259,
+      "value": "0x16e320c",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 313,
+      "value": "0xf91810",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 314,
+      "value": "0xf91500",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 315,
+      "value": "0xf9a320",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 316,
+      "value": "0x1b3080",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 753,
+      "value": "0x10ff59f",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 753,
+      "value": "0x10b084f",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 754,
+      "value": "0x10b09f3",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 754,
+      "value": "0x11d97b8",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 754,
+      "value": "0x11d9898",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 755,
+      "value": "0xf9a49c",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 755,
+      "value": "0xf9a4f8",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 755,
+      "value": "0xf9a540",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 755,
+      "value": "0xf9a5a4",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 774,
+      "value": "0xf91e91",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 774,
+      "value": "0xf917e8",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 781,
+      "value": "0x10ff75c",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 781,
+      "value": "0xf9a2f5",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 781,
+      "value": "0x124efe5",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 311,
+      "value": "0x303430",
+      "function": null,
+      "classification": "Commander groups native selection/frame or exact card/vtable dependency"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 250,
+      "value": "0x170d0e4",
+      "function": null,
+      "classification": "Land group table assigned by the native land-card manager factory and derived constructor; existing immutable engine region"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 346,
+      "value": "0xf97c20",
+      "function": null,
+      "classification": "native land manager removes one card from a numbered group"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 402,
+      "value": "0xf97840",
+      "function": null,
+      "classification": "native base group removes a member and dissolves single-member group"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 341,
+      "value": "0x10e2120",
+      "function": null,
+      "classification": "native land group card-removal override"
+    },
+    {
+      "source": "native/deck/tooltip85.h",
+      "line": 84,
+      "value": "0x170d284",
+      "function": null,
+      "classification": "Ghidra land battle root and review card manager table"
+    },
+    {
+      "source": "native/deck/tooltip85.h",
+      "line": 86,
+      "value": "0x170d184",
+      "function": null,
+      "classification": "Ghidra land battle root and review card manager table"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 424,
+      "value": "0x509b10",
+      "function": null,
+      "classification": "Ghidra-verified native Commander resume evaluation window in unchanged immutable engine region"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 425,
+      "value": "0x520140",
+      "function": null,
+      "classification": "Ghidra-verified native Commander resume evaluation window in unchanged immutable engine region"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 426,
+      "value": "0x50700b",
+      "function": null,
+      "classification": "Ghidra-verified native Commander resume evaluation window in unchanged immutable engine region"
+    },
+    {
+      "source": "native/deck/commander76.h",
+      "line": 761,
+      "value": "0x50703c",
+      "function": null,
+      "classification": "Ghidra-verified native Commander resume evaluation window in unchanged immutable engine region"
+    },
+    {
+      "source": "native/deck/help_rts186.h",
+      "line": 9,
+      "value": "0x170d284",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/channel181.h",
+      "line": 65,
+      "value": "0xf92ae0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/channel181.h",
+      "line": 81,
+      "value": "0x8000",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_ready181.h",
+      "line": 5,
+      "value": "0x170d284",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_ready181.h",
+      "line": 5,
+      "value": "0x170d290",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_ready181.h",
+      "line": 5,
+      "value": "0x170d304",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_ready181.h",
+      "line": 25,
+      "value": "0x281fc",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_ready181.h",
+      "line": 25,
+      "value": "0x15d26fc",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_ready181.h",
+      "line": 27,
+      "value": "0x15d1a74",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_ready181.h",
+      "line": 40,
+      "value": "0x15d22e8",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "line": 1338,
+      "value": "0x366a10",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 58,
+      "value": "0x170d284",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 58,
+      "value": "0x170d290",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 58,
+      "value": "0x170d304",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 61,
+      "value": "0x281fc",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 62,
+      "value": "0x15d26fc",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 65,
+      "value": "0x15d1a74",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 68,
+      "value": "0x281e8",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 68,
+      "value": "0x2e5810",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 103,
+      "value": "0xbd4a10",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 107,
+      "value": "0x2f7350",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/adapter175.h",
+      "line": 166,
+      "value": "0x10dfb80",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle181.h",
+      "line": 89,
+      "value": "0x10f1060",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle181.h",
+      "line": 118,
+      "value": "0x15c2e0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle181.h",
+      "line": 125,
+      "value": "0x10dfb80",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 14,
+      "value": "0x5000",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 68,
+      "value": "0x1704cdc",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 68,
+      "value": "0x16e2aac",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 74,
+      "value": "0x1709cc8",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 81,
+      "value": "0x2826c",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 85,
+      "value": "0x15c4da0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 168,
+      "value": "0x10dc0c0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 174,
+      "value": "0x10dc060",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 184,
+      "value": "0x399f80",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 235,
+      "value": "0x40bd40",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 237,
+      "value": "0x471950",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 301,
+      "value": "0x2648c9",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 313,
+      "value": "0x2646fc",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 349,
+      "value": "0x42dfd0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 367,
+      "value": "0x42e540",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 439,
+      "value": "0x10dfb80",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 442,
+      "value": "0x28048",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 484,
+      "value": "0x4596f0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 487,
+      "value": "0x255680",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 491,
+      "value": "0x15cffe0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 492,
+      "value": "0x1cc200",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 494,
+      "value": "0x2e6eb0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 495,
+      "value": "0x1d0d40",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 511,
+      "value": "0x1d10f0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 560,
+      "value": "0x2804c",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 562,
+      "value": "0x31e6d0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 573,
+      "value": "0x269240",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/formation218.h",
+      "line": 574,
+      "value": "0x17988d8",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/terrain224.h",
+      "line": 18,
+      "value": "0x125500",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/terrain224.h",
+      "line": 21,
+      "value": "0x37b480",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/orders175.h",
+      "line": 13,
+      "value": "0x2826c",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/orders175.h",
+      "line": 16,
+      "value": "0x28048",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/orders175.h",
+      "line": 17,
+      "value": "0x15c4da0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/orders175.h",
+      "line": 28,
+      "value": "0x5000",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_panels223.h",
+      "line": 12,
+      "value": "0x16e2aac",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_panels223.h",
+      "line": 12,
+      "value": "0x1704cdc",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_panels223.h",
+      "line": 13,
+      "value": "0x16e2b14",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_panels223.h",
+      "line": 13,
+      "value": "0x1704d44",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_panels223.h",
+      "line": 14,
+      "value": "0xf8e840",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/selection189.h",
+      "line": 15,
+      "value": "0xf92ae0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_modifiers188.h",
+      "line": 15,
+      "value": "0x100000",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_modifiers188.h",
+      "line": 16,
+      "value": "0x1000",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_modifiers188.h",
+      "line": 32,
+      "value": "0x8000",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/locomotion203.h",
+      "line": 73,
+      "value": "0x15cb80",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/locomotion203.h",
+      "line": 118,
+      "value": "0x3dd9b0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/locomotion203.h",
+      "line": 142,
+      "value": "0x3e4850",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/locomotion203.h",
+      "line": 143,
+      "value": "0x3e44f0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/locomotion203.h",
+      "line": 149,
+      "value": "0x366a10",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition203.h",
+      "line": 50,
+      "value": "0x174ec0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition203.h",
+      "line": 50,
+      "value": "0x174ec7",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition203.h",
+      "line": 50,
+      "value": "0x15c2764",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition203.h",
+      "line": 50,
+      "value": "0x174ecb",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition65.h",
+      "line": 8,
+      "value": "0x102bff",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition65.h",
+      "line": 8,
+      "value": "0x102ccf",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition65.h",
+      "line": 8,
+      "value": "0x102daf",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition65.h",
+      "line": 40,
+      "value": "0x154140",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 64,
+      "value": "0x399f80",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 86,
+      "value": "0x4589a0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 100,
+      "value": "0x459b40",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 117,
+      "value": "0x18a590",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 118,
+      "value": "0x15ae80",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 119,
+      "value": "0x180cd0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 137,
+      "value": "0x15b3680",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 284,
+      "value": "0x16aa00",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 284,
+      "value": "0x1b8740",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 288,
+      "value": "0x48d6f3",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 289,
+      "value": "0x48d6f9",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 292,
+      "value": "0x459b4d",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 293,
+      "value": "0x459b53",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 296,
+      "value": "0x175360",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 297,
+      "value": "0x175366",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 300,
+      "value": "0x175346",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 301,
+      "value": "0x17534c",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 304,
+      "value": "0x1b8830",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition207.h",
+      "line": 305,
+      "value": "0x1b8836",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition208.h",
+      "line": 51,
+      "value": "0x1aaed0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition208.h",
+      "line": 60,
+      "value": "0x47efc0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition208.h",
+      "line": 66,
+      "value": "0x48d6a0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition208.h",
+      "line": 67,
+      "value": "0x48d860",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/acquisition208.h",
+      "line": 68,
+      "value": "0x1752d0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/overlay_gate181.h",
+      "line": 10,
+      "value": "0x170d284",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/overlay_gate181.h",
+      "line": 14,
+      "value": "0x281fc",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/overlay_gate181.h",
+      "line": 15,
+      "value": "0x15d1a74",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/frontend181.h",
+      "line": 63,
+      "value": "0xf92ae0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/frontend181.h",
+      "line": 155,
+      "value": "0x10001",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/frontend181.h",
+      "line": 229,
+      "value": "0x16209f8",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/frontend181.h",
+      "line": 407,
+      "value": "0xea3a90",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/frontend181.h",
+      "line": 407,
+      "value": "0xea3930",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/context181.h",
+      "line": 26,
+      "value": "0x127a210",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/context181.h",
+      "line": 27,
+      "value": "0x172cb74",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/viewport181.h",
+      "line": 18,
+      "value": "0xea32b0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/camera_edges205.h",
+      "line": 40,
+      "value": "0x304800",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/camera_edges205.h",
+      "line": 40,
+      "value": "0x8fb619",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/camera_edges205.h",
+      "line": 56,
+      "value": "0x304820",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/camera_edges205.h",
+      "line": 56,
+      "value": "0x8fb62b",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/camera_edges205.h",
+      "line": 57,
+      "value": "0x30481b",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/camera_edges205.h",
+      "line": 57,
+      "value": "0x8fb626",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/ui214.h",
+      "line": 13,
+      "value": "0x16e2aac",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/ui214.h",
+      "line": 13,
+      "value": "0x1704cdc",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/ui214.h",
+      "line": 23,
+      "value": "0xf955b0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/ui214.h",
+      "line": 31,
+      "value": "0xf98900",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/ui214.h",
+      "line": 38,
+      "value": "0xf920a0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/ui214.h",
+      "line": 56,
+      "value": "0xf87480",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/tooltip85.h",
+      "line": 35,
+      "value": "0xf8a4e0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/tooltip85.h",
+      "line": 36,
+      "value": "0x1401080",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/tooltip85.h",
+      "line": 36,
+      "value": "0x1421f70",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/tooltip85.h",
+      "line": 37,
+      "value": "0x13e35d0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/tooltip85.h",
+      "line": 37,
+      "value": "0x1421ec0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/tooltip85.h",
+      "line": 144,
+      "value": "0x1752370",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/tooltip85.h",
+      "line": 145,
+      "value": "0x1752488",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/tooltip85.h",
+      "line": 148,
+      "value": "0x1754574",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 16,
+      "value": "0xbd75f0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 85,
+      "value": "0x16e2aac",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 85,
+      "value": "0x1704cdc",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 117,
+      "value": "0xf98900",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 146,
+      "value": "0xf955b0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 150,
+      "value": "0xf920a0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 163,
+      "value": "0xea2d60",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 163,
+      "value": "0xea37c0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 163,
+      "value": "0xea32b0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 164,
+      "value": "0x13f7c00",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 164,
+      "value": "0x13f7d20",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 164,
+      "value": "0xf77f70",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 164,
+      "value": "0x1096060",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_ui185.h",
+      "line": 185,
+      "value": "0x1754574",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_speech226.h",
+      "line": 12,
+      "value": "0x170d284",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_speech226.h",
+      "line": 19,
+      "value": "0x2827c",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/battle_speech226.h",
+      "line": 20,
+      "value": "0x15d3c38",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/native_input185.h",
+      "line": 11,
+      "value": "0xbd75f0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/zoom181.h",
+      "line": 11,
+      "value": "0x904c10",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/campaign181.h",
+      "line": 6,
+      "value": "0x8c09e0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/campaign181.h",
+      "line": 6,
+      "value": "0x8c08a0",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/campaign181.h",
+      "line": 6,
+      "value": "0x8c0d10",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/campaign181.h",
+      "line": 6,
+      "value": "0x8c0b20",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/campaign181.h",
+      "line": 6,
+      "value": "0x8ef030",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/campaign181.h",
+      "line": 6,
+      "value": "0x8f0490",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
+    },
+    {
+      "source": "native/deck/campaign181.h",
+      "line": 15,
+      "value": "0x16209f8",
+      "function": null,
+      "classification": "Reviewed Deck175 dependency already in unchanged immutable engine region; native call bodies separately byte-verified"
     }
   ],
   "protected_functions": 62643,
@@ -33971,5 +35875,180 @@
     "after": "9fd581199801e1e3456af8646b37041d62dbc848a760d44f279741ec7c6b347c",
     "scope": "private mod HUD1.15; QTE quarter-height anchor clears requested38px View header; judgement/clock/input code unchanged",
     "regions_unchanged": true
+  },
+  "revision41_dependency_review": {
+    "immutable_header_exact": true,
+    "regions_unchanged": true,
+    "contract_id_unchanged": true,
+    "added_references": [
+      {
+        "source": "native/deck/native214.h",
+        "line": 51,
+        "value": "0x170b5c0",
+        "function": null,
+        "classification": "Revision41 source dependency; covered by unchanged immutable guard; native function evidence freshly decoded with Ghidra; numeric literals also include data/false-positive candidates"
+      },
+      {
+        "source": "native/deck/native214.h",
+        "line": 62,
+        "value": "0x10e0a00",
+        "function": null,
+        "classification": "Revision41 source dependency; covered by unchanged immutable guard; native function evidence freshly decoded with Ghidra; numeric literals also include data/false-positive candidates"
+      },
+      {
+        "source": "native/deck/native214.h",
+        "line": 63,
+        "value": "0x10e20c0",
+        "function": null,
+        "classification": "Revision41 source dependency; covered by unchanged immutable guard; native function evidence freshly decoded with Ghidra; numeric literals also include data/false-positive candidates"
+      },
+      {
+        "source": "native/deck/native214.h",
+        "line": 64,
+        "value": "0x10e3380",
+        "function": null,
+        "classification": "Revision41 source dependency; covered by unchanged immutable guard; native function evidence freshly decoded with Ghidra; numeric literals also include data/false-positive candidates"
+      }
+    ],
+    "fresh_native_decode": true
+  },
+  "terrain224_source_review": {
+    "prior_native_guard_header_sha256": "4f91ccbf8ee6d1e8dc6bc8be4fc16f9b9095743904af177f32fae6c0ce928cd0",
+    "all_prior_spans_hashes_features_relocations_exact": true,
+    "added_spans": [
+      [
+        1201408,
+        121
+      ],
+      [
+        3650688,
+        998
+      ]
+    ],
+    "engine_contract_regions_and_header_unchanged": true
+  },
+  "deck176_cache_lifetime_review": {
+    "temporary_mapping_closed_before_alias_commit": true,
+    "initialized_battle_camera_gate": true,
+    "exact_reverse_comparison": true,
+    "validated_resource_folder_published": true,
+    "original_text_sha256": "a7809721d389f161447b295e10ab0d3c843449a3974b1efaebe15017bf66275c",
+    "corrected_text_sha256": "d5c49529c3b40f5d46c7ed68ccbc89b755025fee31b35fe6349a46f58c49ccac"
+  },
+  "deck175_dependency_review": {
+    "base_contract_id": "2ab5c4c36b4ed492cf1e3c653f0841bb5ba427b8cefd337eed36f4dbfe93083c",
+    "immutable_header_exact": true,
+    "regions_unchanged": true,
+    "engine_admission_unchanged": true,
+    "changed_sources": [
+      "native/outputs/shogun2-accuracy90-preview/src/ability_input141.h",
+      "native/outputs/shogun2-accuracy90-preview/src/adapter.cpp",
+      "native/outputs/shogun2-accuracy90-preview/src/equipment_input81.h",
+      "native/outputs/shogun2-accuracy90-preview/src/hud_visibility148.h",
+      "native/outputs/shogun2-accuracy90-preview/src/look_pitch96.h",
+      "native/outputs/shogun2-accuracy90-preview/src/native_bow.h",
+      "native/outputs/shogun2-accuracy90-preview/src/native_keyboard84.h",
+      "native/outputs/shogun2-accuracy90-preview/src/native_overlay106.h",
+      "native/outputs/shogun2-accuracy90-preview/src/proximity147.h",
+      "native/outputs/shogun2-accuracy90-preview/src/soldier_pose.h",
+      "native/outputs/shogun2-accuracy90-preview/src/third_person152.h",
+      "native/outputs/shogun2-accuracy90-preview/src/unit_detach130.h",
+      "native/outputs/shogun2-ammunition83-preview/hud-src/hud.cpp",
+      "native/outputs/shogun2-ammunition83-preview/hud-src/hud_renderer.h",
+      "native/outputs/shogun2-authentic-hud80-preview/qte-src/playable_runtime.cpp",
+      "native/outputs/shogun2-authentic-hud80-preview/src/hud_renderer.h",
+      "native/outputs/shogun2-possession-cleanup-v46/src/hud_layout108.h",
+      "native/outputs/shogun2-possession-cleanup-v46/src/overlay_surface106.h",
+      "native/work/autoload99-preview/integrated.h",
+      "tools/installer/prepare_local_assets159.cpp",
+      "tools/workshop/entry165.cpp"
+    ],
+    "replaced_with_reversible_path_adapters": [],
+    "added_sources": [
+      "native/deck/acquisition203.h",
+      "native/deck/acquisition207.h",
+      "native/deck/acquisition208.h",
+      "native/deck/acquisition65.h",
+      "native/deck/adapter175.h",
+      "native/deck/battle181.h",
+      "native/deck/battle_panels223.h",
+      "native/deck/battle_ready181.h",
+      "native/deck/battle_speech226.h",
+      "native/deck/binding_profiles182.h",
+      "native/deck/bindings175_generated.h",
+      "native/deck/bindings183.h",
+      "native/deck/camera_edges205.h",
+      "native/deck/campaign181.h",
+      "native/deck/campaign_keys185.h",
+      "native/deck/channel181.h",
+      "native/deck/click190.h",
+      "native/deck/command_display184.h",
+      "native/deck/config174.h",
+      "native/deck/context181.h",
+      "native/deck/controls181.h",
+      "native/deck/cursor178.h",
+      "native/deck/cursor194.h",
+      "native/deck/cursor_idle185.h",
+      "native/deck/defaults175_generated.h",
+      "native/deck/device192.h",
+      "native/deck/escape218.h",
+      "native/deck/fine216.h",
+      "native/deck/formation218.h",
+      "native/deck/framing203.h",
+      "native/deck/frontend177.h",
+      "native/deck/frontend181.h",
+      "native/deck/glyphs181.h",
+      "native/deck/handoff181.h",
+      "native/deck/help_draw188.h",
+      "native/deck/help_header186.h",
+      "native/deck/help_input188.h",
+      "native/deck/help_renderer188.h",
+      "native/deck/help_rts186.h",
+      "native/deck/hud_cycle198.h",
+      "native/deck/input174.h",
+      "native/deck/input_trace181.h",
+      "native/deck/keyboard_handoff196.h",
+      "native/deck/legend_resources184.h",
+      "native/deck/locomotion203.h",
+      "native/deck/look201.h",
+      "native/deck/look202.h",
+      "native/deck/mailbox175.h",
+      "native/deck/menu178.h",
+      "native/deck/menu179.h",
+      "native/deck/native185_generated.h",
+      "native/deck/native_guard175.h",
+      "native/deck/native_input185.h",
+      "native/deck/native_modifiers188.h",
+      "native/deck/native_ui185.h",
+      "native/deck/navigation182.h",
+      "native/deck/orders175.h",
+      "native/deck/overlay_gate181.h",
+      "native/deck/ownership177.h",
+      "native/deck/presentation182.h",
+      "native/deck/presentation188.h",
+      "native/deck/qol193.h",
+      "native/deck/recovery218.h",
+      "native/deck/router174.h",
+      "native/deck/rts175.h",
+      "native/deck/rts_schema178.h",
+      "native/deck/selection189.h",
+      "native/deck/shortcut_click184.h",
+      "native/deck/shoulder_zoom195.h",
+      "native/deck/startup_handoff222.h",
+      "native/deck/steam_input174.h",
+      "native/deck/terrain224.h",
+      "native/deck/tooltip85.h",
+      "native/deck/ui174.h",
+      "native/deck/ui214.h",
+      "native/deck/view_help186.h",
+      "native/deck/viewport181.h",
+      "native/deck/wheel197.h",
+      "native/deck/zoom181.h",
+      "native/deck/zoom181_generated.h",
+      "tools/deck/pack174_generated.h",
+      "tools/deck/ui_compat174_generated.h"
+    ],
+    "new_reviewed_references": 162,
+    "native_body_evidence": "tools/data/deck175-native-bindings.json"
   }
 }

@@ -20,6 +20,9 @@ struct CursorActivity {
   return seen&&now>=last&&now-last<2000;
  }
 };
+inline HCURSOR visible_shape(const CURSORINFO& cursor){
+ return cursor.flags&CURSOR_SHOWING?cursor.hCursor:nullptr;
+}
 inline LRESULT CALLBACK cursor_window(HWND window,UINT message,WPARAM w,LPARAM l){
  if(message==WM_NCHITTEST)return HTTRANSPARENT;
  if(message==WM_MOUSEACTIVATE)return MA_NOACTIVATE;
@@ -71,18 +74,25 @@ public:
 #endif
  ~CursorRenderer(){hide();if(window)DestroyWindow(window);}
  void reset(){activity.reset();hide();}
- void tick(HWND game,bool allowed,bool touched,uint64_t now){
+ void tick(HWND game,bool allowed,bool touched,uint64_t now,bool campaign_pointer=false){
   static const bool proton=GetProcAddress(GetModuleHandleW(L"ntdll.dll"),"wine_get_version")!=nullptr;
   DWORD pid{};RECT client{};POINT point{};
   const bool focused=game&&IsWindow(game)&&GetWindowThreadProcessId(game,&pid)&&pid==GetCurrentProcessId()&&GetForegroundWindow()==game&&GetClientRect(game,&client)&&GetCursorPos(&point);
   if(!activity.update(reinterpret_cast<uintptr_t>(game),allowed&&proton&&focused,touched,now)){hide();return;}
   POINT local=point;if(!ScreenToClient(game,&local)||local.x<0||local.y<0||local.x>=client.right||local.y>=client.bottom){hide();return;}
-  CURSORINFO cursor{sizeof cursor};if(!GetCursorInfo(&cursor)||!(cursor.flags&CURSOR_SHOWING)||!cursor.hCursor){hide();return;}
-  // Mirror only an image the game currently wants visible. It can still hide
-  // the pointer for cinematics. No stock arrow or replacement artwork is used.
+  CURSORINFO cursor{sizeof cursor};
+  HCURSOR shape{};
+  if(GetCursorInfo(&cursor))shape=visible_shape(cursor);
+  if(!shape&&campaign_pointer){
+   // Gamescope can leave a hidden/suppressed cursor after the battle window
+   // hands back focus. Draw a local pointer only during fresh campaign input.
+   shape=reinterpret_cast<HCURSOR>(GetClassLongPtrW(game,GCLP_HCURSOR));
+   if(!shape)shape=LoadCursor(nullptr,IDC_ARROW);
+  }
+  if(!shape){hide();return;}
   if(window&&GetWindow(window,GW_OWNER)!=game){hide();DestroyWindow(window);window=nullptr;image=nullptr;}
   if(!create(game)){hide();return;}
-  if(!shown||cursor.hCursor!=image||now>=redraw){if(!render(cursor.hCursor,point)){hide();return;}redraw=now+33;}
+  if(!shown||shape!=image||now>=redraw){if(!render(shape,point)){hide();return;}redraw=now+33;}
   if(!SetWindowPos(window,HWND_TOPMOST,point.x-int(hot_x),point.y-int(hot_y),int(width),int(height),SWP_NOACTIVATE|SWP_SHOWWINDOW)){hide();return;}shown=true;
   MSG message;while(PeekMessageW(&message,window,0,0,PM_REMOVE)){TranslateMessage(&message);DispatchMessageW(&message);}
  }
