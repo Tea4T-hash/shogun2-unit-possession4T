@@ -1,5 +1,6 @@
 #pragma once
 #include "first_person_presentation101.h"
+#include "../../../deck/native214.h"
 // Native UI operations execute only on the game's window/camera thread.
 using UIVisible=void(__thiscall*)(void*,unsigned);
 using UIState=bool(__thiscall*)(void*,const void*);
@@ -13,7 +14,8 @@ static UIUpdate original_crosshair_update;
 using SetCursorFn=HCURSOR(WINAPI*)(HCURSOR);
 static SetCursorFn original_set_cursor;
 static void* cursor_target;
-struct SavedWidget {uintptr_t object;unsigned visible,desired;};
+struct SavedWidget {uintptr_t object;unsigned visible,desired;bool suppress{true};};
+static bool interface_modal214;
 static SavedWidget saved_widgets[96];
 static unsigned saved_widget_count;
 static uintptr_t interface_root,interface_environment,interface_crosshair,interface_controller,interface_camera;
@@ -80,36 +82,37 @@ static void interface_restore(){
         if(original_set_cursor)original_set_cursor(interface_cursor?interface_cursor:LoadCursorW(nullptr,MAKEINTRESOURCEW(32512)));
         ++state->interface_restores;
     }__except(EXCEPTION_EXECUTE_HANDLER){state->interface_error=103;own_ui_call=0;}
-    interface_clip101={};saved_widget_count=0;interface_camera=0;state->hud_hidden=state->crosshair_visible=0;
+    interface_modal214=false;interface_clip101={};saved_widget_count=0;interface_camera=0;state->hud_hidden=state->crosshair_visible=0;
 }
 static void __fastcall ui_visible_hook(void* widget,void*,unsigned visible){
     if(interface_active&&!own_ui_call&&enabled&&!state->stop&&!state->release&&state->mode==POSSESSED){
         uintptr_t p=reinterpret_cast<uintptr_t>(widget);
-        for(unsigned i=0;i<saved_widget_count;++i)if(saved_widgets[i].object==p){saved_widgets[i].visible=visible;visible=saved_widgets[i].desired;break;}
+        for(unsigned i=0;i<saved_widget_count;++i)if(saved_widgets[i].object==p){saved_widgets[i].visible=visible;if(saved_widgets[i].suppress&&!native_modal214())visible=saved_widgets[i].desired;break;}
     }
     original_ui_visible(widget,visible);
 }
 static bool __fastcall ui_state_hook(void* widget,void*,const void* text){
-    if(interface_active&&!own_ui_call&&reinterpret_cast<uintptr_t>(widget)==interface_crosshair
+    if(interface_active&&!own_ui_call&&!native_modal214()&&reinterpret_cast<uintptr_t>(widget)==interface_crosshair
         &&enabled&&!state->stop&&!state->release&&state->mode==POSSESSED)return true;
     return original_ui_state(widget,text);
 }
 static void __fastcall crosshair_update_hook(void* controller,void*,float dt){
-    if(interface_active&&reinterpret_cast<uintptr_t>(controller)==interface_controller
+    if(interface_active&&!native_modal214()&&reinterpret_cast<uintptr_t>(controller)==interface_controller
         &&enabled&&!state->stop&&!state->release&&state->mode==POSSESSED)return;
     original_crosshair_update(controller,dt);
 }
 static HCURSOR WINAPI set_cursor_hook(HCURSOR cursor){
     if(enabled&&state&&!state->stop&&!state->release&&state->mode==POSSESSED){
         DWORD pid=0;GetWindowThreadProcessId(GetForegroundWindow(),&pid);
-        if(pid==GetCurrentProcessId()&&!command_placing100){++state->cursor_suppressed;return original_set_cursor(nullptr);}
+        if(pid==GetCurrentProcessId()&&!command_placing100&&!native_modal214()){++state->cursor_suppressed;return original_set_cursor(nullptr);}
     }
     return original_set_cursor(cursor);
 }
 static void save_widget(uintptr_t p,unsigned desired){
     if(!p||saved_widget_count>=96)return;
     for(unsigned i=0;i<saved_widget_count;++i)if(saved_widgets[i].object==p)return;
-    saved_widgets[saved_widget_count++]={p,field<unsigned char>(p,0xf5),desired};
+    unsigned visible=field<unsigned char>(p,0xf5);
+    saved_widgets[saved_widget_count++]={p,visible,desired,visible!=0||p==interface_crosshair};
 }
 static bool interface_capture(uintptr_t camera){
     __try {
@@ -138,7 +141,7 @@ static bool interface_capture(uintptr_t camera){
         if(!capture_raw_mouse()){state->interface_error=106;return false;}
         interface_cursor=GetCursor();own_ui_call=1;
         ui_state(interface_crosshair,"static_target");
-        for(unsigned i=0;i<saved_widget_count;++i)original_ui_visible(reinterpret_cast<void*>(saved_widgets[i].object),saved_widgets[i].desired);
+        for(unsigned i=0;i<saved_widget_count;++i)original_ui_visible(reinterpret_cast<void*>(saved_widgets[i].object),saved_widgets[i].suppress?saved_widgets[i].desired:saved_widgets[i].visible);
         own_ui_call=0;MemoryBarrier();InterlockedExchange(&interface_active,1);
         state->hud_hidden=1;state->crosshair_visible=field<unsigned char>(interface_crosshair,0xf5);
         if(original_set_cursor)original_set_cursor(nullptr);
@@ -161,9 +164,20 @@ static void interface_update(uintptr_t camera){
         unsigned children=field<unsigned>(interface_root,0x9c);uintptr_t array=field<uintptr_t>(interface_root,0xa0);
         if(children<=64&&array)for(unsigned i=0;i<children;++i){
             uintptr_t widget=field<uintptr_t>(array,i*4);unsigned old_count=saved_widget_count;
+            // A new root child belongs to native UI (menus/results/tooltips).
             save_widget(widget,widget==interface_crosshair?1:0);
-            if(old_count!=saved_widget_count){own_ui_call=1;original_ui_visible(reinterpret_cast<void*>(widget),widget==interface_crosshair?1:0);own_ui_call=0;}
+            if(old_count!=saved_widget_count)saved_widgets[old_count].suppress=false;
+            if(old_count!=saved_widget_count){own_ui_call=1;original_ui_visible(reinterpret_cast<void*>(widget),saved_widgets[old_count].visible);own_ui_call=0;}
         }
+        const bool modal214=native_modal214();
+        if(modal214!=interface_modal214){
+            interface_modal214=modal214;own_ui_call=1;
+            for(unsigned i=0;i<saved_widget_count;++i){auto& w=saved_widgets[i];if(saved_widget_live(w))original_ui_visible(reinterpret_cast<void*>(w.object),modal214||!w.suppress?w.visible:w.desired);}
+            own_ui_call=0;
+            if(modal214){command_native_cancel100();restore_raw_mouse();InterlockedExchange(&state->aiming,0);if(original_set_cursor)original_set_cursor(interface_cursor);}
+            else capture_raw_mouse();
+        }
+        if(modal214)return; // Native menu owns cursor/input; keep the actor lease.
         // During Q the stock context cursor stays at the centered aim point.
         unsigned crosshair=0;
         // Test90 HUD owns the four movable firearm bars and projectile drop dashes.
@@ -205,6 +219,7 @@ static void restore_interface_on_window(){
     DWORD_PTR result=0;SendMessageTimeoutW(input_window,RESTORE_INTERFACE_MESSAGE,0,0,SMTO_ABORTIFHUNG,500,&result);
 }
 static void create_interface_hooks(){
+    require(native214::admit(base,1),"Native QoL dependency guard failed");
     require(MH_CreateHook(reinterpret_cast<void*>(base+0xf9c360),reinterpret_cast<void*>(&ui_visible_hook),reinterpret_cast<void**>(&original_ui_visible))==MH_OK,"UI visibility hook failed");
     require(MH_CreateHook(reinterpret_cast<void*>(base+0xf9bf20),reinterpret_cast<void*>(&ui_state_hook),reinterpret_cast<void**>(&original_ui_state))==MH_OK,"UI state hook failed");
     require(MH_CreateHook(reinterpret_cast<void*>(base+0x122f740),reinterpret_cast<void*>(&crosshair_update_hook),reinterpret_cast<void**>(&original_crosshair_update))==MH_OK,"Crosshair update hook failed");
