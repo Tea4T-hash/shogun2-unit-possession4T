@@ -8,7 +8,7 @@
 #include "strict_melee_gate.h"
 struct ChargeWorld:PreparedWorld {
     static constexpr uint32_t rider=witness+0xf000,links=witness+0xef00,extra=witness+0xe000;
-    unsigned retained{};bool horse{},group{},countercharger_selected{};
+    unsigned retained{},released{};bool horse{},group{},countercharger_selected{};
     static bool sort(void* p,uint32_t begin,uint32_t end,uint32_t count,const float*){
         auto& w=*static_cast<ChargeWorld*>(p);check(begin==witness+0x10&&end==begin+4*count&&(count==2||count==3),"Original group not supplied to native sort");++w.sorts;return true;
     }
@@ -18,16 +18,19 @@ struct ChargeWorld:PreparedWorld {
     }
     static bool write(void* p,uint32_t address,const void* value,size_t n){auto& w=*static_cast<ChargeWorld*>(p);
         if(address<start||address-start+n>w.bytes.size())return false;memcpy(w.bytes.data()+address-start,value,n);return true;}
+    static void release_extra(void* p,uint32_t witness_,uint32_t actor){
+        auto& w=*static_cast<ChargeWorld*>(p);check(witness_==witness&&actor==extra,"Selected actor or wrong witness released");++w.released;
+    }
     static bool retain(void* p,uint32_t witness_,const qte::NativeActor& player_,const qte::NativeActor& enemy_){
         auto& w=*static_cast<ChargeWorld*>(p);++w.retained;
-        return qte::strictmelee::retain_selected(w.reader(),write,p,engine,witness_,player_,enemy_);
+        return qte::strictmelee::retain_selected(w.reader(),write,p,engine,witness_,player_,enemy_,release_extra);
     }
     static uint32_t resume(void* p,uint32_t address,const qte::NativeVerdict& result,const qte::NativePlan* plans){
         auto& w=*static_cast<ChargeWorld*>(p);check(plans[0].kind==(w.horse?qte::Horse:qte::Human),"Native combat class not retained in plan");
         return PreparedWorld::resume(p,address,result,plans);
     }
     void init(bool mounted,bool multi){
-        initialize(true,5);horse=mounted;group=multi;retained=0;put(player+0x119,uint8_t(2));put(player+0x210,0u);
+        initialize(true,5);horse=mounted;group=multi;retained=released=0;put(player+0x119,uint8_t(2));put(player+0x210,0u);
         put(player+0x28,environment);put(enemy+0x28,environment);
         if(mounted){
             put(player,engine+0x15e8524);put(player+0x6cc,1u);put(player+0x6d0,links);put(links,rider);
@@ -52,7 +55,7 @@ int main(){try{using namespace qte;ChargeWorld w;unsigned cases=0;
         check(bridge.snapshot().action==(counter?Action::Defend:Action::Attack),"Pose-only charge flags changed native attack/defend roles");
         check(w.rolls==1&&w.sorts==1&&w.retained==unsigned(group)&&w.committed.defender_address==(counter?World::player:World::enemy),"Native charge target replaced or rerolled");
         check(w.get<uint32_t>(World::witness+0x24)==2,"Selected pair not retained");
-        check(w.get<uint32_t>(ChargeWorld::extra+0x688)==0,"Excluded soldier registration altered");
+        check(w.get<uint32_t>(ChargeWorld::extra+0x688)==0&&w.released==unsigned(group),"Excluded native reservation not released exactly once");
         check(bridge.update(World::witness,1)==0&&w.updates==0,"Native charge advanced before QTE answer");
         auto prompt=bridge.snapshot();bridge.frame(owner,success?prompt.ideal:0,false,true,prompt.serial,!counter,counter);
         check(bridge.prepare(World::witness,1,owner)==0&&w.resumes==1&&w.rolls==1,"Charge did not commit exactly once");
