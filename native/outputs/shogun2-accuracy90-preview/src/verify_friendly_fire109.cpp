@@ -4,9 +4,11 @@
 #include "verify_native_commands100.cpp"
 #undef main
 static unsigned forwarded109;static uintptr_t expected_victim109,expected_projectile109;
+static bool expect_victim_scope=true;
 static uintptr_t __fastcall damage109(void*,void*,uintptr_t victim,void*,uintptr_t source,uintptr_t direction,uintptr_t projectile,uint32_t third){
     require(victim==expected_victim109&&projectile==expected_projectile109&&direction==projectile+0x98&&third==0xabcdef01,"Native impact arguments changed");
     require(field<uintptr_t>(source,0)==field<uintptr_t>(projectile,0x1c)&&field<uintptr_t>(source,4)==projectile&&field<unsigned>(source,8)==0x4a3,"Native hit source changed");
+    require(projectile_impact_victim==(expect_victim_scope?victim:0),"Native projectile damage lost its victim scope");
     ++forwarded109;return 0x12345678;
 }
 int main(){SetUnhandledExceptionFilter(&fault100);try{
@@ -31,6 +33,7 @@ int main(){SetUnhandledExceptionFilter(&fault100);try{
     for(unsigned i=0;i<200;++i){unsigned before{},after{};state->heartbeat=GetTickCount64();
         __asm mov before,esp
         auto result=impact(f.common.data(),peer,p,0xabcdef01,0x3f400000);
+        require(!projectile_impact_victim,"Projectile victim scope leaked beyond the hit");
         __asm mov after,esp
         require(before==after&&result==0x12345678,"Impact RET10/EAX forwarding differs");
     }
@@ -47,7 +50,7 @@ int main(){SetUnhandledExceptionFilter(&fault100);try{
     tag(52);field<uintptr_t>(p,0x1c)=peer;hit();require(published.event==1,"AI shot with copied projectile id gained attribution");field<uintptr_t>(p,0x1c)=possessed;
     tag(53);hit();require(published.event==2&&friendly_errors109==0,"Second valid personal allied hit rejected");
     require(MH_DisableHook(reinterpret_cast<void*>(base+0x473f80))==MH_OK,"Impact hook disable");
-    auto count=published.event;hit();require(published.event==count,"Disabled observer still published");
+    expect_victim_scope=false;auto count=published.event;hit();require(published.event==count,"Disabled observer still published");
     require(MH_Uninitialize()==MH_OK,"Impact hook cleanup");friendly_status109=nullptr;
     std::cout<<"PASS: original retail impact/source bytes, 200 exact ECX/RET10/EAX forwards, personal-only attribution, allied battle-team filtering, recycled ids/lease/holder/death/RTS rejection and once-only contacts. Damage provider substituted.\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
