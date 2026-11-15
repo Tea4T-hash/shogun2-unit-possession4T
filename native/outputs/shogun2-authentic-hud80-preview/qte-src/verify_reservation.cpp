@@ -10,8 +10,25 @@ static unsigned target_calls;
 static uint32_t __fastcall fake_target(void*,void*,uint32_t,uint32_t b,uint32_t c,uint32_t d,uint32_t e,uint32_t f,uint32_t g,uint32_t h,uint32_t i,uint32_t j,uint32_t k,uint32_t l,uint32_t m){
     require(b==2&&c==3&&d==4&&e==5&&f==6&&g==7&&h==8&&i==9&&j==10&&k==11&&l==12&&m==13,"Target raw stack arguments changed");++target_calls;return 0x12345678;
 }
+static unsigned alignment_calls,playback_updates;
+static uint32_t __fastcall align_pair(void* witness,void*){
+    auto address=uint32_t(witness);
+    require(waiting_for_alignment(address),"Continuation ran outside native alignment");
+    if(++alignment_calls==2){
+        retarget::at<uint8_t>(address,0xc)=1;
+        retarget::at<uint8_t>(address,0xd0)=0;
+        retarget::at<uint32_t>(address,0x98)=0x2000;
+        for(auto participant:{committed_player,committed_enemy})retarget::at<uint32_t>(participant.address,0x688)=address;
+    }
+    return 0;
+}
+static uint32_t __fastcall advance_pair(void* witness,void*){
+    require(!waiting_for_alignment(uint32_t(witness)),"Animation advanced before native alignment");
+    ++playback_updates;return 0;
+}
 int main(){try{
-    Status status{};state=&status;engine=0x10000000;enabled=1;coordinator=1;
+    auto mapped212=VirtualAlloc(nullptr,0x1bc9000,MEM_COMMIT|MEM_RESERVE,PAGE_READWRITE);require(mapped212,"Reservation engine fixture");
+    Status status{};state=&status;engine=uint32_t(mapped212);enabled=1;coordinator=1;
     std::vector<unsigned char> p(0x700),e(0x700),other(0x700),pu(0x1000),eu(0x1000),ou(0x1000),held(0x110),foreign(0x110),unrelated(0x110);
     auto ptr=[](auto& bytes){return uint32_t(bytes.data());};auto w=ptr(held),f=ptr(foreign),u=ptr(unrelated);
     unsigned serial=1;for(auto pair:{std::pair<uint32_t,uint32_t>{ptr(p),ptr(pu)},{ptr(e),ptr(eu)},{ptr(other),ptr(ou)}}){
@@ -19,6 +36,11 @@ int main(){try{
         retarget::at<uint32_t>(a,0x214)=unit;retarget::at<uint32_t>(a,0x1c8)=serial;retarget::at<uint32_t>(unit,4)=serial;retarget::at<uint32_t>(a,0x44)=serial;retarget::at<float>(a,0x4c)=1.f;++serial;
     }
     require(actor_identity(reader(),ptr(p),w,engine,committed_player)&&actor_identity(reader(),ptr(e),w,engine,committed_enemy),"Fixture identity");
+    std::vector<unsigned char> root212(0x122),env212(0x28300),manager212(0x900),camera212(0x200);
+    retarget::at<uint32_t>(engine,0x1bc8180)=ptr(root212);retarget::at<uint32_t>(ptr(root212),0x110)=ptr(env212);
+    retarget::at<uint32_t>(ptr(env212),0x281fc)=ptr(manager212);retarget::at<uint32_t>(ptr(manager212),0x8e0)=ptr(camera212);retarget::at<uint32_t>(ptr(camera212),0x188)=ptr(p);
+    observation::PossessionPrefix lease212{};lease212.magic=0x31504353;lease212.version=46;lease212.pid=GetCurrentProcessId();lease212.ready=1;lease212.mode=2;lease212.actor_id=1;lease212.unit_id=1;lease212.lease_generation=1;lease212.heartbeat=GetTickCount64();possession=&lease212;
+    InterlockedExchange64(&delivery_lease212,1);InterlockedExchange64(&delivery_generation212,LONG64(lifetimes.get(w)));
     delivery_address=LONG(w);pending_address=LONG(w);native_release_actor=reinterpret_cast<retarget::ReleaseActor>(fake_release);native_prepare=reinterpret_cast<NativeWitnessCall>(fake_prepare);
     retarget::at<uint32_t>(f,0x24)=2;retarget::at<uint32_t>(f,0x10)=ptr(p);retarget::at<uint32_t>(f,0x14)=ptr(other);
     retarget::at<uint32_t>(u,0x24)=1;retarget::at<uint32_t>(u,0x10)=ptr(other);
@@ -28,6 +50,9 @@ int main(){try{
     require(native_releases==0&&foreign_releases_preserved==2,"Competing removal cleared the owned pair");
     native_target=reinterpret_cast<NativeTarget>(fake_target);
     require(target_hook(reinterpret_cast<void*>(f),nullptr,ptr(p),2,3,4,5,6,7,8,9,10,11,12,13)==0&&!target_calls,"In-flight foreign activation stole reservation");
+    WitnessKey authorized212{w,uint64_t(delivery_generation212),{1,1,1,2,1,2}};
+    require(authorize(authorized212,1,Result::Success,committed_player,committed_enemy),"Active reservation authorization fixture");
+    authorization.sealed=true;
     uintptr_t before{},after{};__asm mov before,esp
     for(unsigned n=0;n<1000;++n)require(target_hook(reinterpret_cast<void*>(w),nullptr,ptr(p),2,3,4,5,6,7,8,9,10,11,12,13)==0x12345678,"Owned target assignment changed return");
     __asm mov after,esp
@@ -107,5 +132,28 @@ int main(){try{
     retarget::at<uint32_t>(mount,0x6cc)=1;
     release_actor_hook(reinterpret_cast<void*>(w),nullptr,horse.data());
     require(native_releases==++releases&&active_callbacks==0,"Owned mounted cleanup blocked");
+    // A verdict retains the same witness, including when its native
+    // continuation chooses a different clip variant for that same verdict.
+    retarget::at<uint32_t>(ptr(p),0x210)=0;
+    retarget::at<uint32_t>(ptr(p),0x688)=0;
+    retarget::at<uint32_t>(ptr(e),0x688)=0;
+    require(combat_identity(reader(),ptr(p),engine,committed_player),"On-foot identity after dismount");
+    retarget::at<uint32_t>(w,0x30)=ptr(p);retarget::at<uint32_t>(w,0x34)=ptr(e);retarget::at<uint32_t>(w,0x38)=2;
+    retarget::at<uint8_t>(w,0xc)=0;retarget::at<uint8_t>(w,0xd0)=1;
+    retarget::at<uint32_t>(w,0x98)=0x1000;retarget::at<NativeVerdict>(w,0x80)={0,ptr(p),ptr(e)};
+    require(authorize(authorized212,2,Result::Success,committed_player,committed_enemy),"Pending verdict authorization");
+    require(seal_authorization(w,authorized212.generation,{0,ptr(p),ptr(e)}),"Pending native verdict was not sealed");
+    native_prepare=reinterpret_cast<NativeWitnessCall>(align_pair);
+    native_update=reinterpret_cast<NativeWitnessCall>(advance_pair);
+    owns_coordinator=true;
+    for(unsigned i=1;i<=2;++i){
+        lease212.heartbeat=GetTickCount64();
+        require(controlled(w,authorized212.generation,true)==0&&alignment_calls==i&&!playback_updates,
+                "A pending verdict was discarded or allowed to play early");
+        require(dispatch(f,1,false)==1,"Crowd encounter replaced an aligning verdict");
+    }
+    require(controlled(w,authorized212.generation,true)==0&&playback_updates==1,"Exact pair did not play after alignment");
+    owns_coordinator=false;
+    VirtualFree(mapped212,0,MEM_RELEASE);
     std::cout<<"PASS: production conflict dispatch and release wrappers; reserved pair cannot be stolen or unregistered by foreign witness removal; unrelated, owned, replaced and ended-reservation cleanup forward exactly once. Local synthetic actors only.\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
