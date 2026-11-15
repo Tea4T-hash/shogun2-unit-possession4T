@@ -1,0 +1,6 @@
+{
+  "upstream": "https://github.com/iOrange/bcdec",
+  "source": "Unmodified upstream bcdec.h; MIT option selected",
+  "sha256": "134520764d96f70a27db814173616c89ad85db95fbd3328417c7a8c77e7ca189",
+  "commit": "80859ed3b7afb1c527a2a99d70c61457bea72d0c"
+}
