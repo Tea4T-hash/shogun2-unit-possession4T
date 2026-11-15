@@ -29,6 +29,14 @@ static void charge_publish146(){
 }
 static void charge_reset139(){InterlockedExchange(&charge_input_generation146,0);InterlockedExchange(&charge_reset_request139,1);}
 static bool charge_native_task146(uintptr_t actor){return field<unsigned char>(actor,0x2e8)==1&&field<uintptr_t>(actor,0x250)==base+0x15e0a5c&&field<uintptr_t>(actor,0x254)==actor&&!field<unsigned char>(actor,0x258);}
+static bool charge_target_locked72(uintptr_t actor,uintptr_t target){
+    AcquireSRWLockShared(&charge_lock146);
+    const auto& proof=charge_control146.proof;
+    const bool selected=proof.active&&proof.generation==possession_lease.generation&&
+        proof.actor==actor&&proof.target==target;
+    ReleaseSRWLockShared(&charge_lock146);
+    return selected;
+}
 static bool charge_formation147(uintptr_t actor,bool pending){
     auto task=actor+0x2f8;return field<unsigned char>(actor,0x384)==1&&field<uintptr_t>(task,0)==base+0x15dd5cc&&field<uintptr_t>(task,8)==actor+0x2f0&&field<uintptr_t>(actor,0x2f0)==actor&&field<uintptr_t>(task,0x18)==environment&&(!pending||(!field<unsigned char>(task,0x10)&&!field<unsigned char>(task,0x34)));
 }
@@ -91,6 +99,61 @@ struct ChargeList148 {uintptr_t vtable{},unknown{};unsigned capacity{},count{};u
 static_assert(sizeof(ChargeList148)==20,"Native entity result ABI");
 using ChargeQuery148=void(__thiscall*)(void*,void*,float,unsigned,unsigned);
 using ChargeEligible148=bool(__thiscall*)(void*,uintptr_t,uintptr_t);
+
+struct CombatPresence73 {uint64_t tick;unsigned lease;bool nearby;};
+static CombatPresence73 combat_presence73;
+static CombatPresence73 combat_presence_snapshot73(){
+    AcquireSRWLockShared(&charge_lock146);auto result=combat_presence73;ReleaseSRWLockShared(&charge_lock146);
+    return result;
+}
+static bool combat_enemy_near73(){
+    const auto sample=combat_presence_snapshot73();
+    return sample.nearby&&sample.lease==possession_lease.generation&&GetTickCount64()-sample.tick<=250;
+}
+static bool probe_combat_enemy73(uintptr_t actor){
+    // The original 3c2350 close-contact check queries a five-metre radius.
+    // Ask the native radial query to filter its grid results by distance.
+    using Nearby=void(__thiscall*)(void*,void*,float,unsigned);
+    constexpr float range=5.f;
+    const auto own_side=field<uintptr_t>(actor,0x44);
+    if(!own_side)return false;
+    const auto side_id=field<unsigned>(own_side,0x10);
+    if(side_id>31)return false;
+    const float x=field<float>(actor,0x48),y=field<float>(actor,0x4c),z=field<float>(actor,0x50);
+    if(!std::isfinite(x)||!std::isfinite(y)||!std::isfinite(z))return false;
+    ChargeList148 list{};
+    __try{
+        reinterpret_cast<Nearby>(base+0x3d21f0)(reinterpret_cast<void*>(actor),&list,range,1);
+        if(!list.data||list.count>list.capacity||list.count>4096)return false;
+        for(unsigned i=0;i<list.count;++i){
+            const auto other=field<uintptr_t>(list.data,i*4);
+            if(!other||other==actor)continue;
+            const auto table=field<uintptr_t>(other,0);
+            if((!actor152::human(base,table)&&table!=base+0x15e8524)||
+               field<uintptr_t>(other,0x28)!=environment||field<unsigned char>(other,0xf0)!=1)continue;
+            const auto side=field<uintptr_t>(other,0x44);
+            if(!side||side==own_side)continue;
+            const auto id=field<unsigned>(side,0x10);
+            if(id>31||id==side_id)continue;
+            const float dx=field<float>(other,0x48)-x,dy=field<float>(other,0x4c)-y,dz=field<float>(other,0x50)-z;
+            if(dx*dx+dy*dy+dz*dz<range*range)return true;
+        }
+    }__finally{if(list.data)reinterpret_cast<void(__cdecl*)(void*)>(base+0xf04d0)(reinterpret_cast<void*>(list.data));}
+    return false;
+}
+static void refresh_combat_presence73(){
+    const auto actor=locomotion_actor();
+    if(possession_lease.identity.mount||!member_owned130(actor))return;
+    const auto lease=possession_lease.generation;
+    const auto now=GetTickCount64();
+    const auto sample=combat_presence_snapshot73();
+    if(sample.lease==lease&&now-sample.tick<100)return;
+    bool nearby=false;
+    __try{nearby=probe_combat_enemy73(actor);}__except(EXCEPTION_EXECUTE_HANDLER){}
+    AcquireSRWLockExclusive(&charge_lock146);
+    if(possession_lease.active&&possession_lease.generation==lease)combat_presence73={now,lease,nearby};
+    ReleaseSRWLockExclusive(&charge_lock146);
+}
 static bool charge_select148(uintptr_t actor,Charge139& selected){
     ChargeList148 list{};bool found=false;
     __try{
@@ -166,7 +229,9 @@ static void charge_try148(){
     }
 }
 static void charge_boundary146(uintptr_t current_unit,bool after){
-    if(current_unit!=unit)return;bool attempt=false;
+    if(current_unit!=unit)return;
+    if(!after)refresh_combat_presence73();
+    bool attempt=false;
     AcquireSRWLockExclusive(&charge_lock146);
     __try{__try{charge_initialize147();if(charge_control146.proof.active)charge_observe147();else attempt=!after;}
     __except(EXCEPTION_EXECUTE_HANDLER){InterlockedIncrement(&charge_errors139);charge_end146();}}
@@ -191,6 +256,7 @@ static void __fastcall charge_contact148(void* context,void*,uintptr_t one,uintp
             // Defer this personal queue call until original motion classifies
             // it; do not fabricate pose/clip/outcome. Native jumps retain their
             // own attack/defence classification and launch/landing authority.
+            if(one==physical&&!charge_target_locked72(physical,two))return;
             if(one==physical&&field<unsigned>(physical,0x1d0)!=16&&!native_mounted_jump140(physical)){InterlockedIncrement(&charge_pose_wait149);return;}
             before=field<unsigned>(manager,0x14);
         }
