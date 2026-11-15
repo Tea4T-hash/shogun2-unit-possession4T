@@ -2,12 +2,13 @@
 #include "command_policy100.h"
 #include "aim_geometry.h"
 namespace command100 {
-enum class Input:unsigned {Stop,Hold,Follow,Fire};
+enum class Input:unsigned {Stop,Hold,Follow,Fire,Skirmish};
+enum class Pace {Automatic,Walk,Run};
 struct Frame {
     Point position{};float yaw{};
     std::uint64_t tick{};unsigned lease{},actor{},unit{};
 };
-struct Event {Input input{};Frame frame{};std::uint64_t tick{};bool running102{};};
+struct Event {Input input{};Frame frame{};std::uint64_t tick{};bool running102{};Pace pace{};};
 
 }
 // Window messages preserve short taps. Only numeric published camera data crosses
@@ -17,6 +18,14 @@ static SRWLOCK command_input_lock100=SRWLOCK_INIT;
 static command100::Frame command_frame100;
 static command100::Event command_events100[32];
 static unsigned command_read100,command_write100,command_key_held100;
+static uint64_t command_fire_press_tick62;
+static unsigned command_fire_press_lease62;
+static void command_cancel_fire62(){
+    command_fire_press_tick62=0;
+    command_fire_press_lease62=0;
+    command_key_held100&=~command100::key_bit('R');
+}
+static bool command_window_fire62(command100::Input input);
 static command100::Tap102 command_q_tap102,command_z_tap102;
 static command100::Frame command_z_anchor102;
 static volatile LONG command_placing100,command_input_overflow100,command_recenter100;
