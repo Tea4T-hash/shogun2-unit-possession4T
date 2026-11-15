@@ -1,3 +1,4 @@
+#include "../../../deck/hud_cycle198.h"
 #pragma once
 #include "../../shogun2-possession-cleanup-v46/src/hud_visibility148.h"
 static HANDLE hud_visibility_mapping148;
@@ -12,14 +13,14 @@ static void hud_visibility_create148(){
 }
 static void hud_visibility_sync151(bool valid,bool owned){
     if(!hud_visibility_shared148||!valid||!owned)return;
-    unsigned hidden;
+    unsigned hidden;uintptr_t root198{};
     __try{
         auto root=*reinterpret_cast<const uintptr_t*>(base+0x1bc8180);
         if(!root)return;
-        // Native global Hide UI (10f1060) owns root+ca0. Never XOR a second
-        // private toggle: it drifts at entry, exit, loading and other UI actions.
+        root198=root; // Native RTS flag remains authoritative; mod visibility has three stages.
         hidden=*reinterpret_cast<const unsigned char*>(root+0xca0);if(hidden>1)return;
     }__except(EXCEPTION_EXECUTE_HANDLER){return;}
+    hidden=hudcycle198::hidden(root198,state?state->lease_generation:0,enabled&&state&&state->mode==POSSESSED&&!state->stop&&!state->release,hidden);
     if(hud_visibility_shared148->hidden==hidden)return;
     InterlockedIncrement(&hud_visibility_shared148->sequence);MemoryBarrier();
     hud_visibility_shared148->hidden=hidden;++hud_visibility_shared148->changes;
