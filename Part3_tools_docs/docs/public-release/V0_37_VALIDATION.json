@@ -1,0 +1,41 @@
+{
+  "version": "0.37",
+  "revision": 126,
+  "previous_source_tag": "v0.36",
+  "base_revision": 125,
+  "pack": "shogun2_unit_possession_workshop165.pack",
+  "pack_sha256": "64054dc25361ee7e21c70ddddcb526dd56d6f789125ea7abf5202d819f70249d",
+  "pack_bytes": 4662688,
+  "bridge_sha256": "34f38e848a933e93a42f774cb55b47f3327e8f0d1ba69cee2a9237c22ff884c8",
+  "component_sha256": {
+    "possession-v46.dll": "c343e4ee0e21354caef4aafcc775fb6507e2741af625c51af280718888131a78",
+    "possession-hud.exe": "bd8653917f7290097c54593c3f686a2605dff255a7e46d4938fc247b7406f6dc",
+    "qte-playable-v79.dll": "629177cc80477298ef0ab09008ff02c9d87ab01ebe9ac9329d90d206e3276049",
+    "prepare-local-assets159.exe": "2fc1ea7179d816c240bd4859a6843fb08064b119e21223f767277757d1904eea"
+  },
+  "verified_runtime_and_tool_source_files": 833,
+  "offline_checks": {
+    "custom_battle_setup_tooltip_cases": 24,
+    "battle_card_tooltip_cases": 8,
+    "reviewed_engine_inputs": [
+      "stock",
+      "reviewed Bugfix"
+    ],
+    "workshop_package_checks": 20,
+    "compiled_menu_and_campaign_cases": 8,
+    "owned_campaign_reader_cases": 8
+  },
+  "owner_test": {
+    "device": "PC",
+    "scope": "Custom Battle army setup tooltip",
+    "result": "Owner reported it worked after Revision 126 was staged.",
+    "installed_pack_hash_verified": true,
+    "loaded_process_hash_observed": false
+  },
+  "deck_hardware_test": "pending",
+  "publication": {
+    "source_tag": true,
+    "binary_assets": false,
+    "workshop_upload": false
+  }
+}

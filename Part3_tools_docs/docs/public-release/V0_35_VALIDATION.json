@@ -1,0 +1,61 @@
+{
+  "version": "0.35",
+  "scope": "Revision51 source tag for the combined PC and Steam Deck build",
+  "runtime": {
+    "revision": "unit-cards-51",
+    "pack_sha256": "957c4990338b84b2ca1a62a8cd05a85cef49053d226e21a9bd8d687bedc031e7",
+    "pack_bytes": 4433168,
+    "native_sha256": "7ce9be0c8d98d513d1540542f328d22821930d15e1c5fcd00195bebc936274a6",
+    "components": {
+      "possession-v46.dll": "e40c57f1f1aedfa01c8c9faffe84d0a78f3752e0dd7ec971c42e1c87958d14a8",
+      "possession-hud.exe": "311a7b966fb92a54ad37a719387967d754a7b789636418bd61637ebeb56bf32f",
+      "qte-playable-v79.dll": "8f097cfdcb1fef2e35e5a81568c6064bd39f9b20e927ac61bdb48bb894c479e7",
+      "prepare-local-assets159.exe": "820bca113e051635ce48cb0236b2eab24414024ada39ba21250e04df1a21bc57"
+    }
+  },
+  "published_workshop_baseline": {
+    "item": "3825625050",
+    "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3825625050",
+    "candidate": 181,
+    "revision": "melee-rts-39",
+    "pack": "shogun2_unit_possession_workshop165.pack",
+    "pack_sha256": "a68637165024934159d5dcdf36efc1c941f50b0f10666394bfe777fc90947449",
+    "pack_bytes": 4275374,
+    "steam_manifest": "2737704436340709338",
+    "uploaded_and_exact_download_verified": true,
+    "last_verified_date": "2026-11-05",
+    "steam_time_updated": 1793760330,
+    "published_change_notes": "https://steamcommunity.com/sharedfiles/filedetails/changelog/3825625050"
+  },
+  "offline": {
+    "adapter_executables": 100,
+    "QTE_executables": 51,
+    "HUD_executables": 8,
+    "production_HUD_identity_and_preload_checks": 141,
+    "card_cases": 51,
+    "downloaded_Workshop_mod_portraits_compared_pixel_for_pixel": 3,
+    "fine_trackpad_cases": 77,
+    "native_whole_selection_cases": 68,
+    "native_terrain_cases": 48,
+    "native_release_cases": 256,
+    "native_deployment_cases": 24,
+    "Python_tests": 52
+  },
+  "local_Deck_install": {
+    "installed_pack_verified": true,
+    "rollback_revision": 50,
+    "protected_paths_unchanged": 18
+  },
+  "live_acceptance": {
+    "revision50_formation_controls": "Owner reported phenomenal after testing",
+    "revision51_custom_unit_portrait": "Owner reported that the portrait appeared on Steam Deck",
+    "revision51_formal_loaded_hash_gate_completed": false,
+    "all_card_formats_or_overrides_validated": false
+  },
+  "source_publication": {
+    "binary_asset": false,
+    "installer": false,
+    "game_assets_shipped": false,
+    "Workshop_upload": false
+  }
+}
