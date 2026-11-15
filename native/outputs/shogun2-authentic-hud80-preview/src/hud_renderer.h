@@ -1,3 +1,5 @@
+#include "../../../deck/glyphs181.h"
+#include "../../../deck/help_header186.h"
 #pragma once
 #include <windows.h>
 #include <objidl.h>
@@ -129,12 +131,14 @@ inline void round_rect(GraphicsPath& path,RectF r,float radius){float d=radius*2
     path.AddArc(r.X,r.Y,d,d,180,90);path.AddArc(r.GetRight()-d,r.Y,d,d,270,90);
     path.AddArc(r.GetRight()-d,r.GetBottom()-d,d,d,0,90);path.AddArc(r.X,r.GetBottom()-d,d,d,90,90);path.CloseFigure();}
 inline void key_image(Graphics& g,const wchar_t* label,RectF r){
+    if(deck181::draw_key(g,label,r))return;label=deck181::key_label(label);
     GraphicsPath shape;round_rect(shape,r,3);SolidBrush paper(Color(255,231,226,205));Pen rim(Color(255,95,80,57),1.1f);
     g.FillPath(&paper,&shape);g.DrawPath(&rim,&shape);Pen highlight(Color(255,255,251,233),1.f);
     g.DrawLine(&highlight,r.X+4,r.Y+3,r.GetRight()-4,r.Y+3);g.DrawLine(&rim,r.X+4,r.GetBottom()-3,r.GetRight()-4,r.GetBottom()-3);
     text(g,label,r.X+6,r.Y+2,r.Width-11,r.Height-4,14,ink());
 }
 inline void mouse_image(Graphics& g,RectF r,bool left,bool active=true){
+    if(deck181::controller_present()){key_image(g,left?L"RT":L"LT",r);return;}
     GraphicsPath shape;round_rect(shape,r,r.Width*.43f);SolidBrush paper(Color(255,228,223,201)),pressed(active?red():muted());
     g.FillPath(&paper,&shape);GraphicsState clip=g.Save();g.SetClip(&shape,CombineModeIntersect);
     g.FillRectangle(&pressed,left?r.X:r.X+r.Width*.5f,r.Y,r.Width*.5f,r.Height*.49f);g.Restore(clip);
@@ -234,5 +238,7 @@ inline void render(Graphics& g,const Assets& a,float width,float height,const Vi
     if(qte&&qte->active)qte_meter(g,a,middle,bottom-210,*qte);
     if(offline)text(g,L"OFFLINE HUD PREVIEW | fixture data",30,22,700,30,18,Color(255,239,232,211));
     g.Restore(all);
+    if(deck181::controller_present()){auto saved=g.Save();float physical_width=width*scale;float zoom=deck186::header_scale(physical_width);g.TranslateTransform(deck186::header_left(physical_width),float(deck186::header_top));g.ScaleTransform(zoom,zoom);deck186::draw_header(g,[](unsigned slot,deck181::Glyph& glyph){return deck181::reader().glyph(slot,glyph);},[&](const wchar_t* label,Gdiplus::RectF bounds,float size){auto shadow=bounds;shadow.X+=1;shadow.Y+=1;native_fonts.paint(g,label,shadow,size,Gdiplus::Color(220,25,21,18));native_fonts.paint(g,label,bounds,size,Gdiplus::Color(255,242,233,207));});g.Restore(saved); }
+    else if(deck181::pc_commander_legend78()){auto saved=g.Save();float physical_width=width*scale;float zoom=deck186::header_scale(physical_width);g.TranslateTransform(deck186::header_left(physical_width),float(deck186::header_top));g.ScaleTransform(zoom,zoom);deck186::draw_commander_pc([&](const wchar_t* label,Gdiplus::RectF bounds,float size){auto shadow=bounds;shadow.X+=1;shadow.Y+=1;native_fonts.paint(g,label,shadow,size,Gdiplus::Color(220,25,21,18));native_fonts.paint(g,label,bounds,size,Gdiplus::Color(255,242,233,207));});g.Restore(saved); }
 }
 }
