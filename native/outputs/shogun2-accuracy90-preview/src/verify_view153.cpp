@@ -29,7 +29,7 @@ int main(){SetUnhandledExceptionFilter(fault100);try{
         float pivot[3];memcpy(pivot,reinterpret_cast<void*>(cam+8),12);
         obstruct152=false;view_camera152(cam);
         float d=0;for(unsigned k=0;k<3;++k){float v=field<float>(cam,8+k*4)-pivot[k];d+=v*v;}
-        require(third_person152&&std::abs(std::sqrt(d)-3)<.001f,"Normal pitched stationary/walking camera fell back to first person");
+        require(third_person152&&std::abs(std::sqrt(d)-3*std::sqrt(1.f+.25f*.25f+.08f*.08f))<.001f,"Normal pitched camera lost its full shoulder segment");
         capture_aim_frame(cam);ViewRay ray{};require(read_aim_frame(ray),"Third-person displayed aim missing");
         for(unsigned k=0;k<3;++k)require(std::abs(ray.origin[k]-field<float>(cam,8+k*4))<.001f,"Aim retained first-person eye");
         require(std::abs(field<float>(cam,0x68)-std::sin(pitch))<.001f,"Original native direction refresh was not retained");++cases;
@@ -45,7 +45,7 @@ int main(){SetUnhandledExceptionFilter(fault100);try{
         auto after154=steering_view(FORWARD|LEFT,state->yaw,1.f,1.f);require(before154.x==after154.x&&before154.z==after154.z,"WASD follows orbit instead of saved movement facing");
         original_matrix(reinterpret_cast<void*>(cam),affine154);adjust_eye(cam);float pivot154[3];memcpy(pivot154,reinterpret_cast<void*>(cam+8),12);view_camera152(cam);
         float distance154=0;for(unsigned i=0;i<3;++i){float d=field<float>(cam,8+i*4)-pivot154[i];distance154+=d*d;}
-        require(std::abs(std::sqrt(distance154)-3)<.001f,"Orbit lost soldier pivot/distance");
+        require(std::abs(std::sqrt(distance154)-3*std::sqrt(1.f+.25f*.25f+.08f*.08f))<.001f,"Orbit lost soldier pivot/shoulder segment");
         require(std::abs(field<float>(cam,0x64)-std::sin(heading154+.8f)*std::cos(.35f))<.001f,"Orbit did not swivel rendered native camera");
         weapon_window_proc(nullptr,WM_MBUTTONUP,0,0);require(!orbit_held154&&orbit_yaw154==0&&orbit_pitch154==0,"MMB release retained orbit input");
     }
