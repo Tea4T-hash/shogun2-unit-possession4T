@@ -24,6 +24,23 @@ int main(){SetUnhandledExceptionFilter(&fault100);try{
  // key provider avoids substituting a unit-specific bow implementation.
  const wchar_t name[]=L"shogun_arrow";field<unsigned>(record,4)=unsigned(wcslen(name));field<uintptr_t>(record,0xc)=reinterpret_cast<uintptr_t>(name);field<unsigned>(record,8)=32;field<unsigned>(record,0x60)=150;field<float>(record,0x6c)=50;
  field<uintptr_t>(possessed,0x23c)=db;field<uintptr_t>(db,0xc)=reinterpret_cast<uintptr_t>(clips.data());field<uintptr_t>(clip,4)=asset;field<unsigned>(asset,0x64)=51;field<float>(base,0x15b2448)=.05f;clips[126]=clips[758]=clip;
+ auto key142=bow_key142();bow_input142.cancel();
+ bow_input142.sample(false,true,true,key142,9,release);
+ bow_input142.sample(true,true,true,key142,10,release);
+ require(bow_power142(false,10)==.35f&&bow_power142(false,12.5)==1.f,"Bow meter endpoints differ");
+ field<unsigned char>(asset,0x94)=1;field<float>(asset,0x90)=1.5f;
+ require(std::abs(bow_power142(true,10.75)-.675f)<.001f,"Meter missed mounted native release marker");
+ field<unsigned char>(asset,0x94)=0;
+ const float shown=bow_power142(false,11.25);
+ require(bow_input142.sample(false,true,true,key142,11.25,release),"Meter fixture did not release");
+ bow_release142=release;require(bow_bind142(record,false),"Meter fixture release did not bind");
+ require(std::abs(shown*50.f-bow_speed142(record,50))<.001f&&bow_power142(false,11.25)==0,
+     "Meter and launch power differed or release left meter active");
+ bow_input142.sample(true,true,true,key142,13,release);
+ ++state->lease_generation;require(bow_power142(false,13.5)==0,"Stale bow meter escaped its lease");--state->lease_generation;
+ bow_input142.sample(true,true,false,key142,14,release);
+ require(bow_power142(false,14)==0,"Canceled draw retained power");
+ bow_input142.sample(false,true,true,key142,14,release);bow_reset142();
  bow_family142=-1;state->fire_request=0;bow_sample142(true,true);bow_sample142(false,true);require(!state->fire_request,"Unknown weapon state queued a bow release");
  bow_family142=0;bow_sample142(true,true);bow_sample142(false,true);require(!state->fire_request,"Non-bow entered bow release policy");
  bow_family142=1;bow_sample142(true,true);bow_sample142(false,true);require(state->fire_request==1,"Known bow release failed to queue");state->fire_request=0;
