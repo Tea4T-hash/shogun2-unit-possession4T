@@ -2,8 +2,8 @@
 #include "../../shogun2-possession-cleanup-v46/src/actor_types152.h"
 #include "aim_geometry.h"
 #include "mounted_shot87.h"
-#include "personal_weapon_profile.h"
-#include "personal_weapon_catalog.h"
+#include "personal_weapon_metadata122.h"
+#include "revolver65.h"
 #include "manual_dispersion.h"
 // UI thread creates an ordinary BCQ_FIRE_PROJECTILE packet with native serializers.
 // Native simulation dispatch executes the shot, using the observed bow release pipeline.
@@ -66,29 +66,23 @@ static bool native_bow_signatures(uintptr_t b){
     {const unsigned char v[]={0x83,0xec,0x44,0x53,0x55,0x8b,0x6c,0x24};if(memcmp(reinterpret_cast<void*>(b+0x41c760),v,8))return false;}
     return true;
 }
-static PersonalWeaponKind native_personal_kind(uintptr_t record){
-    if(!record)return PersonalWeaponKind::Unsupported;
-    if(personal_projectile_supported(field<unsigned>(record,0),field<unsigned>(record,0x60),field<float>(record,0x6c),false))
-        return field<unsigned>(record,0)==3?PersonalWeaponKind::Bow:PersonalWeaponKind::Firearm;
-    unsigned length=field<unsigned>(record,4),capacity=field<unsigned>(record,8);
-    auto text=field<uintptr_t>(record,0xc);
-    if(text<0x10000||!length||length>128||capacity<length||capacity>1048576)return PersonalWeaponKind::Unsupported;
-    // Match either native narrow ASCII names or UTF16 names with bounded reads.
-    return field<unsigned char>(text,1)==0?
-        personal_key_kind(reinterpret_cast<const wchar_t*>(text),length,capacity,field<unsigned>(record,0x60),field<float>(record,0x6c)):
-        personal_ascii_key_kind(reinterpret_cast<const char*>(text),length,capacity,field<unsigned>(record,0x60),field<float>(record,0x6c));
-}
 // Recovered420050 direct branch accepts all native projectile families.
 // Aim sets initial direction; gravity, fuse, collision and effects remain native.
 static bool personal_direct_projectile(uintptr_t record){return native_personal_kind(record)!=PersonalWeaponKind::Unsupported;}
-static uintptr_t unit_projectile152(uintptr_t actor_unit){
+static bool active_suppression_projectile98(uintptr_t actor_unit,uintptr_t projectile);
+static uintptr_t unit_projectile152(uintptr_t actor_unit,bool personal=false){
     if(field<unsigned>(actor_unit,0xf7c)==0)return 0;
     uintptr_t record=reinterpret_cast<uintptr_t>(reinterpret_cast<NativeGet>(base+0x14ad40)(reinterpret_cast<void*>(actor_unit)));
     if(!record)return 0;
-    // Keep the unit's active native record. Mounted bows use the decoded rider
-    // arrow profile; runtime IDs are not inferred from database row numbers.
-    if(native_personal_kind(record)==PersonalWeaponKind::Unsupported)return 0;
-    return record;
+    // Suppression selects a formation projectile. Its firearm classification
+    // alone does not establish an individual ready/fire animation profile.
+    // Keep the verified standard rifle for the player during that ability.
+    if(personal){
+        const auto standard=field<uintptr_t>(actor_unit,0xf1c);
+        if(standard!=record&&active_suppression_projectile98(actor_unit,record)&&
+           native_personal_kind(standard)==PersonalWeaponKind::Firearm)return standard;
+    }
+    return native_personal_kind(record)!=PersonalWeaponKind::Unsupported?record:0;
 }
 static uintptr_t bow_record(uintptr_t actor_unit){
     if(possessed&&actor_unit==unit&&actor152::individual(base,field<uintptr_t>(possessed,0))){
@@ -98,7 +92,7 @@ static uintptr_t bow_record(uintptr_t actor_unit){
         auto personal=field<uintptr_t>(possessed,0x6cc);
         if(personal)return native_personal_kind(personal)==PersonalWeaponKind::Unsupported?0:personal;
     }
-    return unit_projectile152(actor_unit);
+    return unit_projectile152(actor_unit,possessed&&actor_unit==unit);
 }
 static bool is_bow_projectile(uintptr_t record){return native_personal_kind(record)==PersonalWeaponKind::Bow;}
 #include "bow_input142.h"
@@ -120,7 +114,7 @@ static uintptr_t database(uintptr_t env){
 static bool weapon_ready_held(){
     auto request=equipment_requests_snapshot81();
     bool changing_ammo=request.lease==state->lease_generation&&request.tabs&&!state->weapon_phase&&!state->fire_ticket;
-    return equipment_ranged_selected81()&&!changing_ammo&&state->aiming&&(GetAsyncKeyState(VK_RBUTTON)&0x8000)!=0;
+    return equipment_ranged_selected81()&&!changing_ammo&&state->aiming&&(deck181::key_state(VK_RBUTTON)&0x8000)!=0;
 }
 #include "native_accuracy90.h"
 static void manual_bow_apply(const uint32_t* payload,uintptr_t context){
@@ -175,13 +169,15 @@ static void manual_bow_apply(const uint32_t* payload,uintptr_t context){
             state->shot_origin[i]=origin[i];state->shot_velocity[i]=field<float>(reinterpret_cast<uintptr_t>(launch),0x50+i*4);
             state->launch_delta=std::max(state->launch_delta,std::abs(state->shot_velocity[i]-solved_velocity[i]));
         }
-        friendly_register109(field<uintptr_t>(context,0xe8),launch);
+        unsigned arrow=arrowcam107::no_projectile;
+        const auto pool=field<uintptr_t>(context,0xe8);
+        friendly_register109(pool,launch,is_bow_projectile(record)?&arrow:nullptr);
+        if(arrow!=arrowcam107::no_projectile)arrow_capture107(context,pool,arrow,accuracy_lease);
         // Match the ordinary ranged task: native unit/weapon modifiers determine reload.
         using ReloadDuration=float(__thiscall*)(void*,void*);
-        using ReloadSchedule=void(__thiscall*)(void*,float,unsigned);
         float duration=reinterpret_cast<ReloadDuration>(base+0x3c86e0)(reinterpret_cast<void*>(actor),reinterpret_cast<void*>(record));
         if(!std::isfinite(duration)||duration<0||duration>300){state->shot_error=86;InterlockedExchange(&state->release,1);return;}
-        reinterpret_cast<ReloadSchedule>(base+0x3ea970)(reinterpret_cast<void*>(actor),duration,field<unsigned>(record,0xa0));
+        schedule_personal_reload65(reinterpret_cast<NativeReloadSchedule65>(base+0x3ea970),actor,record,duration);
         state->ammo_after=field<float>(unit,0xf78);++state->shots_spawned;state->shot_error=0;
     }__except(EXCEPTION_EXECUTE_HANDLER){state->shot_error=75;InterlockedExchange(&state->release,1);}
 }
@@ -244,7 +240,9 @@ static void process_bow(uintptr_t camera){
     // Keep an early LMB click pending until RMB's native draw transition ends.
     // Releasing RMB above cancels it without consuming ammo or spawning an arrow.
     uintptr_t record=bow_record(unit);
-    if((weapon_mounted()||is_bow_projectile(record))&&state->aim_pose!=1)return;
+    bool from_type=false;
+    const auto kind=native_personal_kind(record,&from_type);
+    if((weapon_mounted()||kind==PersonalWeaponKind::Bow||from_type)&&state->aim_pose!=1)return;
     if(InterlockedCompareExchange(&fire_busy,1,0))return;
     __try {
         InterlockedExchange(&state->fire_request,0);
