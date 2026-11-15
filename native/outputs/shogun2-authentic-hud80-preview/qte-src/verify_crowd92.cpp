@@ -2,9 +2,15 @@
 #include "verify_prepared_bridge.cpp"
 #undef PREPARED_FIXTURE_ENTRY
 struct CrowdWorld92:PreparedWorld {
- unsigned continuations{},wait_calls=3;bool initial=true,fail{};
+ unsigned continuations{},wait_calls=3,reservations{};bool initial=true,fail{};
+ static bool reserve(void* p,const qte::WitnessKey& key,const qte::NativeActor& own,const qte::NativeActor& target){
+  auto& w=*static_cast<CrowdWorld92*>(p);++w.reservations;
+  check(w.initial&&key.address==witness&&own.address==player&&target.address==enemy,
+        "Exact pair was not reserved before native preparation");
+  return true;
+ }
  static uint32_t native_prepare92(void* p,uint32_t address){auto& w=*static_cast<CrowdWorld92*>(p);
-  if(w.initial){w.initial=false;auto answer=PreparedWorld::prepare(p,address);
+  if(w.initial){check(w.reservations==1,"Native prepare ran before pair protection");w.initial=false;auto answer=PreparedWorld::prepare(p,address);
    w.put(address+0xc,uint8_t(0));w.put(address+0xd0,uint8_t(1));w.put(player+0x688,0u);w.put(enemy+0x688,0u);return answer;
   }
   ++w.prepares;++w.continuations;
@@ -13,8 +19,8 @@ struct CrowdWorld92:PreparedWorld {
   if(w.continuations<w.wait_calls)return 0;
   w.put(address+0xc,uint8_t(1));w.put(address+0xd0,uint8_t(0));w.put(player+0x688,address);w.put(enemy+0x688,address);return 0;
  }
- qte::BridgeCalls ports92(){auto calls=ports();calls.prepare=native_prepare92;return calls;}
- void begin92(bool attack){initialize(attack,0);continuations=0;wait_calls=3;initial=true;fail=false;}
+ qte::BridgeCalls ports92(){auto calls=ports();calls.prepare=native_prepare92;calls.reserve_pair=reserve;return calls;}
+ void begin92(bool attack){initialize(attack,0);continuations=reservations=0;wait_calls=3;initial=true;fail=false;}
 };
 int main(){try{using namespace qte;unsigned cases=0;
  for(bool attack:{false,true})for(unsigned waits:{1u,3u,20u}){
@@ -30,7 +36,7 @@ int main(){try{using namespace qte;unsigned cases=0;
   }
   NativeActor refreshed,opponent;check(bridge.participants(refreshed,opponent)&&refreshed.height==4.f,"Native waiting retained stale terrain height");
   auto shown=bridge.snapshot();check(shown.active&&shown.result==Result::Pending&&shown.response_elapsed==0&&shown.elapsed==0,"Native waiting consumed the visible QTE budget");
-  check(w.prepares==waits+1&&w.continuations==waits&&w.rolls==1,"Native preparation call contract changed");
+  check(w.prepares==waits+1&&w.continuations==waits&&w.rolls==1&&w.reservations==1,"Native preparation call contract changed");
   bridge.frame(owner,3.001,false,true,shown.serial,false,false);check(bridge.snapshot().result==Result::Timeout,"Three-second deadline changed");
   check(bridge.prepare(World::witness,1,owner)==0&&!bridge.occupied()&&w.resumes==1&&w.rolls==1,"Timed verdict failed exactly-once native replay");++cases;
  }
