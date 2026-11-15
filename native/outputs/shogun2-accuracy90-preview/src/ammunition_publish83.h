@@ -1,11 +1,29 @@
 #pragma once
+#include "personal_weapon_metadata122.h"
 static void ammunition_item83(uintptr_t record,ammo83::Item& item){
  if(!record)return;item.projectile=field<unsigned>(record,0);
- unsigned n=field<unsigned>(record,4);auto chars=field<uintptr_t>(record,0xc);
- if(!chars||!n||n>128)return;
- wchar_t key[129]{};bool wide=field<unsigned char>(chars,1)==0;
- for(unsigned i=0;i<n;++i)key[i]=wide?field<wchar_t>(chars,i*2):field<unsigned char>(chars,i);
- item.icon=ammo83::icon_for_key(key);wcscpy_s(item.label,ammo83::label(ammo83::Icon(item.icon)));
+ const unsigned n=field<unsigned>(record,4),capacity=field<unsigned>(record,8);
+ const auto chars=field<uintptr_t>(record,0xc);
+ if(chars>=65536&&n&&n<=128&&capacity>=n&&capacity<=1048576){
+  wchar_t key[129]{};const bool wide=field<unsigned char>(chars,1)==0;
+  for(unsigned i=0;i<n;++i)key[i]=wide?field<wchar_t>(chars,i*2):field<unsigned char>(chars,i);
+  item.icon=ammo83::icon_for_key(key);
+ }
+ const auto launcher=launcher_sight123(record);
+ if(launcher==LauncherSight123::Rocket)item.icon=ammo83::Rocket;
+ else if(launcher==LauncherSight123::Mortar)item.icon=ammo83::Mortar;
+ const auto kind=native_personal_kind(record);
+ if((item.icon==ammo83::Rocket||item.icon==ammo83::Mortar)&&kind==PersonalWeaponKind::Firearm)
+  item.icon=ammo83::Bullet;
+ if(item.icon==ammo83::Unknown){
+  switch(kind){
+   case PersonalWeaponKind::Bow:item.icon=ammo83::Arrow;break;
+   case PersonalWeaponKind::Firearm:item.icon=ammo83::Bullet;break;
+   case PersonalWeaponKind::Thrown:item.icon=ammo83::Bomb;break;
+   default:break;
+  }
+ }
+ wcscpy_s(item.label,ammo83::label(ammo83::Icon(item.icon)));
 }
 static void publish_ammunition83(const equipment81::AmmoOption* options,unsigned count,uintptr_t active,unsigned pending,unsigned error){
  if(!ammunition_status83||!state)return;
