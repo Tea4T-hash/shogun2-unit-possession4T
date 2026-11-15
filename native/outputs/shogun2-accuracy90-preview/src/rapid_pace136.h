@@ -11,7 +11,7 @@ struct RapidPace136 {
 static RapidPace136 rapid_pace136;
 static SRWLOCK rapid_pace_lock136=SRWLOCK_INIT;
 static volatile LONG rapid_pace_present136;
-static bool rapid_peer_speed136(uintptr_t rider,float& speed){
+static bool rapid_peer_speed136(uintptr_t rider,float& speed,uintptr_t* verified_actor=nullptr){
     __try {
         if(!rider||rider==possessed||rider==locomotion_actor())return false;
         if(!actor152::human(base,field<uintptr_t>(rider,0))||field<uintptr_t>(rider,0x214)!=unit||
@@ -28,10 +28,12 @@ static bool rapid_peer_speed136(uintptr_t rider,float& speed){
            field<uintptr_t>(squad,0x510)!=unit||field<uintptr_t>(squad,4)!=environment)return false;
         float vx=field<float>(actor,0x8c),vz=field<float>(actor,0x94);
         speed=std::hypot(vx,vz);
-        return std::isfinite(speed)&&speed>.05f&&speed<=100&&
+        const bool valid=std::isfinite(speed)&&speed>.05f&&speed<=100&&
             field<unsigned>(rider,0x1c8)==serial&&field<unsigned char>(rider,0xf0)==1&&
             field<uintptr_t>(rider,0x214)==unit&&field<uintptr_t>(rider,0x28)==environment&&
             field<uintptr_t>(actor,0x20c)==config&&field<uintptr_t>(actor,0x3b4)==squad;
+        if(valid&&verified_actor)*verified_actor=actor;
+        return valid;
     }__except(EXCEPTION_EXECUTE_HANDLER){return false;}
 }
 static float rapid_reference136(uint64_t now){
