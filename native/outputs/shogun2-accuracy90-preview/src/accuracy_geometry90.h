@@ -2,6 +2,8 @@
 #include <cmath>
 #include <algorithm>
 namespace accuracy90 {
+inline constexpr float maximum_aimed_spread125=.205f;
+inline constexpr float fixed_sight_width_scale125=maximum_aimed_spread125/.235f;
 struct Envelope {float half_angle{},horizontal{},vertical{},chance{},calibration{},core{},control{};};
 inline bool envelope(float variance,float chance,float calibration,float ratio,float multiplier,Envelope& out){
  if(!std::isfinite(variance)||variance<0||!std::isfinite(chance)||chance<.01f||chance>1.00001f||
