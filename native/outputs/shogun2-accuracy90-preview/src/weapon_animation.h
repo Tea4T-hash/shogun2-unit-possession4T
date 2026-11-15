@@ -4,6 +4,7 @@
 #include "view152.h"
 #include "ranged_task_completion.h"
 #include "personal_weapon_profile.h"
+#include "revolver65.h"
 // Owned weapon sequencing runs at the controlled actor's native motion update.
 // AI ranged tasks remain untouched for every other actor.
 using PlayAnimation=void(__thiscall*)(void*,unsigned,unsigned,unsigned,float);
@@ -73,6 +74,8 @@ static volatile LONG reload_tick_stamp=-1;
 static __declspec(thread) unsigned own_weapon_call;
 enum {WEAPON_IDLE=0,WEAPON_START=1,WEAPON_DRAW=2,WEAPON_FIRED=3,WEAPON_RELOAD=4};
 enum {AIM_LOWERED=0,AIM_READY=1,AIM_BOW_DRAWING=2};
+struct FootAimLower {uintptr_t actor,clip;unsigned lease;};
+static __declspec(thread) FootAimLower foot_aim_lower;
 static uint32_t weapon_payload[13];
 static bool valid_weapon_clip(uintptr_t,unsigned);
 struct MountedDraw {uintptr_t actor,animation;unsigned lease,clip,hold_frame;float release;};
@@ -138,6 +141,46 @@ static uintptr_t weapon_actor,weapon_context;
 static unsigned weapon_clip;
 static float release_time;
 static volatile LONG manual_arrow_released;
+
+struct FootRevolverCycle {
+    uintptr_t actor{}, fire_animation{}, aim_animation{};
+    unsigned lease{}, aim_clip{}, return_frame{}, aim_frames{}, clock_tick{}, extra_frame_credit{};
+    bool has_clock_tick{};
+};
+static FootRevolverCycle foot_revolver;
+
+static bool weapon_asset_is(uintptr_t asset, const wchar_t* path) {
+    if(!asset)return false;
+    const auto length=std::wcslen(path);
+    const auto text=field<uintptr_t>(asset,16);
+    return text&&field<unsigned>(asset,8)==length&&
+        CompareStringOrdinal(reinterpret_cast<const wchar_t*>(text),int(length),
+                             path,int(length),TRUE)==CSTR_EQUAL;
+}
+
+static FootRevolverCycle foot_revolver_profile(uintptr_t actor, uintptr_t fire_animation, float marker) {
+    const unsigned aim_clip=equipment_crouched81()?127:124;
+    if(!valid_weapon_clip(actor,aim_clip))return {};
+    const auto clips=field<uintptr_t>(field<uintptr_t>(actor,0x23c),0xc);
+    const auto aim_animation=field<uintptr_t>(clips,aim_clip*4);
+    const auto aim_asset=field<uintptr_t>(aim_animation,4);
+    const auto fire_asset=field<uintptr_t>(fire_animation,4);
+    // Cut only the last two stock 20 Hz samples. After samples 34/30,
+    // both hands and weapons already match poise within 19 mm and 2.3 degrees.
+    if(field<unsigned>(fire_asset,0x64)==37&&field<unsigned>(aim_asset,0x64)==41&&std::abs(marker-.02f)<.0001f&&
+       weapon_asset_is(fire_asset,L"animations/shogun_animation/battle/men/pistol/pistol_poise/pistol_fire.anim")&&
+       weapon_asset_is(aim_asset,L"animations/shogun_animation/battle/men/pistol/pistol_poise/pistol_poise.anim"))
+        return {actor,fire_animation,aim_animation,state->lease_generation,aim_clip,35,41};
+    if(field<unsigned>(fire_asset,0x64)==33&&field<unsigned>(aim_asset,0x64)==43&&std::abs(marker-.12f)<.0001f&&
+       weapon_asset_is(fire_asset,L"animations/shogun_animation/battle/men/pistol/pistol_poise/dual_pistol_fire.anim")&&
+       weapon_asset_is(aim_asset,L"animations/shogun_animation/battle/men/pistol/pistol_poise/dual_pistol_poise.anim"))
+        return {actor,fire_animation,aim_animation,state->lease_generation,aim_clip,31,43};
+    return {};
+}
+static bool foot_revolver_shot(uintptr_t actor) {
+    return foot_revolver.actor==actor&&actor==weapon_actor&&
+        foot_revolver.lease==state->lease_generation&&foot_revolver.aim_clip;
+}
 static bool bow_draw_ready(){
     return is_bow_projectile(bow_record(unit))&&state->aim_pose==AIM_READY;
 }
@@ -189,6 +232,76 @@ static bool mounted_bow_blend_ready88(){
     AcquireSRWLockShared(&mounted_blend_lock88);bool ready=mounted_blend_clock88.ready(key);ReleaseSRWLockShared(&mounted_blend_lock88);
     return ready;
 }
+static bool advance_foot_revolver(uintptr_t actor) {
+    __try {
+        if(!state||!foot_revolver_shot(actor)||
+           (state->weapon_phase!=WEAPON_DRAW&&state->weapon_phase!=WEAPON_FIRED)||
+           field<uintptr_t>(actor,0x474)!=foot_revolver.fire_animation||!weapon_owned(actor))
+            return false;
+        const auto common=environment?field<uintptr_t>(environment,8):0;
+        if(!common)return false;
+        const auto tick=field<unsigned>(common,0x50);
+        if(!foot_revolver.has_clock_tick||tick!=foot_revolver.clock_tick){
+            foot_revolver.has_clock_tick=true;
+            foot_revolver.clock_tick=tick;
+            foot_revolver.extra_frame_credit+=11;
+        }
+        if(foot_revolver.extra_frame_credit<25)return false;
+        const float frame_time=float(field<unsigned>(actor,0x1d8))*field<float>(base,0x15b2448);
+        // Give the simulation boundary its chance to fire at the original
+        // marker before an extra native recoil step can move past it.
+        if(state->weapon_phase==WEAPON_DRAW&&frame_time>=release_time)return false;
+        foot_revolver.extra_frame_credit-=25;
+        return true;
+    } __except(EXCEPTION_EXECUTE_HANDLER){return false;}
+}
+static bool resume_foot_revolver_aim(uintptr_t actor);
+
+static bool foot_revolver_aim_held(uintptr_t actor){
+    return state&&foot_revolver_shot(actor)&&weapon_ready_held()&&
+        (equipment_crouched81()||!(state->input&RUN))&&weapon_owned(actor)&&
+        field<float>(actor,0x390)<=0&&field<float>(unit,0xf78)>=1;
+}
+
+static bool finish_foot_revolver_tail(uintptr_t actor){
+    __try{
+        if(!foot_revolver_aim_held(actor)||state->weapon_phase!=WEAPON_FIRED||
+           field<uintptr_t>(actor,0x474)!=foot_revolver.fire_animation||
+           field<unsigned>(actor,0x1d8)<foot_revolver.return_frame||
+           !field<unsigned>(actor,0x394)||!resume_foot_revolver_aim(actor))return false;
+        InterlockedExchange(&state->weapon_phase,WEAPON_IDLE);
+        return true;
+    }__except(EXCEPTION_EXECUTE_HANDLER){return false;}
+}
+
+static void wrap_foot_revolver_aim(uintptr_t actor){
+    __try{
+        if(foot_revolver_aim_held(actor)&&!state->weapon_phase&&state->aim_pose==AIM_READY&&
+           field<uintptr_t>(actor,0x474)==foot_revolver.aim_animation&&
+           field<unsigned>(actor,0x1d8)==foot_revolver.aim_frames-1){
+            // The native clock clears the active clip at the duplicate seam.
+            // Keep the same poise active and advance the first sample instead.
+            field<unsigned>(actor,0x1d8)=0;
+        }
+    }__except(EXCEPTION_EXECUTE_HANDLER){}
+}
+
+static void finish_foot_revolver_clock(uintptr_t actor,uintptr_t previous_animation){
+    __try{
+        if(!previous_animation||!state||!foot_revolver_shot(actor)||
+           field<uintptr_t>(actor,0x474)||!weapon_owned(actor))
+            return;
+        const LONG phase=state->weapon_phase;
+        const bool recoil_finished=phase==WEAPON_FIRED&&
+            previous_animation==foot_revolver.fire_animation&&field<unsigned>(actor,0x394)!=0;
+        const bool reload_finished=phase==WEAPON_RELOAD&&field<float>(actor,0x390)<=0;
+        // Restore native poise before returning to the actor's caller. An
+        // animation-free interval can hand the renderer a lowered fallback.
+        if((recoil_finished||reload_finished)&&resume_foot_revolver_aim(actor))
+            InterlockedExchange(&state->weapon_phase,WEAPON_IDLE);
+    }__except(EXCEPTION_EXECUTE_HANDLER){}
+}
+
 static void __fastcall weapon_animation_clock_hook(void* actor,void*){
     if(reinterpret_cast<uintptr_t>(actor)==possessed&&weapon_mounted()&&weapon_owned(possessed)&&
        mounted_draw_owned(possessed)&&mounted_bow_native_profile85(possessed)){
@@ -207,9 +320,20 @@ static void __fastcall weapon_animation_clock_hook(void* actor,void*){
         InterlockedIncrement(&mounted_clock_holds);state->aim_pose=AIM_READY;return;
     }
     auto caller=reinterpret_cast<uintptr_t>(_ReturnAddress());
-    observe_weapon82(reinterpret_cast<uintptr_t>(actor),1,caller);
-    original_animation_clock(actor);
-    observe_weapon82(reinterpret_cast<uintptr_t>(actor),2,caller);
+    const auto subject=reinterpret_cast<uintptr_t>(actor);
+    const auto previous_animation=state&&foot_revolver_shot(subject)?field<uintptr_t>(subject,0x474):0;
+    observe_weapon82(subject,1,caller);
+    wrap_foot_revolver_aim(subject);
+    if(!finish_foot_revolver_tail(subject)){
+        original_animation_clock(actor);
+        if(!finish_foot_revolver_tail(subject)){
+            // Keep the existing 36/25 rate. The native play scalar is root
+            // displacement, and does not change the animation clock.
+            if(advance_foot_revolver(subject))original_animation_clock(actor);
+            if(!finish_foot_revolver_tail(subject))finish_foot_revolver_clock(subject,previous_animation);
+        }
+    }
+    observe_weapon82(subject,2,caller);
 }
 static bool __fastcall weapon_animation_events_hook(void* actor,void*,void* clip,unsigned frame){
     if(mounted_clock_held(reinterpret_cast<uintptr_t>(actor))&&
@@ -293,7 +417,7 @@ static void __fastcall weapon_play_hook(void* actor,void*,unsigned clip,unsigned
         original_play(actor,clip,force,attached,speed);return;
     }
     if(!own_weapon_call&&(state->weapon_phase||state->aim_pose)&&weapon_owned(reinterpret_cast<uintptr_t>(actor)))return;
-    if(!own_weapon_call&&weapon_owned(reinterpret_cast<uintptr_t>(actor))&&equipment_slot81==equipment81::Melee&&
+    if(!own_weapon_call&&weapon_owned(reinterpret_cast<uintptr_t>(actor))&&equipment_slot81==equipment81::Melee&&!equipment_personal_override214&&
        ((clip>=124&&clip<=140)||clip==750||clip==751||(clip>=753&&clip<=786)))return;
     original_play(actor,clip,force,attached,speed);
 }
@@ -304,7 +428,7 @@ static void __fastcall weapon_change_hook(void* actor,void*,unsigned mode,unsign
         else return;
     }
     if(!own_weapon_call&&weapon_owned(reinterpret_cast<uintptr_t>(actor))){
-        if(equipment_slot81==equipment81::Melee){
+        if(equipment_slot81==equipment81::Melee&&!equipment_personal_override214){
             if(mode==14||mode==15||mode==16||mode==17||mode==32||mode==33)return;
 
         }else if(!weapon_mounted()){
@@ -321,6 +445,7 @@ static void begin_weapon_impl(const uint32_t* payload,uintptr_t context){
         if(!weapon_ready_held()){++state->shots_canceled;return;}
         if(!weapon_owned(payload[11])||state->weapon_phase||field<float>(payload[11],0x390)>0){state->shot_error=87;return;}
         weapon_actor=payload[11];weapon_context=context;memcpy(weapon_payload,payload,sizeof(weapon_payload));
+        foot_revolver={};
         InterlockedExchange(&manual_arrow_released,0);
         if(weapon_mounted()){
             if(state->aim_pose!=AIM_READY||!mounted_draw_owned(weapon_actor)){
@@ -333,13 +458,18 @@ static void begin_weapon_impl(const uint32_t* payload,uintptr_t context){
             state->weapon_record=field<unsigned>(bow_record(unit),0);state->weapon_animation=weapon_clip;
             state->weapon_release_time=release_time;state->shot_error=0;return;
         }
-        bool drawn_bow=bow_draw_ready();
-        if(state->aim_pose)reinterpret_cast<RangedAction>(base+0x3ca920)(reinterpret_cast<void*>(weapon_actor));
-        state->aim_pose=0;
+        const auto record=bow_record(unit);
+        const bool revolver=revolver_record65(record);
+        const bool drawn_bow=bow_draw_ready();
+        const unsigned ready_mode=equipment81::ready_mode(false,equipment_crouched81());
+        const bool already_aiming=revolver&&state->aim_pose==AIM_READY;
+        if(!already_aiming){
+            if(state->aim_pose)reinterpret_cast<RangedAction>(base+0x3ca920)(reinterpret_cast<void*>(weapon_actor));
+            state->aim_pose=0;
+            // A drawn bow proceeds directly to its native release clip.
+            if(!drawn_bow)original_change(reinterpret_cast<void*>(weapon_actor),ready_mode,0,0);
+        }
         InterlockedExchange(&state->weapon_phase,WEAPON_START);
-        // RMB has already completed the bow's native stand-to-aim transition.
-        // Do not draw it again on LMB; proceed to its native release clip.
-        if(!drawn_bow)original_change(reinterpret_cast<void*>(weapon_actor),equipment81::ready_mode(weapon_mounted(),equipment_crouched81()),0,0);
         weapon_clip=reinterpret_cast<ChooseAnimation>(base+0x3d28b0)(reinterpret_cast<void*>(weapon_actor),reinterpret_cast<float*>(weapon_payload+5));
         // The native task always evaluates its primary shot. Missing markers use time zero.
         uintptr_t db=field<uintptr_t>(weapon_actor,0x23c),array=field<uintptr_t>(db,0xc);
@@ -350,13 +480,43 @@ static void begin_weapon_impl(const uint32_t* payload,uintptr_t context){
         }
         release_time=reinterpret_cast<ReleaseTime>(base+0x3d2ef0)(reinterpret_cast<void*>(weapon_actor),weapon_clip,0);
         if(!std::isfinite(release_time)||release_time<0||release_time>30){state->shot_error=89;InterlockedExchange(&state->weapon_phase,WEAPON_IDLE);return;}
-        state->weapon_record=field<unsigned>(bow_record(unit),0);state->weapon_animation=weapon_clip;state->weapon_release_time=release_time;
+        if(revolver)foot_revolver=foot_revolver_profile(weapon_actor,anim,release_time);
+        if(already_aiming){
+            if(foot_revolver.aim_clip){
+                if(field<unsigned>(weapon_actor,0x1f0)!=ready_mode)
+                    original_change(reinterpret_cast<void*>(weapon_actor),ready_mode,1,0);
+                original_play(reinterpret_cast<void*>(weapon_actor),weapon_clip,0,0,1.f);
+                if(field<uintptr_t>(weapon_actor,0x474)==anim)
+                    InterlockedExchange(&state->weapon_phase,WEAPON_DRAW);
+            }else{
+                reinterpret_cast<RangedAction>(base+0x3ca920)(reinterpret_cast<void*>(weapon_actor));
+                state->aim_pose=0;
+                original_change(reinterpret_cast<void*>(weapon_actor),ready_mode,0,0);
+            }
+        }
+        state->weapon_record=field<unsigned>(record,0);state->weapon_animation=weapon_clip;state->weapon_release_time=release_time;
         ++state->draws_started;state->shot_error=0;
     }__except(EXCEPTION_EXECUTE_HANDLER){state->shot_error=90;InterlockedExchange(&state->weapon_phase,WEAPON_IDLE);InterlockedExchange(&state->release,1);}
 }
 static void begin_weapon(const uint32_t* payload,uintptr_t context){
     own_weapon_call=1;
     __try {begin_weapon_impl(payload,context);}__finally {own_weapon_call=0;}
+}
+static bool resume_foot_revolver_aim(uintptr_t actor) {
+    if(!foot_revolver_aim_held(actor))return false;
+    const unsigned clip=foot_revolver.aim_clip;
+    if(!valid_weapon_clip(actor,clip))return false;
+    const unsigned ready_mode=equipment81::ready_mode(false,equipment_crouched81());
+    own_weapon_call=1;
+    __try {
+        if(field<unsigned>(actor,0x1f0)!=ready_mode)
+            original_change(reinterpret_cast<void*>(actor),ready_mode,1,0);
+        original_play(reinterpret_cast<void*>(actor),clip,0,0,1.f);
+    } __finally {own_weapon_call=0;}
+    if(field<uintptr_t>(actor,0x474)!=foot_revolver.aim_animation||field<unsigned>(actor,0x1d4)!=clip)return false;
+    state->aim_clip=clip;
+    state->aim_pose=AIM_READY;
+    return true;
 }
 static void weapon_tick(uintptr_t actor){
     __try {
@@ -387,9 +547,19 @@ static void weapon_tick(uintptr_t actor){
         }
         if(!state->weapon_phase){
             uintptr_t record=bow_record(unit);
-            bool bow=is_bow_projectile(record);
-            bool desired=weapon_ready_held()&&state->weapon_reload_remaining<=0&&(equipment_crouched81()||weapon_mounted()||!(state->input&RUN))&&field<float>(unit,0xf78)>=1;
+            bool from_type=false;
+            const bool bow=native_personal_kind(record,&from_type)==PersonalWeaponKind::Bow;
+            const bool mounted=weapon_mounted();
+            bool desired=weapon_ready_held()&&state->weapon_reload_remaining<=0&&(equipment_crouched81()||mounted||!(state->input&RUN))&&field<float>(unit,0xf78)>=1;
+            if(desired&&!mounted&&(bow||from_type)&&
+               ((bow&&!valid_weapon_clip(actor,bow_raise_clip(false)))||
+                !valid_weapon_clip(actor,equipment_crouched81()&&!bow?127:bow_hold_clip(false)))){
+                state->shot_error=95;
+                InterlockedExchange(&state->fire_request,0);
+                desired=false;
+            }
             if(desired!=bool(state->aim_pose)){
+                foot_aim_lower={};
                 if(state->aim_pose)reinterpret_cast<RangedAction>(base+0x3ca920)(reinterpret_cast<void*>(actor));
                 // Native29->32 starts bow/rifle clip751. We immediately start758
                 // below; playing both poisons the draw's initial blend history.
@@ -398,6 +568,11 @@ static void weapon_tick(uintptr_t actor){
                 unsigned skip_transition=mounted_skip_raise85(actor,desired);
                 own_weapon_call=1;original_change(reinterpret_cast<void*>(actor),desired?equipment81::ready_mode(weapon_mounted(),equipment_crouched81()):equipment81::lower_mode(weapon_mounted(),equipment_crouched81()),skip_transition,0);own_weapon_call=0;
                 state->aim_pose=desired?AIM_READY:AIM_LOWERED;
+                if(!desired&&!weapon_mounted()&&!equipment_crouched81()&&
+                   field<unsigned>(actor,0x1f0)==equipment81::lower_mode(false,false)){
+                    // Only the clip installed by this owned ADS exit may yield to walking.
+                    foot_aim_lower={actor,field<uintptr_t>(actor,0x474),state->lease_generation};
+                }
                 if(weapon_mounted()){
                     mounted_draw={};
                     if(desired){
@@ -414,9 +589,6 @@ static void weapon_tick(uintptr_t actor){
                     InterlockedExchange(&manual_arrow_released,0);
                     // Native asset126 is bow_stand_to_aim_25: raise and draw.
                     // Native asset124 is bow_aim_25: hold at full draw.
-                    if(!valid_weapon_clip(actor,bow_raise_clip(weapon_mounted()))||!valid_weapon_clip(actor,bow_hold_clip(weapon_mounted()))){
-                        state->shot_error=95;InterlockedExchange(&state->release,1);return;
-                    }
                     own_weapon_call=1;original_play(reinterpret_cast<void*>(actor),bow_raise_clip(weapon_mounted()),1,0,1.0f);own_weapon_call=0;
                     state->aim_pose=bow?AIM_BOW_DRAWING:AIM_READY;state->aim_clip=bow_raise_clip(weapon_mounted());++state->draws_started;
                 }
@@ -480,10 +652,21 @@ static void weapon_tick(uintptr_t actor){
                 InterlockedExchange(&manual_arrow_released,is_bow_projectile(bow_record(unit))&&state->shots_spawned==previous_shots+1);
             }
         }else if(state->weapon_phase==WEAPON_FIRED&&!anim){
+            // The revolver reloads only after the last round. Between rounds
+            // the stock recoil endpoint blends directly into its poise loop.
+            const auto record=bow_record(unit);
+            if(!reload_after_recoil65(actor,record)||(state->shot_error&&revolver_record65(record))){
+                resume_foot_revolver_aim(actor);
+                InterlockedExchange(&state->weapon_phase,WEAPON_IDLE);
+                return;
+            }
+            if(foot_revolver_shot(actor))state->aim_pose=AIM_LOWERED;
             own_weapon_call=1;original_change(reinterpret_cast<void*>(actor),equipment81::reload_mode(weapon_mounted(),equipment_crouched81()),0,0);own_weapon_call=0;
             ++state->reloads_started;InterlockedExchange(&state->weapon_phase,WEAPON_RELOAD);
         }else if(state->weapon_phase==WEAPON_RELOAD&&field<float>(actor,0x390)<=0&&!anim){
-            own_weapon_call=1;original_change(reinterpret_cast<void*>(actor),equipment81::lower_mode(weapon_mounted(),equipment_crouched81()),0,0);own_weapon_call=0;
+            if(!resume_foot_revolver_aim(actor)){
+                own_weapon_call=1;original_change(reinterpret_cast<void*>(actor),equipment81::lower_mode(weapon_mounted(),equipment_crouched81()),0,0);own_weapon_call=0;
+            }
             InterlockedExchange(&manual_arrow_released,0);
             InterlockedExchange(&state->weapon_phase,WEAPON_IDLE);
         }
