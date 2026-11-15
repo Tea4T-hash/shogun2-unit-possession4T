@@ -61,7 +61,17 @@ static bool measure_accuracy90(uintptr_t actor,uintptr_t common,uintptr_t record
   if(!accuracy90::envelope(variance,chance,range,ratio,1,out))return false;
   out.core=reinterpret_cast<AccuracyFloat90>(base+0x43d500)(&attacker);
   out.control=reinterpret_cast<AccuracyFloat90>(base+0x43d250)(&attacker);
-  return std::isfinite(out.core)&&std::isfinite(out.control);
+  if(!std::isfinite(out.core)||!std::isfinite(out.control))return false;
+  const auto kind=native_personal_kind(record);
+  if(kind==PersonalWeaponKind::Bow||kind==PersonalWeaponKind::Firearm){
+   // The preview and manual projectile release both use this final cone.
+   const float miss=std::clamp((1.f-out.chance)/.99f,0.f,1.f);
+   const float spread=std::tan(out.half_angle)*(.35f+.65f*miss)+.135f*miss*miss*miss;
+   out.half_angle=std::atan(std::clamp(spread,.006f,accuracy90::maximum_aimed_spread125));
+  }else if(kind==PersonalWeaponKind::Thrown){
+   out.half_angle=std::atan(std::tan(out.half_angle)*accuracy90::fixed_sight_width_scale125);
+  }
+  return true;
  }__except(EXCEPTION_EXECUTE_HANDLER){InterlockedIncrement(&accuracy_error_total90);return false;}
 }
 static void publish_accuracy90(const accuracy90::Envelope* e,uintptr_t record,unsigned error,uint32_t expected_lease=0){
@@ -85,9 +95,14 @@ static void refresh_accuracy90(uintptr_t actor){
   auto record=bow_record(unit);auto common=possession_lease.identity.common;uint32_t lease=state->lease_generation;
   if(!record||!common){publish_accuracy90(nullptr,0,1);return;}
   ViewRay ray{};if(!read_aim_frame(ray)){publish_accuracy90(nullptr,record,2);return;}
-  float target[3];crosshair_target(ray,target,field<float>(record,0xe8));
-  reinterpret_cast<Parameters>(base+0x40ebe0)(parameters,ray.origin,mountedshot87::native_arc(weapon_mounted()),reinterpret_cast<void*>(actor),field<float>(unit,0x164),field<float>(unit,0x170),nullptr,nullptr,nullptr);
-  parameters[0x44]=1;
+  // Match release's direct-fire solve. The chance provider still evaluates
+  // accuracy at the projectile's native calibration distance.
+  const bool direct=personal_direct_projectile(record);
+  float origin[3],target[3];
+  for(unsigned i=0;i<3;++i)origin[i]=ray.origin[i]+ray.direction[i]*.4f;
+  crosshair_target(ray,target,direct?6000.f:80.f);
+  reinterpret_cast<Parameters>(base+0x40ebe0)(parameters,origin,mountedshot87::native_arc(weapon_mounted()),reinterpret_cast<void*>(actor),field<float>(unit,0x164),field<float>(unit,0x170),nullptr,nullptr,nullptr);
+  parameters[0x44]=direct?1:0;
   reinterpret_cast<Launch>(base+0x40e9d0)(launch,reinterpret_cast<void*>(common),reinterpret_cast<void*>(record),parameters,field<float>(record,0x6c));
   if(!reinterpret_cast<Ballistic>(base+0x420050)(launch,target)){publish_accuracy90(nullptr,record,3);return;}
   accuracy90::Envelope e{};bool ok=measure_accuracy90(actor,common,record,launch,e);if(ok)InterlockedIncrement(&accuracy_update_total90);
