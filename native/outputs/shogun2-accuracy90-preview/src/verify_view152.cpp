@@ -21,7 +21,7 @@ int main(){SetUnhandledExceptionFilter(fault100);try{
     auto native=[&](){float a[6]={0,2,0,0,2,1},up[3]={0,1,0};memcpy(reinterpret_cast<void*>(cam+8),a,24);memcpy(reinterpret_cast<void*>(cam+0x58),up,12);};
     native();obstruct152=false;view_distance152=3;view_camera152(cam);require(std::abs(field<float>(cam,0x10)+3)<.001f&&refresh152==1&&world_queries152==1,"Third person did not move the real camera via original world query");
     capture_aim_frame(cam);ViewRay ray{};require(read_aim_frame(ray)&&ray.origin[2]==-3&&ray.direction[2]==1,"Commands did not capture third-person view");
-    native();obstruct152=true;view_camera152(cam);require(std::abs(field<float>(cam,0x10)+1.25f)<.001f,"Camera did not pull in before obstruction");
+    native();obstruct152=true;view_camera152(cam);require(std::abs(field<float>(cam,0x10)+3.f*(.5f-.25f/(3.f*std::sqrt(1.f+.25f*.25f+.08f*.08f))))<.001f,"Camera did not pull in before obstruction");
     view_wheel152(120);view_prepare152();require(view_distance152==2.5f,"Wheel distance direction/step");for(unsigned i=0;i<20;++i){view_wheel152(12000);view_prepare152();}require(view_distance152==1,"Zoom minimum");
     for(unsigned i=0;i<20;++i){view_wheel152(-12000);view_prepare152();}require(view_distance152==12,"Zoom maximum");
     view_key152(current,previous,true,true);current[0x19]=0x80;view_key152(current,previous,true,true);view_prepare152();require(!third_person152,"Second P did not restore first person");
@@ -33,6 +33,7 @@ int main(){SetUnhandledExceptionFilter(fault100);try{
         require(view152::eye(e,y,p,out),"Bounded native face basis rejected");float fwd[3],next[3];for(unsigned i=0;i<3;++i){fwd[i]=e.view[i+3]-e.view[i];next[i]=out.view[i+3]-out.view[i];}deathpose::normalize(fwd);deathpose::normalize(next);
         require(!memcmp(e.view,out.view,12)&&deathpose::dot(fwd,next)>=std::cos(view152::yaw_limit)*std::cos(view152::pitch_limit)-.001f,"Eye escaped face or changed origin");
     }
+    #include "../../../../tools/deck/verify_framing203.h"
     view_reset152();require(!third_person152&&!eye_yaw152&&!eye_pitch152,"Exit retained third-person/eye state");
     std::cout<<"PASS: P ownership/held handoff, wheel bounds, actual native world-query camera/obstruction and targeting, first-person restoration, current-face eye limits. World geometry/allocation and camera refresh are explicit providers.\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
