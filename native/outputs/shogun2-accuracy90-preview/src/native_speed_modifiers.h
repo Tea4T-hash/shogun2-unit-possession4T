@@ -58,7 +58,7 @@ static bool read_native_speed_modifiers(uintptr_t actor,unsigned input,float bas
         factor=surface_factor*fatigue_factor;++state->speed_modifier_queries;return true;
     }__except(EXCEPTION_EXECUTE_HANDLER){return false;}
 }
-static bool apply_native_speed_step(uintptr_t actor,Intent direction,bool requested,float dt,float factor,float& speed){
+static bool apply_native_speed_step(uintptr_t actor,Intent direction,bool requested,float dt,float factor,float& speed,bool resumed96=false){
     __try {
         float previous=field<float>(actor,0x1ac),acceleration=field<float>(actor,0x160),deceleration=field<float>(actor,0x104);
         float negative_dt=field<float>(base,0x15de874);
@@ -68,6 +68,12 @@ static bool apply_native_speed_step(uintptr_t actor,Intent direction,bool reques
         // AI +110 may still be the formation's walking cap while manual Shift
         // requests this unit's native run speed. Use completed actual speed here
         // so that the AI cap cannot reset manual running to walking every tick.
+        if(resumed96)previous=0;
+        else if(requested&&!possession_lease.identity.mount){
+            const float vx=field<float>(actor,0x8c),vz=field<float>(actor,0x94);
+            if(!std::isfinite(vx)||!std::isfinite(vz))return false;
+            previous=directed_speed95(previous,vx,vz,direction.x,direction.z);
+        }
         float target=requested?speed:0;
         state->requested_speed=target;state->previous_motion_speed=previous;
         speed=native_speed_step(previous,target,acceleration*factor,deceleration,dt,negative_dt);
