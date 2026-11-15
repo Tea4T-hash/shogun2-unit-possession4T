@@ -31,6 +31,8 @@ static LRESULT CALLBACK stock_window100(HWND window,UINT message,WPARAM flags,LP
     return 0;
 }
 
+static LRESULT CALLBACK modal_window214(HWND,UINT message,WPARAM,LPARAM){native_messages100.push_back(message);return 0;}
+static void __fastcall modal_visible214(void* widget,void*,unsigned visible){field<unsigned char>(reinterpret_cast<uintptr_t>(widget),0xf5)=static_cast<unsigned char>(visible);}
 static float scene_origin102[3]{};
 static uintptr_t fixture_group100,fixture_world_one100,fixture_world_two100;
 static unsigned scene_object100[4]{};static unsigned char scene_hits100[28]{};
@@ -82,7 +84,7 @@ struct NativeFixture100 {
         holder=std::vector<unsigned char>(0x210),peer_holder=std::vector<unsigned char>(0x210),selected=std::vector<unsigned char>(0x500),owner=std::vector<unsigned char>(0x200),
         config=std::vector<unsigned char>(0x100),actor=std::vector<unsigned char>(0x700),peer=std::vector<unsigned char>(0x700),actor_unit=std::vector<unsigned char>(0x1800),
         queue=std::vector<unsigned char>(QUEUE_CAPACITY+8),world_one=std::vector<unsigned char>(32),world_two=std::vector<unsigned char>(32);
-    std::array<uintptr_t,2> holders{};std::array<uintptr_t,1> units{};unsigned char descriptors[6*28]{};
+    std::array<uintptr_t,2> holders{};std::array<uintptr_t,1> units{};unsigned char descriptors[7*28]{};
     static uintptr_t ptr(std::vector<unsigned char>& v){return reinterpret_cast<uintptr_t>(v.data());}
     void jump(unsigned address,void* destination){auto code=reinterpret_cast<unsigned char*>(base+address);code[0]=0xe9;unsigned delta=unsigned(reinterpret_cast<uintptr_t>(destination)-base-address-5);memcpy(code+1,&delta,4);}
     NativeFixture100(){
@@ -98,6 +100,9 @@ struct NativeFixture100 {
             for(unsigned i=0;i<count;++i)if((entries[i]>>12)==IMAGE_REL_BASED_HIGHLOW)field<unsigned>(base,block->VirtualAddress+(entries[i]&4095))+=unsigned(base-nt->OptionalHeader.ImageBase);
             cursor+=block->SizeOfBlock;
         }
+        // Validate pristine mapped native ranges before this fixture replaces
+        // serializer/terrain endpoints with explicit providers.
+        require(native214::admit(base),"Pristine QoL native dependencies differ in fixture");
         jump(0x15cb80,reinterpret_cast<void*>(&native_run102));
         jump(0x10f1060,reinterpret_cast<void*>(&native_ui151)); // Native UI tree is an explicit provider.
         field<float>(base,0x18d1c80+0x5c)=1;field<float>(base,0x18d1ce0+0x5c)=1;
@@ -123,9 +128,9 @@ struct NativeFixture100 {
         for(auto a:{possessed,ptr(peer)}){field<uintptr_t>(a,0)=base+0x15dfec8;field<unsigned char>(a,0xf0)=field<unsigned char>(a,0xa1)=1;field<uintptr_t>(a,0x214)=unit;field<uintptr_t>(a,0x28)=environment;field<uintptr_t>(a,0x20c)=ptr(config);}
         field<unsigned>(ptr(peer),0x1c8)=12;field<unsigned>(unit,4)=7;field<uintptr_t>(unit,0xf9c)=ptr(config);field<unsigned char>(unit,0xeb0)=1;
         require(followed(possessed,true),"Production current lease fixture invalid");state->lease_generation=possession_lease.generation;state->actor_id=0;state->unit_id=7;
-        unsigned offsets[]={0x192e0d0,0x192da04,0x192d014,0x192eaac,0x192ca68,0x192e90c};
-        for(unsigned i=0;i<6;++i){unsigned key=0x10203001+i;field<unsigned>(base,offsets[i])=key;memcpy(descriptors+i*28,&key,4);descriptors[i*28+16]=3;}
-        field<uintptr_t>(base,0x18d9000)=reinterpret_cast<uintptr_t>(descriptors);field<unsigned>(base,0x18d9004)=6;field<uintptr_t>(environment,0x28048)=ptr(queue);
+        unsigned offsets[]={0x192e0d0,0x192da04,0x192d014,0x192eaac,0x192ca68,0x192e90c,0x192d2cc};
+        for(unsigned i=0;i<7;++i){unsigned key=0x10203001+i;field<unsigned>(base,offsets[i])=key;memcpy(descriptors+i*28,&key,4);descriptors[i*28+16]=3;}
+        field<uintptr_t>(base,0x18d9000)=reinterpret_cast<uintptr_t>(descriptors);field<unsigned>(base,0x18d9004)=7;field<uintptr_t>(environment,0x28048)=ptr(queue);
         scene_object100[0]=1;field<uintptr_t>(reinterpret_cast<uintptr_t>(scene_hits100),0)=reinterpret_cast<uintptr_t>(scene_object100);field<float>(reinterpret_cast<uintptr_t>(scene_hits100),4)=10;field<float>(reinterpret_cast<uintptr_t>(scene_hits100),8)=0;field<float>(reinterpret_cast<uintptr_t>(scene_hits100),12)=20;
         original_draw_gate=reinterpret_cast<RangedGate>(&gate100);original_native_release=reinterpret_cast<RangedAction>(&release100);original_skin_ready=reinterpret_cast<SkinReady>(base+0x4c56d0);
         command_generation100=possession_lease.generation;command_fire_mode100=LONG(command100::FireMode::AtWill);
@@ -152,7 +157,7 @@ int main(){SetUnhandledExceptionFilter(&fault100);try{
     }
     for(bool run:{false,true})for(unsigned repeat=0;repeat<100;++repeat){
         fixture.clear_queue();unsigned stack_before{},stack_after{};__asm mov stack_before,esp
-        require(command_serialize100(&destination,1234,0,-1,false,false,nullptr,nullptr,run),"Native gait packet refused");
+        require(command_serialize100(&destination,1234,0,-1,false,UnitState100::Fire,nullptr,nullptr,run),"Native gait packet refused");
         __asm mov stack_after,esp
         require(stack_before==stack_after&&packets100.back().bytes[0]==unsigned(run)&&packets100.back().bytes[1]==0,"Original move serializer changed run or queue flag/ABI");
         fixture.clear_queue();require(command_hold_here100(destination,1234,run),"Native Hold Here gait refused");
@@ -161,6 +166,42 @@ int main(){SetUnhandledExceptionFilter(&fault100);try{
     fixture.clear_queue();require(command_serialize100(&destination,0,0,-1,true),"Native point move refused");require(packets100.back().short_count==0&&packets100.back().float_count==0,"Point move changed native facing or width");
     for(unsigned mode:{0u,1u}){fixture.clear_queue();unsigned char native_before=field<unsigned char>(unit,0xeb0);require(command_serialize100(nullptr,0,0,int(mode)),"Native fire policy packet refused");
         require(packets100.back().integer_count==1&&packets100.back().integers[0]==mode&&field<unsigned char>(unit,0xeb0)==native_before,"Fire policy bypassed native dispatch or changed enum");}
+    state->heartbeat=GetTickCount64();
+    require(camera_owned(P::ptr(fixture.camera)),"Skirmish fixture lacks a current camera lease");
+    for(bool deck:{false,true})for(unsigned active:{0u,1u}){
+        process_orders(P::ptr(fixture.camera));
+        fixture.clear_queue();field<unsigned char>(unit,0x179)=1;field<unsigned char>(unit,0xeb2)=active;
+        if(deck)require(command_window_fire62(command100::Input::Skirmish),"Possession L5 order refused");
+        else {
+            require(command_window100(nullptr,WM_KEYDOWN,'R',0),"Skirmish press refused");
+            command_fire_press_tick62=GetTickCount64()-400;
+            require(command_window100(nullptr,WM_KEYDOWN,'R',1L<<30)&&!command_write100,"Skirmish repeated while held");
+            require(command_window100(nullptr,WM_KEYUP,'R',0),"Skirmish release refused");
+        }
+        process_orders(P::ptr(fixture.camera));
+        require(packets100.size()==1&&packets100[0].key==0x10203007&&packets100[0].byte_count==1&&
+            packets100[0].bytes[0]==!active&&field<unsigned char>(unit,0xeb2)==active,"Skirmish used the wrong packet/state");
+        auto feedback=active?command100::Feedback::SkirmishOff:command100::Feedback::SkirmishOn;
+        require(command_shared100&&command_shared100->feedback==unsigned(feedback)&&
+            command100::valid(*command_shared100,state->pid,state->lease_generation,state->actor_id,state->unit_id,GetTickCount64())&&
+            command_shared100->fire_mode==unsigned(command100::FireMode::AtWill),"Skirmish acknowledgement invalidated the fire mode in the HUD");
+        command_input_reset100();
+    }
+    process_orders(P::ptr(fixture.camera));
+    fixture.clear_queue();field<unsigned char>(unit,0x179)=0;
+    require(command_window100(nullptr,WM_KEYDOWN,'R',0),"R press refused");
+    command_fire_press_tick62=GetTickCount64()-400;
+    command_window100(nullptr,WM_KEYUP,'R',0);process_orders(P::ptr(fixture.camera));
+    require(packets100.empty(),"Ineligible unit received Skirmish");
+    command_input_reset100();
+    command100::Event fire62{};
+    command_window100(nullptr,WM_KEYDOWN,'R',0);command_window100(nullptr,WM_KEYUP,'R',0);
+    require(command_pop100(fire62)&&fire62.input==command100::Input::Fire&&!command_pop100(fire62),"R tap did not enqueue exactly one fire order");
+    command_window100(nullptr,WM_KEYDOWN,'R',0);command_window100(nullptr,WM_KILLFOCUS,0,0);command_window100(nullptr,WM_KEYUP,'R',0);
+    require(!command_pop100(fire62),"Focus loss committed an R order");
+    std::cout<<"PASS possession62: R tap/hold, two native skirmish packets and cancellation\n";
+    std::cout<<"PASS possession63: both Skirmish acknowledgements preserve the HUD sample\n";
+    std::cout<<"PASS possession64: Deck Skirmish uses the native on/off packets and HUD acknowledgements\n";
     fixture.clear_queue();require(command_hold_here100(destination,16384),"Hold + native guard transaction refused");
     require(packets100.size()==2&&packets100[0].shorts[0]==16384&&packets100[1].byte_count==1&&packets100[1].bytes[0]==1,"Native guard-mode packet wrong");
     unsigned committed=field<unsigned>(P::ptr(fixture.queue)+4,QUEUE_CAPACITY);require(committed>0,"Hold transaction never published");
@@ -229,6 +270,33 @@ int main(){SetUnhandledExceptionFilter(&fault100);try{
     // snapshot-copy primitives are fixture substitutions. No custom Q packet.
     HWND window=CreateWindowExW(0,L"STATIC",L"Command100 fixture",WS_POPUP,0,0,1280,720,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);require(window!=nullptr,"Hidden input fixture window");
     input_window=window;native_window_proc=&stock_window100;state->heartbeat=GetTickCount64();
+    // Reproduce blanket possession UI suppression, then native modal ownership.
+    require(native214::admit(base),"QoL native dependencies differ in fixture");
+    {unsigned char manager214[0x60]{},widget214[0x328]{};auto manager_at214=reinterpret_cast<uintptr_t>(manager214),widget_at214=reinterpret_cast<uintptr_t>(widget214);
+     auto prior_manager214=field<uintptr_t>(base,0x1bc73e4);field<uintptr_t>(base,0x1bc73e4)=manager_at214;
+     auto prior_visibility214=original_ui_visible;original_ui_visible=reinterpret_cast<UIVisible>(&modal_visible214);interface_active=1;saved_widget_count=1;saved_widgets[0]={widget_at214,1,0,true};
+     ui_visible_hook(widget214,nullptr,1);require(!widget214[0xf5],"Possession native HUD unexpectedly exposed");
+     *reinterpret_cast<unsigned*>(manager214+0x30)=1;ui_visible_hook(widget214,nullptr,1);
+     require(widget214[0xf5]&&!keyboard_fps84(),"Native pause/results still hidden or keyboard captured");
+     auto prior_window214=native_window_proc;native_window_proc=&modal_window214;auto mode214=state->mode;
+     weapon_window_proc(window,WM_LBUTTONDOWN,0,0);weapon_window_proc(window,WM_KEYDOWN,VK_ESCAPE,0);
+     require(native_messages100.size()==2&&native_messages100[0]==WM_LBUTTONDOWN&&native_messages100[1]==WM_KEYDOWN&&state->mode==mode214&&!state->release,"Native menu input did not pass through while possessed");
+     native_window_proc=prior_window214;memset(manager214,0,sizeof manager214);
+     for(auto key:{'3','4'}){
+         require(speed_key214(window,WM_KEYDOWN,key,0)&&speed_key214(window,WM_KEYDOWN,key,1L<<30)&&
+             speed_key214(window,WM_KEYUP,key,0)&&speed_key214(window,WM_CHAR,key,0),"Possession speed key not owned");
+         require(!speed_key214(window,WM_SYSKEYDOWN,key,0),"Alt chord owned by speed control");
+     }
+     require(!speed_key214(window,WM_SYSKEYDOWN,VK_MENU,0)&&!speed_key214(window,WM_KEYDOWN,'2',0),"Unrelated key captured as battle speed");
+     *reinterpret_cast<unsigned*>(manager214+0x30)=1;
+     require(!speed_key214(window,WM_KEYDOWN,'3',0)&&!speed_key214(window,WM_KEYDOWN,'4',0),"Speed key captured in native menu");
+     memset(manager214,0,sizeof manager214);
+     state->mode=0;
+     require(!speed_key214(window,WM_KEYDOWN,'3',0)&&!speed_key214(window,WM_KEYDOWN,'4',0),"Speed key captured in RTS");
+     state->mode=mode214;saved_widgets[0].suppress=false;ui_visible_hook(widget214,nullptr,1);require(widget214[0xf5],"New native results widget suppressed outside modal");
+     interface_active=0;saved_widget_count=0;original_ui_visible=prior_visibility214;field<uintptr_t>(base,0x1bc73e4)=prior_manager214;native_messages100.clear();
+     std::cout<<"PASS modal214: native pause/results visibility, mouse/keyboard passthrough and retained possession; owning-window provider only\n";
+    }
     auto cursor=P::ptr(fixture.root)+0x10c;unsigned packets_before=unsigned(packets100.size());
     require(command_window100(window,WM_KEYDOWN,'Q',0)&&command_window100(window,WM_KEYDOWN,'Q',1L<<30),"Q press/repeat capture differs");
     require(command_placing100&&native_messages100.size()==1&&native_messages100[0]==WM_RBUTTONDOWN&&native_events100[0]==5&&field<unsigned char>(cursor,0x5b)==1,"Q did not enter exact native RMB/cursor state");
@@ -287,21 +355,30 @@ int main(){SetUnhandledExceptionFilter(&fault100);try{
     auto service102=[&](){command_follow100.next=0;state->heartbeat=GetTickCount64();process_orders(P::ptr(fixture.camera));};
     field<float>(P::ptr(fixture.peer),0x48)=11;field<float>(P::ptr(fixture.peer),0x50)=20;
     state->follow=1;command_pace102.reset();fixture.clear_queue();state->input=FORWARD;service102();
-    require(packets100.size()==1&&packets100.back().bytes[0]==0,"Caught-up walk did not serialize native walk");
-    state->input=FORWARD|RUN;service102();require(packets100.size()==2&&packets100.back().bytes[0]==1,"Player run did not update native formation gait");
-    for(unsigned i=0;i<600;++i){state->yaw=float(i);service102();require(packets100.size()==2,"Stationary gaze churned running formation");}
-    run_allowed102=false;service102();require(packets100.size()==3&&packets100.back().bytes[0]==0,"Native denied player run was not matched");run_allowed102=true;
-    state->input=FORWARD;service102();require(packets100.size()==3,"Unchanged walk reissued order");
-    field<float>(P::ptr(fixture.peer),0x48)=1;service102();require(packets100.size()==4&&packets100.back().bytes[0]==1&&command_pace102.catchup,"Lagging formation did not run to catch up");
-    field<float>(P::ptr(fixture.peer),0x48)=8;service102();require(packets100.size()==4,"Catch-up hysteresis restarted order inside band");
-    field<float>(P::ptr(fixture.peer),0x48)=10;service102();require(packets100.size()==5&&packets100.back().bytes[0]==0&&!command_pace102.catchup,"Arrived formation failed to match walking leader");
-    state->input=RUN;service102();require(packets100.size()==5,"Standing with Shift triggered running");
-    state->input=FORWARD|BACKWARD|RUN;service102();require(packets100.size()==5,"Opposed movement inputs requested run");
-    state->input=LEFT|RIGHT|RUN;service102();require(packets100.size()==5,"Opposed strafe inputs requested run");
-    equipment_crouch81=1;state->input=FORWARD|RUN;service102();require(packets100.size()==5,"Crouch-locked player requested matching run");equipment_crouch81=0;state->input=0;
+    require(packets100.size()==1&&packets100.back().bytes[0]==1,"Follow Me did not default to the native running order");
+    state->input=FORWARD|RUN;service102();require(packets100.size()==1,"Holding sprint restarted the same Follow Me run");
+    for(unsigned i=0;i<600;++i){state->yaw=float(i);service102();require(packets100.size()==1,"Stationary gaze churned running formation");}
+    run_allowed102=false;service102();require(packets100.size()==2&&packets100.back().bytes[0]==0,"Native denied player run was not matched");run_allowed102=true;
+    state->input=FORWARD;service102();require(packets100.size()==3&&packets100.back().bytes[0]==1,"Restored run eligibility did not restore Follow Me running");
+    state->input=0;
+    field<float>(P::ptr(fixture.peer),0x48)=1;service102();require(packets100.size()==3&&command_pace102.catchup,"Lagging formation did not keep running to catch up");
+    field<float>(P::ptr(fixture.peer),0x48)=8;service102();require(packets100.size()==3,"Catch-up hysteresis restarted order inside band");
+    field<float>(P::ptr(fixture.peer),0x48)=10;service102();require(packets100.size()==4&&packets100.back().bytes[0]==0&&!command_pace102.catchup,"Arrived formation failed to stop running");
+    state->input=FORWARD;service102();require(packets100.size()==5&&packets100.back().bytes[0]==1,"Follow Me did not resume running when the leader moved");
+    state->input=RUN;service102();require(packets100.size()==6&&packets100.back().bytes[0]==0,"Standing with Shift triggered running");
+    state->input=FORWARD|BACKWARD|RUN;service102();require(packets100.size()==6,"Opposed movement inputs requested run");
+    state->input=LEFT|RIGHT|RUN;service102();require(packets100.size()==6,"Opposed strafe inputs requested run");
+    equipment_crouch81=1;state->input=FORWARD|RUN;service102();require(packets100.size()==6,"Crouch-locked player requested matching run");equipment_crouch81=0;state->input=0;
     // Foreign/dead peers cannot pull the formation into catch-up.
-    field<float>(P::ptr(fixture.peer),0x48)=-500;field<uintptr_t>(P::ptr(fixture.peer),0x214)=unit+4;service102();require(packets100.size()==5,"Foreign unit affected catch-up");field<uintptr_t>(P::ptr(fixture.peer),0x214)=unit;
-    field<unsigned char>(P::ptr(fixture.peer),0xf0)=0;service102();require(packets100.size()==5,"Dead actor affected catch-up");field<unsigned char>(P::ptr(fixture.peer),0xf0)=1;
+    field<float>(P::ptr(fixture.peer),0x48)=-500;field<uintptr_t>(P::ptr(fixture.peer),0x214)=unit+4;service102();require(packets100.size()==6,"Foreign unit affected catch-up");field<uintptr_t>(P::ptr(fixture.peer),0x214)=unit;
+    field<unsigned char>(P::ptr(fixture.peer),0xf0)=0;service102();require(packets100.size()==6,"Dead actor affected catch-up");field<unsigned char>(P::ptr(fixture.peer),0xf0)=1;
+    state->follow=0;state->input=0;command_follow100.reset();command_pace102.reset();
+    field<float>(P::ptr(fixture.peer),0x48)=field<float>(possessed,0x48);
+    field<float>(P::ptr(fixture.peer),0x50)=field<float>(possessed,0x50);
+    fixture.clear_queue();state->follow=1;state->input=FORWARD|WALK_OVERRIDE;service102();
+    require(packets100.size()==1&&packets100.back().bytes[0]==0,"Explicit Deck walk did not override Follow Me run");
+    state->input=FORWARD|RUN;service102();
+    require(packets100.size()==2&&packets100.back().bytes[0]==1,"Toggling sprint back on did not update the native Follow Me order");
     state->follow=0;state->input=0;command_follow100.reset();command_pace102.reset();
     // Q forwards a true stock double-click (7 -> 6), not two single releases.
     command_key_held100=0;command_q_tap102.reset();native_events100.clear();
@@ -325,6 +402,19 @@ int main(){SetUnhandledExceptionFilter(&fault100);try{
     command_window100(window,WM_KEYDOWN,'Z',0);process_orders(P::ptr(fixture.camera));
     require(packets100.size()==4&&packets100[2].bytes[0]==1&&packets100[2].shorts[0]==command100::bearing(.25f)&&packets100[2].point.position[0]==10&&packets100[2].point.position[1]==10*.1f+packets100[2].point.position[2]*.2f&&queries100==hold_queries144,"Double Z lost original Hold Here anchor/facing or run flag");
     command_window100(window,WM_KEYUP,'Z',0);command_window100(window,WM_KILLFOCUS,0,0);command_key_held100=0;
+    for(bool run:{false,true}){
+        fixture.clear_queue();service102();
+        command_window_wheel101({2,run});process_orders(P::ptr(fixture.camera));
+        require(packets100.size()==2&&packets100[0].bytes[0]==unsigned(run),
+                "Wheel Hold Here lost its native walk/run flag");
+        require(commander_input76.feedback.hold_pace==(run?2u:1u)&&commander_input76.feedback.issued[2],
+                "Wheel acknowledgement lost the committed Hold Here pace");
+        fixture.clear_queue();service102();state->input=FORWARD;
+        command_window_wheel101({0,run});process_orders(P::ptr(fixture.camera));
+        require(packets100.size()==1&&packets100[0].bytes[0]==1&&commander_input76.feedback.issued[0],
+                "Wheel Follow Me did not use the native automatic pace");
+    }
+    state->follow=0;state->input=0;command_follow100.reset();command_pace102.reset();
     std::array<unsigned char,32> controller101{},crosshair101{};
     interface_root=P::ptr(fixture.root);interface_environment=environment;
     interface_controller=reinterpret_cast<uintptr_t>(controller101.data());interface_crosshair=reinterpret_cast<uintptr_t>(crosshair101.data());
