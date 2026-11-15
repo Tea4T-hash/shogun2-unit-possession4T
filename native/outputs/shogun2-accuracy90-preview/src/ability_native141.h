@@ -2,6 +2,20 @@
 // Native manager31ec00 iterates 0x282c-byte live ability records. The catalog
 // supplies artwork only; native15c530/15be80 remain the unlock/use authority.
 #include "ability_target143.h"
+static bool active_suppression_projectile98(uintptr_t actor_unit,uintptr_t projectile){
+    const auto manager=actor_unit+0xed4;
+    if(field<uintptr_t>(manager,0)!=base+0x15cfeec||field<uintptr_t>(manager,8)!=actor_unit)return false;
+    const auto count=field<unsigned>(manager,0x28),capacity=field<unsigned>(manager,0x24);
+    const auto array=field<uintptr_t>(manager,0x2c);
+    if(!array||count>128||capacity<count||capacity>4096)return false;
+    for(unsigned i=0;i<count;++i){
+        const auto entry=array+i*0x282c;
+        if(field<unsigned char>(entry,0x18)!=1)continue;
+        const auto record=field<uintptr_t>(entry,4);
+        if(record&&field<unsigned>(record,0)==61&&field<uintptr_t>(record,0x28)==projectile)return true;
+    }
+    return false;
+}
 static bool ability_collect141(ability141::Status& s){
  auto manager=unit+0xed4;
  if(field<uintptr_t>(manager,0)!=base+0x15cfeec||field<uintptr_t>(manager,8)!=unit)return false;
