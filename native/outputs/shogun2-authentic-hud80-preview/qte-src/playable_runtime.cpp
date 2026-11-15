@@ -1,4 +1,5 @@
 #include "qte_service94.h"
+#include "../../../deck/channel181.h"
 #include "../../../common/runtime_storage166.h"
 #include "../../../common/component_error168.h"
 #include "../../shogun2-possession-cleanup-v46/src/identity.h"
@@ -109,26 +110,56 @@ static EncounterAdmission admission;
 static ClockFrame delivery_clock;
 static BattleEpoch151 battle_epoch151;
 static volatile LONG delivery_address,suppressed_prompts;
+static __declspec(align(8)) volatile LONG64 delivery_lease212,delivery_generation212;
 static melee60::Submit submit_commitment;
 static melee60::Request commitment;
 static NativeActor committed_player,committed_enemy;
+static __declspec(thread) bool owns_coordinator;
+static SRWLOCK reservation_lock=SRWLOCK_INIT;
+struct PairReservation {uint32_t address;uint64_t generation,lease;NativeActor player,enemy;};
+static PairReservation pair_reservation(){
+    if(!InterlockedCompareExchange(&delivery_address,0,0))return {};
+    AcquireSRWLockShared(&reservation_lock);
+    PairReservation value{uint32_t(delivery_address),uint64_t(delivery_generation212),
+        uint64_t(delivery_lease212),committed_player,committed_enemy};
+    ReleaseSRWLockShared(&reservation_lock);
+    return value;
+}
+static bool reserve_pair(void*,const WitnessKey& key,const NativeActor& player,const NativeActor& enemy){
+    if(!owns_coordinator||!lifetimes.matches140(key.address,key.generation)||
+       !admission.acquire(key,delivery_clock.tick))return false;
+    AcquireSRWLockExclusive(&reservation_lock);
+    committed_player=player;committed_enemy=enemy;
+    InterlockedExchange64(&delivery_lease212,LONG64(key.pair.lease));
+    InterlockedExchange64(&delivery_generation212,LONG64(key.generation));
+    InterlockedExchange(&delivery_address,LONG(key.address));
+    ReleaseSRWLockExclusive(&reservation_lock);
+    return true;
+}
+static void clear_reservation(uint32_t address,uint64_t generation){
+    AcquireSRWLockExclusive(&reservation_lock);
+    if(uint32_t(delivery_address)==address&&uint64_t(delivery_generation212)==generation)
+        InterlockedExchange(&delivery_address,0);
+    ReleaseSRWLockExclusive(&reservation_lock);
+}
 static volatile LONG coordinator,active_callbacks,enabled,pending_address,last_environment,player_address;
 static __declspec(thread) uint32_t replay_parent;
 static __declspec(thread) bool retargeting;
 static __declspec(thread) bool selector_missed;
 static uint32_t(__cdecl* request_rts)();
-static __declspec(thread) bool owns_coordinator;
 static SRWLOCK click_lock=SRWLOCK_INIT;
 static ClickQueue<128> queued;
 struct Removal {uint32_t address;uint64_t generation;};
 static Removal removal_queue[128];static unsigned removal_head,removal_tail;
 static transport::Publication publication;
-static transport::Publication completion_publication;
+static transport::Publication completion_publication,interruption_publication102;
+static uint64_t interruption_serial102,interruption_lease102,interruption_battle102;
+static double interruption_until102;
 static SRWLOCK frame_lock93=SRWLOCK_INIT;static Frame93 frame93;
 static volatile LONG frames93,click_frames93,stale_frames93,precise_input93,precise_render93,refresh_hz93=60;
 static __declspec(align(8)) volatile LONG64 last_frame_us93,max_frame_us93,last_input_us93,max_input_us93;
 static uint32_t interrupted_seen93;
-static transport::Publication freeze_publication93;static volatile LONG stale_press93;
+static transport::Publication freeze_publication93;
 static __declspec(align(8)) volatile LONG64 clicked_frame_age_us93;
 static volatile LONG clicked_frame_inside93;
 struct PlaybackWatch {
@@ -268,6 +299,32 @@ static uint32_t fps_actor(uint64_t* lease=nullptr){
     if(!camera||!combat_identity(r,camera,engine,human,false)||!physical_actor(r,engine,human,subject,false))return 0;
     if(lease)*lease=generation;return subject.address;
 }
+// A saved encounter address is a filter, never authority to suppress native AI.
+// Returning to RTS, a different possession lease or native witness reuse ends
+// reservation protection immediately, even before the old removal callback.
+// Do not clear engine backlinks or cancel other encounters from this check.
+static bool live_reservation212(const PairReservation& pair){
+    if(!enabled||!pair.address)return false;
+    const auto held=pair.address;
+    const auto generation=pair.generation,lease=pair.lease;
+    observation::PossessionPrefix p{};
+    if(!generation||!lease||!possession_snapshot93(p)||p.magic!=0x31504353||p.version!=46||
+       p.pid!=GetCurrentProcessId()||!p.ready||p.stop||p.release||p.mode!=2||
+       p.lease_generation!=lease||GetTickCount64()-p.heartbeat>1000||
+       !lifetimes.matches140(held,generation))return false;
+    auto r=reader();NativeActor actor,rider,physical;
+    if(!combat_identity(r,pair.player.address,engine,actor,false)||!same_actor(actor,pair.player))return false;
+    if(actor.kind==Horse){
+        if(!horse_rider(r,engine,actor,rider,false))return false;
+    }else{
+        if(!physical_actor(r,engine,actor,physical,false)||!same_actor(actor,physical))return false;
+        rider=actor;
+    }
+    return rider.serial==p.actor_id&&rider.unit_serial==p.unit_id&&
+        held==uint32_t(InterlockedCompareExchange(&delivery_address,0,0))&&
+        generation==uint64_t(InterlockedCompareExchange64(&delivery_generation212,0,0))&&
+        lease==uint64_t(InterlockedCompareExchange64(&delivery_lease212,0,0));
+}
 static uint32_t owned_combat_actor(uint32_t witness,uint64_t* lease=nullptr){
     auto physical=fps_actor(lease);
     if(physical&&strictmelee::includes(reader(),physical,witness))return physical;
@@ -302,18 +359,34 @@ static bool scoped(uint32_t witness){
     if(!strictmelee::includes(r,mount,witness))return false;
     return owned_combat_actor(witness)!=0;
 }
-static bool approved(uint32_t address,uint64_t generation){uint64_t lease{};if(!fps_actor(&lease))return false;
+static bool waiting_for_alignment(uint32_t address){
+    uint8_t active{},waiting{},playing{};uint32_t matched{};auto r=reader();
+    return r.get(address+0xc,active)&&!active&&r.get(address+0xd0,waiting)&&waiting==1&&
+        r.get(address+0xd1,playing)&&!playing&&r.get(address+0x98,matched)&&matched;
+}
+static bool approved(uint32_t address,uint64_t generation,bool* awaiting=nullptr){
+    uint64_t lease{};if(!fps_actor(&lease))return false;
     AcquireSRWLockShared(&authorization_lock);auto copy=authorization;ReleaseSRWLockShared(&authorization_lock);
     if(!copy.matches(address,generation,lease)||!copy.sealed)return false;
     NativeVerdict verdict{};uint32_t matched{},fallback{};auto verify=reader();
     if(!verify.get(address+0x80,verdict)||memcmp(&verdict,&copy.verdict,sizeof verdict)||
        !verify.get(address+0x98,matched)||matched!=copy.matched||!verify.get(address+0xb4,fallback)||fallback!=copy.fallback)return false;
-    auto r=reader();for(auto identity:{copy.player,copy.enemy}){uint32_t table{},id{},unit{},serial{},link{};uint8_t alive{};
+    const bool waiting=waiting_for_alignment(address);
+    if(waiting){
+        uint32_t count{},a{},b{};
+        if(!verify.get(address+0x38,count)||count!=2||!verify.get(address+0x30,a)||!verify.get(address+0x34,b)||
+           !((a==copy.player.address&&b==copy.enemy.address)||(b==copy.player.address&&a==copy.enemy.address)))return false;
+    }
+    const auto& r=verify;
+    for(auto identity:{copy.player,copy.enemy}){uint32_t table{},id{},unit{},serial{},link{};uint8_t alive{};
         if(!r.get(identity.address,table)||!actor152::kind(engine,table,identity.kind)||!r.get(identity.address+0x1c8,serial)||serial!=identity.serial||
            !r.get(identity.address+0x214,unit)||unit!=identity.unit||!r.get(unit+4,id)||id!=identity.unit_serial||
            !r.get(identity.address+0xf0,alive)||alive>1||!r.get(identity.address+0x688,link)||
-           (link!=address&&(alive||link)))return false;
-    }return true;}
+           (link!=address&&(link||(alive&&!waiting)))||(waiting&&!alive))return false;
+    }
+    if(awaiting)*awaiting=waiting;
+    return true;
+}
 #include "native_charge_contact140.h"
 static void retire_authorization(uint32_t address,uint64_t generation){AcquireSRWLockExclusive(&authorization_lock);authorization.removed(address,generation);ReleaseSRWLockExclusive(&authorization_lock);}
 static bool authorize(const WitnessKey& key,uint64_t serial,Result result,const NativeActor& p,const NativeActor& e){
@@ -329,8 +402,13 @@ static bool seal_authorization(uint32_t address,uint64_t generation,const Native
 }
 static uint32_t reject_melee(){InterlockedIncrement(&melee_rejected);return 1;}
 static bool write_local(void*,uint32_t address,const void* value,size_t size){SIZE_T n{};return WriteProcessMemory(GetCurrentProcess(),reinterpret_cast<void*>(address),value,size,&n)&&n==size;}
+static void release_excluded213(void*,uint32_t witness,uint32_t actor){
+    // Original unprepared witness release clears its candidate's native busy
+    // bit. It is deliberately not routed back through reservation suppression.
+    native_release_actor(reinterpret_cast<void*>(witness),reinterpret_cast<void*>(actor));
+}
 static bool retain_selected_pair(void*,uint32_t witness,const NativeActor& player,const NativeActor& enemy){
-    return strictmelee::retain_selected(reader(),write_local,nullptr,engine,witness,player,enemy);
+    return strictmelee::retain_selected(reader(),write_local,nullptr,engine,witness,player,enemy,native_release_actor?release_excluded213:nullptr);
 }
 static void candidate_scope(uint32_t address,uint64_t generation){
     // Called under the coordinator; native worker TLS alone is not a lifetime.
@@ -424,6 +502,18 @@ static uint32_t prepare_port(void*,uint32_t address){
             playback.prepare_return=answer;playback.prepare_return_valid=true;++playback.revision;}}
     __finally{if(selector_missed&&scoped(address))answer=reject_melee();selector_missed=missed_before;replay_parent=before;}return answer;
 }
+static uint32_t continue_verdict(uint32_t address,uint64_t generation){
+    NativeVerdict verdict{};auto r=reader();
+    if(!r.get(address+0x80,verdict))return reject_melee();
+    const bool previous=retargeting;retargeting=true;uint32_t answer{};
+    __try{answer=prepare_port(nullptr,address);}
+    __finally{retargeting=previous;}
+    if(answer&0xff)return answer;
+    uint8_t active{};
+    if(!r.get(address+0xc,active)||(active!=1&&!waiting_for_alignment(address))||
+       !seal_authorization(address,generation,verdict))return reject_melee();
+    return answer;
+}
 static uint32_t update_port(void*,uint32_t address){
     if(scoped(address)&&!approved(address,lifetimes.get(address)))return reject_melee();
     auto before=protected_update;protected_update=address;uint32_t answer{};
@@ -453,23 +543,44 @@ static uint32_t retarget_port(void*,uint32_t address,const NativeVerdict& desire
     return answer;
 }
 static void drain_input(){AcquireSRWLockExclusive(&click_lock);Click value;
-    if(queued.overflowed()){session->release(CancelReason92::InputOverflow);queued.clear();InterlockedIncrement(&state->dropped);}
+    if(queued.overflowed()){queued.clear();InterlockedIncrement(&state->dropped);}
     while(queued.pop(value))session->enqueue(value);ReleaseSRWLockExclusive(&click_lock);
-    session->levels((GetAsyncKeyState(VK_LBUTTON)&0x8000)!=0,(GetAsyncKeyState(VK_RBUTTON)&0x8000)!=0);
+    session->levels((deck181::key_state(VK_LBUTTON)&0x8000)!=0,(deck181::key_state(VK_RBUTTON)&0x8000)!=0);
+}
+static void show_interruption102(transport::Payload feedback){
+    auto& prompt=feedback.prompt;
+    if(prompt.serial==interruption_serial102&&feedback.lease==interruption_lease102&&
+       feedback.anchor.battle==interruption_battle102)return;
+    prompt.active=true;prompt.paused=false;prompt.result=Result::Canceled;
+    feedback.occupied=feedback.enabled=1;feedback.published_wall=wall();
+    if(!transport::valid(feedback))return;
+    interruption_serial102=prompt.serial;interruption_lease102=feedback.lease;
+    interruption_battle102=feedback.anchor.battle;interruption_until102=feedback.published_wall+1.05;
+    transport::publish(interruption_publication102,feedback);
+}
+static void playback_removed102(uint32_t address,uint64_t generation){
+    if(address!=playback.address||generation!=playback.generation||playback.removed_wall)return;
+    playback.removed_wall=wall();++playback.revision;
+    if(playback.playing_wall)return;
+    transport::Payload resolved;
+    if(transport::read(completion_publication,resolved)&&resolved.prompt.serial==playback.serial)
+        show_interruption102(resolved);
+}
+static void publish_interruption102(){
+    const auto canceled=session->cancellation_stats92();
+    if(canceled.total==interrupted_seen93)return;
+    interrupted_seen93=canceled.total;
+    show_interruption102(session->interruption_publication93(GetCurrentProcessId(),wall()));
 }
 static void drain_removals(){AcquireSRWLockExclusive(&click_lock);
     while(removal_tail!=removal_head){const auto& value=removal_queue[removal_tail++%128];stock_charge_removed140(value.address,value.generation);session->removed(value.address,value.generation);
-        if(admission.removed(value.address,value.generation,delivery_clock)){InterlockedExchange(&delivery_address,0);clear_commitment();}
-        if(value.address==playback.address&&value.generation==playback.generation&&!playback.removed_wall){playback.removed_wall=wall();++playback.revision;}}
+        if(admission.removed(value.address,value.generation,delivery_clock)){clear_reservation(value.address,value.generation);clear_commitment();}
+        playback_removed102(value.address,value.generation);}
     ReleaseSRWLockExclusive(&click_lock);}
 static void publish(){auto data=session->publication(GetCurrentProcessId(),wall());
     auto canceled=session->cancellation_stats92();InterlockedExchange(&canceled_total92,LONG(canceled.total));InterlockedExchange(&canceled_reason92,LONG(canceled.reason));InterlockedExchange64(&canceled_serial92,LONG64(canceled.serial));
     auto reg=session->registration_stats92();InterlockedExchange(&registration_ready92,LONG(reg.ready));InterlockedExchange(&registration_waiting92,LONG(reg.waiting));InterlockedExchange(&registration_rejected92,LONG(reg.rejected));InterlockedExchange(&registration_reason92,LONG(reg.reason_mask));
-    if(canceled.total!=interrupted_seen93){
-        interrupted_seen93=canceled.total;auto feedback=session->interruption_publication93(GetCurrentProcessId(),wall());
-        feedback.occupied=1;feedback.enabled=1;feedback.published_wall=wall();
-        if(feedback.prompt.serial)transport::publish(completion_publication,feedback);
-    }
+    publish_interruption102();
     publish_commitment();
     transport::publish(publication,data);InterlockedExchange(&pending_address,LONG(session->key().address));
     state->mode=data.occupied?1:0;if(data.error){state->faults=LONG(data.error);InterlockedExchange(&state->stop,1);}}
@@ -487,7 +598,7 @@ static uint32_t routed_prepare152(void*,uint32_t address,const NativeActor& play
        !combat_identity(r,physical,engine,current)||!same_actor(current,player)||
        !combat_identity(r,enemy.address,engine,opponent)||!same_actor(opponent,enemy)||player.side==enemy.side||player.unit==enemy.unit||
        !r.get(address,table)||!r.get(address+4,env)||!env)return 1;
-    if(plans){admission.removed(address,generation,delivery_clock);InterlockedExchange(&delivery_address,0);retire_authorization(address,generation);}
+    if(plans){admission.removed(address,generation,delivery_clock);clear_reservation(address,generation);retire_authorization(address,generation);}
     stock_charge_clear140();stock_charge140={address,table,env,generation,lease,generation|(uint64_t(1)<<63),player,false};
     if(!stock_charge_current140(address,generation)){stock_charge_clear140();return 1;}
     if(plans)InterlockedIncrement(&routing_transitions152);else InterlockedIncrement(&routing_prepares152);
@@ -499,7 +610,19 @@ static uint32_t routed_prepare152(void*,uint32_t address,const NativeActor& play
 static uint32_t controlled(uint32_t address,uint64_t generation,bool updating){
     drain_removals();
     const bool owned=scoped(address);
-    if(owned&&approved(address,generation))return updating?update_port(nullptr,address):prepare_port(nullptr,address);
+    const auto pair=pair_reservation();
+    if(address==pair.address&&generation==pair.generation&&!owned){
+        observation::PossessionPrefix observed{};
+        if(!possession_snapshot93(observed)||live_reservation212(pair))return 0;
+    }
+    bool waiting=false;
+    if(owned&&approved(address,generation,&waiting)){
+        // Native update returns without progressing a pending prepare. The
+        // manager already considers this witness installed, so continue it
+        // here through original prepare, then allow update on its next tick.
+        if(waiting)return continue_verdict(address,generation);
+        return updating?update_port(nullptr,address):prepare_port(nullptr,address);
+    }
     uint32_t stock_answer140{};
     if(owned&&stock_charge_dispatch140(address,generation,updating,stock_answer140))return stock_answer140;
     if(owned&&session->occupied()&&address!=session->key().address)return reject_melee();
@@ -524,14 +647,23 @@ static uint32_t controlled(uint32_t address,uint64_t generation,bool updating){
     Owner current=owner(env,address);
     if(owned&&(!focused()||clock.step<=0||clock.speed<=0))return 0;
     if(current.observation_busy93&&address==session->key().address)return 0;
-    if(owned&&!current.verified_melee)return reject_melee();
+    if(owned&&!current.verified_melee){
+        const auto key=session->key();
+        if(address==key.address&&generation==key.generation){
+            session->release(CancelReason92::Owner);publish();
+        }
+        return reject_melee();
+    }
     if(owned&&!session->occupied()){
         if(updating)return reject_melee(); // Stock encounter already active at FPS entry: native cleanup, never stock replay.
     }
     // Native witnesses migrate between workers. The bounded captured contexts
     // belong to this coordinated generation, not to a worker's TLS history.
     candidate_scope(address,generation);
-    const bool admit=admission.allowed(current.battle,current.lease,clock.tick);
+    publish_interruption102();
+    const bool show_interruption=current.lease==interruption_lease102&&current.battle==interruption_battle102&&
+        wall()<interruption_until102;
+    const bool admit=!show_interruption&&admission.allowed(current.battle,current.lease,clock.tick);
     if(!admit&&!updating&&!session->occupied()&&current.verified_melee)InterlockedIncrement(&suppressed_prompts);
     uint32_t answer;
     if(updating&&address==session->key().address&&generation==session->key().generation){
@@ -543,8 +675,8 @@ static uint32_t controlled(uint32_t address,uint64_t generation,bool updating){
     const auto after=session->publication(GetCurrentProcessId(),wall());
     if(!updating&&session->acquisition_stage()<12)InterlockedIncrement(bridge_stages+session->acquisition_stage());
     if(after.prompt.active&&after.prompt.serial!=before.prompt.serial){++acquisitions;
-        if(!admission.acquire(session->key(),clock.tick)){session->release();++state->faults;state->stop=1;}
-        if(session->participants(committed_player,committed_enemy)){
+        if(!admission.matches(session->key().address,session->key().generation)){session->release();++state->faults;state->stop=1;}
+        else{
             commitment={};commitment.pid=GetCurrentProcessId();commitment.phase=melee60::Facing;commitment.lease=uint32_t(current.lease);
             commitment.serial=after.prompt.serial;commitment.player=committed_player.serial;commitment.player_unit=committed_player.unit_serial;
             commitment.opponent=committed_enemy.serial;commitment.opponent_unit=committed_enemy.unit_serial;
@@ -552,14 +684,13 @@ static uint32_t controlled(uint32_t address,uint64_t generation,bool updating){
             if(!refresh_committed_pose(committed_player,commitment.player_anchor)||!refresh_committed_pose(committed_enemy,commitment.opponent_anchor)){session->release();clear_commitment();}
             else publish_commitment();
         }
-        // Publish the reservation only after its immutable actor identities.
-        InterlockedExchange(&delivery_address,LONG(admission.address()));
     }
     if(before.occupied&&!after.occupied)++resolutions;
     drain_removals();publish();return answer;
 }
 static uint32_t contact_dispatch(uint32_t address,bool updating){
-    if(enabled&&reservation::overlaps(reader(),engine,uint32_t(InterlockedCompareExchange(&delivery_address,0,0)),address,committed_player,committed_enemy)){
+    const auto pair=pair_reservation();
+    if(enabled&&reservation::overlaps(reader(),engine,pair.address,address,pair.player,pair.enemy)&&live_reservation212(pair)){
         InterlockedIncrement(&contacts_blocked);return 1; // Native removes this foreign contact, not the owned pair.
     }
     return updating?native_contact_update(reinterpret_cast<void*>(address)):native_contact_prepare(reinterpret_cast<void*>(address));
@@ -575,11 +706,11 @@ static uint32_t __fastcall contact_update_hook(void* self,void*){
 static uint32_t __fastcall avoid_pair_hook(void* self,void*,void* other){
     InterlockedIncrement(&active_callbacks);uint32_t answer{};
     __try{
-        auto held=uint32_t(InterlockedCompareExchange(&delivery_address,0,0));auto one=uint32_t(self),two=uint32_t(other);
+        const auto pair=pair_reservation();auto held=pair.address,one=uint32_t(self),two=uint32_t(other);
         uint8_t playing{};
         if(enabled&&held&&held==protected_update&&reader().get(held+0xd1,playing)&&!playing&&
-           ((one==committed_player.address&&two==committed_enemy.address)||(two==committed_player.address&&one==committed_enemy.address))&&
-           reservation::owns(reader(),engine,held,committed_player)&&reservation::owns(reader(),engine,held,committed_enemy)){
+           ((one==pair.player.address&&two==pair.enemy.address)||(two==pair.player.address&&one==pair.enemy.address))&&
+           reservation::owns(reader(),engine,held,pair.player)&&reservation::owns(reader(),engine,held,pair.enemy)&&live_reservation212(pair)){
             // Native locomotion avoidance cannot cancel an already committed pair.
             // Life/identity checks still allow projectile death/dismount teardown.
             InterlockedIncrement(&preplay_avoidance_blocked);return 0;
@@ -602,12 +733,13 @@ static uint32_t dispatch_current(uint32_t address,uint64_t generation,bool updat
     if(!enabled)return updating?native_update(reinterpret_cast<void*>(address)):native_prepare(reinterpret_cast<void*>(address));
     if(naval_now175(address)){InterlockedIncrement(&naval_rejected175);
         return updating?native_update(reinterpret_cast<void*>(address)):native_prepare(reinterpret_cast<void*>(address));}
-    if(reservation::overlaps(reader(),engine,uint32_t(InterlockedCompareExchange(&delivery_address,0,0)),address,committed_player,committed_enemy)){
+    const auto pair=pair_reservation();
+    if(reservation::overlaps(reader(),engine,pair.address,address,pair.player,pair.enemy)&&live_reservation212(pair)){
         InterlockedIncrement(&conflicts_blocked);return 1;
     }
     if(InterlockedCompareExchange(&coordinator,1,0)){
         // Never wait inside an engine callback. A different pair forwards once.
-        if(address==uint32_t(pending_address)||scoped(address))return 0;
+        if(address==uint32_t(pending_address)||(address==pair.address&&generation==pair.generation)||scoped(address))return 0;
         return updating?native_update(reinterpret_cast<void*>(address)):native_prepare(reinterpret_cast<void*>(address));
     }
     owns_coordinator=true;uint32_t answer=0;
@@ -637,8 +769,8 @@ static void __fastcall remove_hook(void* self,void*,void* witness){InterlockedIn
     retire_authorization(address,generation);
     if(enabled&&!InterlockedCompareExchange(&coordinator,1,0)){
         drain_removals();stock_charge_removed140(address,generation);session->removed(address,generation);
-        if(admission.removed(address,generation,delivery_clock)){InterlockedExchange(&delivery_address,0);clear_commitment();}
-        if(address==playback.address&&generation==playback.generation&&!playback.removed_wall){playback.removed_wall=wall();++playback.revision;}
+        if(admission.removed(address,generation,delivery_clock)){clear_reservation(address,generation);clear_commitment();}
+        playback_removed102(address,generation);
         publish();InterlockedExchange(&coordinator,0);
     }else if(enabled&&(address==uint32_t(pending_address)||address==uint32_t(delivery_address))){
         AcquireSRWLockExclusive(&click_lock);
@@ -651,8 +783,8 @@ static void __fastcall remove_hook(void* self,void*,void* witness){InterlockedIn
 static void __fastcall release_actor_hook(void* witness,void*,void* actor){
     InterlockedIncrement(&active_callbacks);
     __try{
-        auto held=uint32_t(InterlockedCompareExchange(&delivery_address,0,0));
-        if(enabled&&reservation::preserve_release(reader(),engine,held,uint32_t(witness),uint32_t(actor),committed_player,committed_enemy)){
+        const auto pair=pair_reservation();
+        if(enabled&&reservation::preserve_release(reader(),engine,pair.address,uint32_t(witness),uint32_t(actor),pair.player,pair.enemy)&&live_reservation212(pair)){
             InterlockedIncrement(&foreign_releases_preserved);return;
         }
         native_release_actor(witness,actor);
@@ -661,12 +793,12 @@ static void __fastcall release_actor_hook(void* witness,void*,void* actor){
 static uint32_t __fastcall target_hook(void* witness,void*,uint32_t actor,uint32_t b,uint32_t c,uint32_t d,uint32_t e,uint32_t f,uint32_t g,uint32_t h,uint32_t i,uint32_t j,uint32_t k,uint32_t l,uint32_t m){
     InterlockedIncrement(&active_callbacks);uint32_t answer=0;
     __try{
-        auto held=uint32_t(InterlockedCompareExchange(&delivery_address,0,0));
-        if(enabled&&reservation::preserve_release(reader(),engine,held,uint32_t(witness),actor,committed_player,committed_enemy)){
+        const auto pair=pair_reservation();
+        if(enabled&&reservation::preserve_release(reader(),engine,pair.address,uint32_t(witness),actor,pair.player,pair.enemy)&&live_reservation212(pair)){
             InterlockedIncrement(&conflicts_blocked);return 0;
         }
         if(enabled&&scoped(uint32_t(witness))&&!stock_charge_target_scope140(uint32_t(witness))&&!approved(uint32_t(witness),lifetimes.get(uint32_t(witness)))&&
-           !(owns_coordinator&&replay_parent==uint32_t(witness)&&session&&session->occupied())){
+           !(owns_coordinator&&replay_parent==uint32_t(witness)&&session&&(retargeting||session->occupied()))){
             InterlockedIncrement(&melee_rejected);return 0;
         }
         answer=native_target(witness,actor,b,c,d,e,f,g,h,i,j,k,l,m);
@@ -758,6 +890,8 @@ struct Surface93 {
 static Surface93 surface93;
 static overlay106::Publisher pixels106;
 static PresentedImages113 images113;
+static QtePresenter96 presenter96;
+enum class Draw96 { Hidden, Waiting, Presented };
 static Snapshot drawn_prompt106;static double drawn_wall106;
 static volatile LONG unique_frames107,moving_frames107,repeated_frames107;
 static __declspec(align(8)) volatile LONG64 max_marker_hold_us107;
@@ -901,37 +1035,54 @@ static bool draw_banner173(){
     bool positioned=SetWindowPos(overlay,HWND_TOPMOST,0,0,0,0,SWP_ASYNCWINDOWPOS|SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_SHOWWINDOW);
     return painted&&positioned;
 }
-static bool draw(const Snapshot& prompt,uint64_t lease,uint64_t battle){
+static Draw96 draw(const Snapshot& prompt,uint64_t lease,uint64_t battle){
     game=gamewindow105::refresh(game,GetCurrentProcessId());
     if(InterlockedExchange(&display_reset105,0))surface93.clear();
-    if(!prompt.active||!focused()||!IsWindow(game)||IsIconic(game)){pixels106.hide();ShowWindow(overlay,SW_HIDE);return false;}
-    RECT client{};POINT corner{};if(!gamewindow105::client(game,client,corner)){ShowWindow(overlay,SW_HIDE);return false;}
+    if(!prompt.active||!focused()||!IsWindow(game)||IsIconic(game))return Draw96::Hidden;
+    RECT client{};POINT corner{};if(!gamewindow105::client(game,client,corner))return Draw96::Hidden;
+    observation::PossessionPrefix p{};
+    if(!possession_snapshot93(p))return Draw96::Waiting;
+    if(p.lease_generation!=lease||!p.ready||p.stop||
+       (prompt.result==Result::Pending&&(p.mode!=2||p.release)))return Draw96::Hidden;
+    overlay106::Ack ack{};
+    const bool native_ready=pixels106.ack(ack)&&(ack.backend==9||ack.backend==11);
+    const bool use_native=presenter96.use_native(lease,battle,prompt.serial,native_ready);
+    if(use_native&&IsWindowVisible(overlay))ShowWindow(overlay,SW_HIDE);
     const float scale=hudlayout108::scale(float(client.right),float(client.bottom));
-    const int size=int(std::ceil(320.f*scale));if(!surface93.ensure(size))return false;
+    const int size=int(std::ceil(320.f*scale));if(!surface93.ensure(size))return Draw96::Hidden;
     memset(surface93.pixels,0,size_t(size)*size*4);
     {Gdiplus::Bitmap image(size,size,size*4,PixelFormat32bppPARGB,static_cast<BYTE*>(surface93.pixels));
      Gdiplus::Graphics graphics(&image);graphics.ScaleTransform(scale,scale);render(graphics,160,160,prompt);}
     POINT pos={corner.x+client.right/2-size/2,corner.y+int(std::lround(hudlayout108::qte_anchor_y(float(client.bottom))))-size/2},origin{};SIZE extent={size,size};
-    if(pixels106.open(GetCurrentProcessId(),overlay106::QTE)&&possession){
-        observation::PossessionPrefix p{};bool stable=false;
-        for(unsigned attempt=0;attempt<3;++attempt){auto s=possession->sequence;if(s&1)continue;MemoryBarrier();memcpy(&p,possession,sizeof p);MemoryBarrier();if(s==possession->sequence){stable=true;break;}}
-        if(!stable||p.lease_generation!=lease){pixels106.hide();ShowWindow(overlay,SW_HIDE);return false;}
+    if(use_native){
         overlay106::Frame f{};f.key={unsigned(lease),p.actor_id,p.unit_id};f.width=f.height=size;f.view_width=client.right;f.view_height=client.bottom;f.rect_count=1;
         f.active=prompt.result==Result::Pending?1:2;f.rect[0]={pos.x-corner.x,pos.y-corner.y,size,size};
-        auto number=pixels106.publish(f,surface93.pixels);if(number){images113.remember(number,f.key,battle,prompt);overlay106::Ack ack;
-            if(pixels106.ack(ack)){ShowWindow(overlay,SW_HIDE);return acknowledged_image106(ack,f.key,prompt.serial,battle);}
-        }
+        auto number=pixels106.publish(f,surface93.pixels);
+        if(!number)return Draw96::Hidden;
+        images113.remember(number,f.key,battle,prompt);
+        if(pixels106.ack(ack)&&ack.tick<=GetTickCount64()&&GetTickCount64()-ack.tick<=100&&
+           acknowledged_image106(ack,f.key,prompt.serial,battle))return Draw96::Presented;
+        return Draw96::Waiting;
     }
+    pixels106.hide();
     BLENDFUNCTION alpha={AC_SRC_OVER,0,255,AC_SRC_ALPHA};
     bool painted=!renderer_failed&&UpdateLayeredWindow(overlay,surface93.screen,&pos,&extent,surface93.dc,&origin,0,&alpha,ULW_ALPHA);
-    bool positioned=SetWindowPos(overlay,HWND_TOPMOST,0,0,0,0,SWP_ASYNCWINDOWPOS|SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_SHOWWINDOW);
-    if(painted&&positioned){drawn_prompt106=prompt;drawn_wall106=wall();return true;}return false;
+    bool positioned=painted&&SetWindowPos(overlay,HWND_TOPMOST,0,0,0,0,SWP_ASYNCWINDOWPOS|SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_SHOWWINDOW);
+    if(positioned){drawn_prompt106=prompt;drawn_wall106=wall();return Draw96::Presented;}
+    return Draw96::Hidden;
 }
 static void log_variant(const char* name,const observation::AnimationSnapshot& s){
     log_file<<",\""<<name<<"\":{\"valid\":"<<s.valid<<",\"outcome\":"<<s.outcome<<",\"matched\":"<<s.matched<<",\"fallback\":"<<s.fallback<<",\"requests\":[";
     for(unsigned i=0;i<s.request_count&&i<2;++i){if(i)log_file<<',';const auto& r=s.requests[i];
         log_file<<"{\"actor\":"<<r.actor<<",\"start\":"<<r.start<<",\"end\":"<<r.end<<",\"attacks\":"<<r.attacks<<"}";}
     log_file<<"]}";
+}
+static bool sample_publication97(const transport::Publication& source,transport::Payload& value,double& observed){
+    const bool sampled=transport::read(source,value);
+    // The writer timestamps the payload before publishing it. Read the clock
+    // after our coherent copy so a newly published prompt cannot appear future.
+    observed=wall();
+    return sampled;
 }
 // Presentation must never prevent input polling, publication or lease release.
 // Win32 positioning of owned windows can synchronously message another thread.
@@ -945,22 +1096,28 @@ static DWORD WINAPI render_worker(void*){
         overlay=CreateWindowExW(WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_NOACTIVATE|WS_EX_TOOLWINDOW|WS_EX_TOPMOST,
             cls.lpszClassName,L"Shogun melee QTE",WS_POPUP,0,0,320,320,nullptr,nullptr,module,nullptr);
         require(overlay!=nullptr,"QTE overlay failed");InterlockedExchange(&render_ready,1);SetEvent(render_initialized);
+        // Open the pixel channel before the first prompt so the game can
+        // acknowledge an available compositor even while the layer is hidden.
+        pixels106.open(GetCurrentProcessId(),overlay106::QTE);
         PreciseWait93 pace93;precise_render93=pace93.precise();double last_frame93=wall(),next_refresh93=0;
-        uint64_t marker_serial105=0;double marker_elapsed105=0,marker_changed105=0;
+        uint64_t marker_serial105=0;double marker_elapsed105=0,marker_changed105=0,last_publication96=0;
         while(!render_stop){
             InterlockedExchange64(&render_heartbeat,LONG64(GetTickCount64()));render_stage=1;
             MSG msg;while(PeekMessageW(&msg,nullptr,0,0,PM_REMOVE)){TranslateMessage(&msg);DispatchMessageW(&msg);}
-            transport::Payload data;Snapshot shown;double now=wall();
-            bool show=transport::read(publication,data)&&transport::presentation(data,now,shown);
+            transport::Payload data;Snapshot shown;const double render_started=wall();double now;
+            const bool sampled=sample_publication97(publication,data,now);
+            bool show=sampled&&transport::presentation(data,now,shown);
             if(!show){transport::Payload done;
-                if(transport::read(completion_publication,done)&&done.prompt.serial>=data.prompt.serial&&
-                   now-done.published_wall<(done.prompt.result==Result::Canceled?1.1:3.0)){show=transport::presentation(done,now,shown);if(show)data=done;}
+                if(sample_publication97(interruption_publication102,done,now)&&done.prompt.serial>=data.prompt.serial&&
+                   transport::presentation(done,now,shown)){show=true;data=done;}
+                else if(sample_publication97(completion_publication,done,now)&&done.prompt.serial>=data.prompt.serial&&
+                        now-done.published_wall<(done.prompt.result==Result::Canceled?1.1:3.0)&&transport::presentation(done,now,shown)){show=true;data=done;} // our result display time
             }
             bool click_freeze105=false;
             // Kit v14: the marker stops where it was clicked and stays there until the result is shown
             // (was: frozen for only 0.12 s, then it kept moving until the native exchange resolved).
             if(show&&!shown.paused){transport::Payload frozen;
-                if(transport::read(freeze_publication93,frozen)&&frozen.prompt.serial==shown.serial&&
+                if(sample_publication97(freeze_publication93,frozen,now)&&frozen.prompt.serial==shown.serial&&
                    frozen.lease==data.lease&&frozen.anchor.battle==data.anchor.battle&&now>=frozen.published_wall&&now-frozen.published_wall<4.){
                     if(shown.result==Result::Pending){shown=frozen.prompt;click_freeze105=true;}
                     else{shown.elapsed=frozen.prompt.elapsed;shown.response_elapsed=frozen.prompt.response_elapsed;} // result fill starts at the click point
@@ -969,8 +1126,18 @@ static DWORD WINAPI render_worker(void*){
             render_stage=2;
             const bool armed176_now=InterlockedCompareExchange(&armed176,0,0)!=0;
             if(armed176_now)life_poll173();
-            if(!state->stop&&!show&&armed176_now&&draw_banner173()){InterlockedExchange64(&presented_tick,0);}
-            else if(!state->stop&&show&&draw(shown,data.lease,data.anchor.battle)){
+            if(show)last_publication96=now;
+            else if(sampled)last_publication96=0;
+            // A torn publication is not an inactive prompt. Leave the prior
+            // image alone briefly; never publish or score a speculative frame.
+            auto drawn=Draw96::Hidden;bool banner_drawn173=false;
+            if(!state->stop){
+                if(show)drawn=draw(shown,data.lease,data.anchor.battle);
+                else if(armed176_now&&draw_banner173()){InterlockedExchange64(&presented_tick,0);banner_drawn173=true;} // kit v10 death banner
+                else if(!sampled&&last_publication96>0&&now-last_publication96<.1&&
+                        focused()&&IsWindow(game)&&!IsIconic(game))drawn=Draw96::Waiting;
+            }
+            if(drawn==Draw96::Presented){
                 const double submitted=drawn_wall106;const auto& presented=drawn_prompt106;
                 record_presented107(presented,submitted,click_freeze105);
                 AcquireSRWLockExclusive(&frame_lock93);frame93={presented,data.anchor.battle,data.lease,submitted};ReleaseSRWLockExclusive(&frame_lock93);
@@ -986,12 +1153,16 @@ static DWORD WINAPI render_worker(void*){
                     }
                     marker_serial105=presented.serial;marker_elapsed105=presented.response_elapsed;
                 }else marker_serial105=0;
-            }else {if(!show||state->stop)pixels106.hide();last_frame93=0;marker_serial105=marker_serial107=0;InterlockedExchange64(&presented_tick,0);ShowWindowAsync(overlay,SW_HIDE);}
+            }else if(drawn==Draw96::Hidden&&!banner_drawn173){
+                pixels106.hide();last_frame93=0;marker_serial105=marker_serial107=0;
+                InterlockedExchange64(&presented_tick,0);
+                if(IsWindowVisible(overlay))ShowWindowAsync(overlay,SW_HIDE);
+            }
             render_stage=3;
             if(now>=next_refresh93){MONITORINFOEXW mi{};mi.cbSize=sizeof(mi);DEVMODEW dm{};dm.dmSize=sizeof(dm);
                 if(GetMonitorInfoW(MonitorFromWindow(game,MONITOR_DEFAULTTONEAREST),reinterpret_cast<MONITORINFO*>(&mi))&&EnumDisplaySettingsW(mi.szDevice,ENUM_CURRENT_SETTINGS,&dm)&&dm.dmDisplayFrequency>=30&&dm.dmDisplayFrequency<=360)refresh_hz93=LONG(dm.dmDisplayFrequency);
                 next_refresh93=now+1.;}
-            pace93.seconds(std::max(.0005,1./double(refresh_hz93)-(wall()-now)));
+            pace93.seconds(std::max(.0005,1./double(refresh_hz93)-(wall()-render_started)));
         }
         pixels106.hide();DestroyWindow(overlay);overlay=nullptr;surface93.clear();release_renderer();Gdiplus::GdiplusShutdown(gdiplus);render_ready=0;
     }catch(const std::exception&){render_error=1;render_ready=0;SetEvent(render_initialized);}
@@ -999,6 +1170,7 @@ static DWORD WINAPI render_worker(void*){
 }
 static DWORD WINAPI worker(void*){void* targets[10]{};bool hooked=false;HANDLE renderer=nullptr;
     try{
+        hudlayout108::deck_ui192=device192::enabled();
         LARGE_INTEGER f;QueryPerformanceFrequency(&f);frequency=double(f.QuadPart);
         (void)random_placement(); // Initialize entropy before installing hooks.
         wchar_t name[80];mapping_name(name,GetCurrentProcessId());HANDLE channel=CreateFileMappingW(INVALID_HANDLE_VALUE,nullptr,PAGE_READWRITE,0,sizeof(Status),name);
@@ -1042,7 +1214,7 @@ static DWORD WINAPI worker(void*){void* targets[10]{};bool hooked=false;HANDLE r
         require(!memcmp(reinterpret_cast<void*>(engine+0x3e1930),release_actor_sig,sizeof release_actor_sig)&&
             !memcmp(reinterpret_cast<void*>(engine+0x3e18f0),release_aux_sig,sizeof release_aux_sig),"Native pair release differs");
         retarget_ports={native_prepare,native_release_actor,reinterpret_cast<retarget::ReleaseAux>(engine+0x3e18f0),engine};
-        session=new Session(reader(),selection_ports.calls(),{nullptr,prepare_port,update_port,routing,facing_ready,retarget_port,effective_pair,retain_selected_pair,routed_prepare152},engine,{0,5,true},true,true,true,true,true);
+        session=new Session(reader(),selection_ports.calls(),{nullptr,prepare_port,update_port,routing,facing_ready,retarget_port,effective_pair,retain_selected_pair,routed_prepare152,reserve_pair},engine,{0,5,true},true,true,true,true,true);
         wchar_t path[MAX_PATH];GetModuleFileNameW(module,path,MAX_PATH);std::wstring folder=path;folder=folder.substr(0,folder.find_last_of(L'\\'));
         log_file<<std::setprecision(12);
         // The renderer reacquires a replaced window and waits through minimization.
@@ -1060,11 +1232,11 @@ static DWORD WINAPI worker(void*){void* targets[10]{};bool hooked=false;HANDLE r
         overlay106::Reader input_surface113;
         while(true){const double poll93=wall();LONG64 poll_us93=LONG64((poll93-previous_poll93)*1e6);previous_poll93=poll93;InterlockedExchange64(&last_input_us93,poll_us93);if(poll_us93>max_input_us93)InterlockedExchange64(&max_input_us93,poll_us93);state->heartbeat=GetTickCount64();
             ++input_polls94;
-            bool focus=focused(),left=focus&&(GetAsyncKeyState(VK_LBUTTON)&0x8000),right=focus&&(GetAsyncKeyState(VK_RBUTTON)&0x8000);
+            bool focus=focused(),left=focus&&(deck181::key_state(VK_LBUTTON)&0x8000),right=focus&&(deck181::key_state(VK_RBUTTON)&0x8000);
             gate176(focus);
             if(!InterlockedCompareExchange(&armed176,0,0)){previous_left=left;previous_right=right;previous_focus=focus;
                 if(state->stop)break;input_wait93.seconds(.01);continue;}
-            if(cadence94.due(poll93,focus!=previous_focus||state->stop||stale_press93)){
+            if(cadence94.due(poll93,focus!=previous_focus||state->stop)){
                 ++service_runs94;
             uint32_t root=0,env=0,manager=0,camera=0,actor=0;
             if(possession->ready&&possession->mode==2&&!possession->release&&!possession->stop){
@@ -1078,7 +1250,6 @@ static DWORD WINAPI worker(void*){void* targets[10]{};bool hooked=false;HANDLE r
                 observation::PossessionPrefix latest93{};
                 if(state->stop||!focus)session->release();
                 else if(possession_snapshot93(latest93)&&(!latest93.ready||latest93.stop||latest93.release||latest93.mode!=2))session->release(CancelReason92::Owner);
-                if(InterlockedExchange(&stale_press93,0))session->release(CancelReason92::Presentation93);
                 publish();recorded_playback=playback;recorded_phase=commitment.phase;
                 recorded_epoch151=battle_epoch151.epoch();recorded_restarts151=battle_epoch151.restarts();recorded_tick151=delivery_clock.tick;
                 InterlockedExchange(&coordinator,0);
@@ -1102,7 +1273,7 @@ static DWORD WINAPI worker(void*){void* targets[10]{};bool hooked=false;HANDLE r
                     if(click_queued){InterlockedIncrement(&click_frames93);InterlockedExchange64(&clicked_frame_age_us93,LONG64((click_wall113-drawn.submitted)*1e6));InterlockedExchange(&clicked_frame_inside93,in_success_zone(drawn.shown)?1:0);
                         if(!click.paused&&((left&&!previous_left)||(right&&!previous_right))){auto freeze=data;freeze.prompt=drawn.shown;freeze.published_wall=wall();transport::publish(freeze_publication93,freeze);}
                     }
-                }else {InterlockedIncrement(&stale_frames93);if((left&&!previous_left)||(right&&!previous_right))InterlockedExchange(&stale_press93,1);}
+                }else InterlockedIncrement(&stale_frames93);
             }
             if(log_file.enabled()&&input_changed){log_file<<"{\"event\":\"mouse_sample\",\"tick_ms\":"<<GetTickCount64()<<",\"focused\":"<<focus
                 <<",\"fps\":"<<(possession->mode==2)<<",\"left\":"<<left<<",\"right\":"<<right<<",\"prompt_visible\":"<<show
@@ -1120,8 +1291,11 @@ static DWORD WINAPI worker(void*){void* targets[10]{};bool hooked=false;HANDLE r
                 log_file<<"}\n";log_file.flush();}
             previous_left=left;previous_right=right;previous_focus=focus;
             transport::Payload completed;Snapshot feedback;const double now=wall();
-            bool feedback_visible=!show&&transport::read(completion_publication,completed)&&
-                now-completed.published_wall<(completed.prompt.result==Result::Canceled?1.1:3.0)&&transport::presentation(completed,now,feedback);
+            bool feedback_visible=!show&&
+                ((transport::read(interruption_publication102,completed)&&completed.prompt.serial>=data.prompt.serial&&
+                  transport::presentation(completed,now,feedback))||
+                 (transport::read(completion_publication,completed)&&completed.prompt.serial>=data.prompt.serial&&
+                  now-completed.published_wall<(completed.prompt.result==Result::Canceled?1.1:3.0)&&transport::presentation(completed,now,feedback)));
             if(log_file.enabled()&&(GetTickCount64()>=next_log||logged_serial!=last_serial||logged_acquisitions!=acquisitions||logged_resolutions!=resolutions||logged_playback!=recorded_playback.revision||logged_phase!=recorded_phase)){
                 const auto registry94=lifetimes.metrics94();
                 ScoreMetrics metrics;const bool metrics_valid=read_score_metrics(metrics);
