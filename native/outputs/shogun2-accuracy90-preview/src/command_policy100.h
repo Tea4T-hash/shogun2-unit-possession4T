@@ -3,11 +3,11 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include "command_protocol100.h"
 namespace command100 {
 constexpr float tau=6.2831853071795864769f;
 enum class MoveMode:std::uint32_t {None,Advance,Stop,Hold,Follow};
 enum class FireMode:std::uint32_t {Hold,AtWill,OnCommand};
-enum class Feedback:std::uint32_t {None,Move,Formation,Stopped,Holding,Following,FollowEnded,FireHold,FireAtWill,FireCommand,NoGround,Busy,Unavailable};
 struct Point {float x{},y{},z{};};
 inline bool finite(const Point& p){return std::isfinite(p.x)&&std::isfinite(p.y)&&std::isfinite(p.z)&&std::abs(p.x)<100000&&std::abs(p.y)<100000&&std::abs(p.z)<100000;}
 inline std::uint16_t bearing(float yaw){return std::uint16_t(std::int32_t(std::lround(std::remainder(double(yaw),double(tau))*65536.0/double(tau))));}
