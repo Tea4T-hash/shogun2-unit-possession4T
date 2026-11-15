@@ -6,11 +6,13 @@
 #undef main
 static bool __cdecl false141(){return false;}
 static bool __fastcall stationary141(void*,void*){return false;}
+static bool kneel_blocked101;
+static bool __fastcall kneel_gate101(void*,void*){return kneel_blocked101;}
 static bool __fastcall can_fire141(void*,void*){return true;}
 int main(){SetUnhandledExceptionFilter(&fault100);try{
  NativeFixture100 f;using P=NativeFixture100;field<uintptr_t>(unit,0x14)=environment;
  auto patch=[&](unsigned address,void* fn){DWORD old{};require(VirtualProtect(reinterpret_cast<void*>(base+address),16,PAGE_EXECUTE_READWRITE,&old)!=0,"Patch fixture provider");f.jump(address,fn);VirtualProtect(reinterpret_cast<void*>(base+address),16,old,&old);};
- patch(0x459550,reinterpret_cast<void*>(&false141));patch(0x180760,reinterpret_cast<void*>(&stationary141));patch(0x15c4c0,reinterpret_cast<void*>(&can_fire141));
+ patch(0x459550,reinterpret_cast<void*>(&false141));patch(0x180760,reinterpret_cast<void*>(&stationary141));patch(0x180730,reinterpret_cast<void*>(&kneel_gate101));patch(0x15c4c0,reinterpret_cast<void*>(&can_fire141));
  unsigned char descriptors[7*28]{};memcpy(descriptors,f.descriptors,sizeof f.descriptors);unsigned key=0x141141;
  field<unsigned>(base,0x192ee34)=key;memcpy(descriptors+6*28,&key,4);descriptors[6*28+16]=3;field<uintptr_t>(base,0x18d9000)=reinterpret_cast<uintptr_t>(descriptors);field<unsigned>(base,0x18d9004)=7;
  std::vector<unsigned char> entries(4*0x282c),records(4*0x60);auto array=P::ptr(entries),defs=P::ptr(records),manager=unit+0xed4;
@@ -37,6 +39,22 @@ int main(){SetUnhandledExceptionFilter(&fault100);try{
  equipment_ranged81=1;equipment_slot81=equipment81::Ranged;field<unsigned>(possessed,0x1f0)=8;field<float>(base,0x15b2448)=.04f;
  field<unsigned char>(array+2*0x282c,0x18)=1;sample={};ability_collect141(sample);f.clear_queue();state->weapon_phase=WEAPON_DRAW;require(!ability_send141(sample,1)&&packets100.empty(),"Ammo changed inside committed draw");state->weapon_phase=0;
  sample={};ability_collect141(sample);f.clear_queue();require(ability_send141(sample,1)&&packets100.size()==2&&packets100[0].integers[0]==26&&packets100[0].integers[1]==1&&packets100[1].integers[0]==23&&packets100[1].integers[1]==0,"Ammo transaction did not disable old style before activating new");
+ const auto kneel_record=defs+3*0x60;
+ field<unsigned>(kneel_record,0)=57;
+ field<unsigned>(manager,0x28)=4;sample={};
+ require(ability_collect141(sample)&&sample.count==4&&sample.items[3].id==57&&
+         (sample.items[3].flags&ability141::Available),"Native Crouch Fire absent from selector");
+ f.clear_queue();
+ require(ability_send141(sample,3)&&packets100.size()==1&&packets100[0].integers[0]==57&&
+         packets100[0].integers[1]==0,"Crouch Fire did not use the native enable command");
+ field<unsigned char>(array+3*0x282c,0x18)=1;sample={};
+ require(ability_collect141(sample)&&(sample.items[3].flags&ability141::Active),"Native Crouch Fire active flag lost");
+ f.clear_queue();
+ require(ability_send141(sample,3)&&packets100.size()==1&&packets100[0].integers[1]==1,
+         "Crouch Fire did not use the native disable command");
+ kneel_blocked101=true;sample={};f.clear_queue();
+ require(ability_collect141(sample)&&!(sample.items[3].flags&ability141::Available)&&
+         !ability_send141(sample,3)&&packets100.empty(),"Native Crouch Fire eligibility bypassed");
  EquipmentRequests81 tab{};equipment_keys134(tab,4,true);require(!tab.tabs,"Tab still changed ammo");
  ability_reset141();require(!ability_request141.lease&&ability_selected141==~0u&&!ability_pending_until141,"Exit retained ability request");ability_shared141=nullptr;
  std::cout<<"PASS: production native ability list, original unlock/cooldown and whole-unit serialization;1000 activations, no actor writes, inactive/active/ammo transaction, full queue, stale lease, selector/publication/reset and removed Tab binding. Native effect scheduler/visuals require live testing.\n";return 0;
