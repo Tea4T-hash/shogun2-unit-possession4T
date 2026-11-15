@@ -22,7 +22,7 @@ int main(){SetUnhandledExceptionFilter(fault100);try{
    original_matrix(reinterpret_cast<void*>(cam),affine);remember_native_eye78(cam);adjust_eye(cam);
    float pivot[3];memcpy(pivot,reinterpret_cast<void*>(cam+8),12);view_camera152(cam);
    float d=0;for(unsigned i=0;i<3;++i){float x=field<float>(cam,8+i*4)-pivot[i];d+=x*x;}
-   require(std::abs(std::sqrt(d)-5)<.001f,"QTE reset third-person distance");
+   require(std::abs(std::sqrt(d)-5*std::sqrt(1.f+.25f*.25f+.08f*.08f))<.001f,"QTE reset third-person distance");
    require(std::abs(field<float>(cam,0x64)-std::sin(state->yaw+.65f)*std::cos(state->pitch-.13f))<.001f,"New QTE reset/oriented the orbit view");
  };
  for(unsigned serial=1;serial<=100;++serial){
@@ -49,7 +49,7 @@ int main(){SetUnhandledExceptionFilter(fault100);try{
  for(unsigned i=0;i<100;++i){sample.tick=GetTickCount64();sample.eye.view[0]=float(i)*.02f;publish_model_eye(model_eye_channel,sample);
    require(camera_update104(reinterpret_cast<void*>(cam),nullptr,.1f,.5f),"Death update returned failure to native manager");
    require(state->yaw==yaw&&state->pitch==pitch&&third_person152,"Death changed third-person heading");
-   float expected=sample.eye.view[0]-std::sin(yaw)*std::cos(pitch)*5;
+   float expected=sample.eye.view[0]-std::sin(yaw)*std::cos(pitch)*5+std::cos(yaw)*1.25f-std::sin(yaw)*std::sin(pitch)*.4f;
    require(std::abs(field<float>(cam,8)-expected)<.001f,"Death lost third-person pivot/distance");}
  require(!retired_queries156&&death_publications156==100,"Death queried retired native roster or missed native publication");
  input_window=CreateWindowExW(0,L"STATIC",L"fixture156",WS_POPUP,0,0,1,1,nullptr,nullptr,nullptr,nullptr);
