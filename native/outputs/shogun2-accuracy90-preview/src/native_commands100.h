@@ -39,18 +39,21 @@ static bool command_native_signatures100(uintptr_t image){
     return field<uintptr_t>(image+0x15cffe0,0)==image+0x2e6eb0&&field<uintptr_t>(image+0x15cffdc,0)==image+0x2e6f00&&
         field<uintptr_t>(image+0x15d002c,0)==image+0x2e6c40;
 }
-static bool command_serialize100(const MovePoint100* destination,unsigned facing,float width,int fire_policy=-1,bool plain=false,bool guard=false,unsigned char* prepared=nullptr,unsigned* prepared_size=nullptr,bool running102=false){
+enum class UnitState100 {Fire,Guard,Skirmish};
+static bool command_serialize100(const MovePoint100* destination,unsigned facing,float width,int fire_policy=-1,bool plain=false,UnitState100 unit_state=UnitState100::Fire,unsigned char* prepared=nullptr,unsigned* prepared_size=nullptr,bool running102=false){
+    const bool boolean_order=unit_state!=UnitState100::Fire;
     alignas(16) unsigned char order[0x80]{},context[16]{},packet[QUEUE_CAPACITY+4]{};
     bool constructed=false,context_live=false,result=false;
     __try{
         if(!enabled||state->stop||state->release||state->mode!=POSSESSED||dead_view()||!followed(possessed,false))return false;
         auto group=selected_possessed_group();auto queue=field<uintptr_t>(environment,0x28048);
-        unsigned descriptor_offset=guard?0x192e90cu:fire_policy>=0?0x192ca68u:plain?0x192e0d0u:width>0?0x192eaacu:0x192d014u;
+        unsigned descriptor_offset=unit_state==UnitState100::Skirmish?0x192d2ccu:unit_state==UnitState100::Guard?0x192e90cu:
+            fire_policy>=0?0x192ca68u:plain?0x192e0d0u:width>0?0x192eaacu:0x192d014u;
         unsigned key=field<unsigned>(base,descriptor_offset),flags=0;
         if(!group||!queue||!descriptor_flags(key,flags)){command_error100=41;return false;}
         if(fire_policy>=0){
             if(fire_policy>1)return false;
-            reinterpret_cast<UnitStateConstructor100>(base+(guard?0x254e10:0x255140))(order,reinterpret_cast<void*>(group),unsigned(fire_policy));
+            reinterpret_cast<UnitStateConstructor100>(base+(boolean_order?0x254e10:0x255140))(order,reinterpret_cast<void*>(group),unsigned(fire_policy));
         }else{
             if(!destination||!command100::finite({destination->position[0],destination->position[1],destination->position[2]})||
                !std::isfinite(width)||width<0||width>4096)return false;
@@ -58,7 +61,7 @@ static bool command_serialize100(const MovePoint100* destination,unsigned facing
             else if(width>0)reinterpret_cast<FacingConstructor100>(base+0x2557e0)(order,reinterpret_cast<void*>(group),destination,facing,width,unsigned(running102),0);
             else reinterpret_cast<OrientationConstructor100>(base+0x255680)(order,reinterpret_cast<void*>(group),destination,facing,unsigned(running102),0);
         }
-        constructed=true;auto expected=base+(guard?0x15cffe8:fire_policy>=0?0x15d002c:plain?0x15cffd8:width>0?0x15cffdc:0x15cffe0);
+        constructed=true;auto expected=base+(boolean_order?0x15cffe8:fire_policy>=0?0x15d002c:plain?0x15cffd8:width>0?0x15cffdc:0x15cffe0);
         if(field<uintptr_t>(reinterpret_cast<uintptr_t>(order),0)!=expected){command_error100=47;}
         else{
             reinterpret_cast<ContextConstructor>(base+0x1cc200)(context,packet,key,flags);context_live=true;
@@ -82,8 +85,8 @@ static bool command_serialize100(const MovePoint100* destination,unsigned facing
 }
 static bool command_hold_here100(const MovePoint100& point,unsigned facing,bool running102=false){
     alignas(16) unsigned char move[QUEUE_CAPACITY+4]{},guard[QUEUE_CAPACITY+4]{};unsigned move_size=0,guard_size=0;
-    if(!command_serialize100(&point,facing,0,-1,false,false,move,&move_size,running102)||
-       !command_serialize100(nullptr,0,0,1,false,true,guard,&guard_size))return false;
+    if(!command_serialize100(&point,facing,0,-1,false,UnitState100::Fire,move,&move_size,running102)||
+       !command_serialize100(nullptr,0,0,1,false,UnitState100::Guard,guard,&guard_size))return false;
     auto queue=field<uintptr_t>(environment,0x28048);if(!queue)return false;
     auto& used=field<unsigned>(queue+4,QUEUE_CAPACITY);unsigned before=used,total=move_size+guard_size;
     if(before>QUEUE_CAPACITY||total>QUEUE_CAPACITY-before){command_error100=48;return false;}
@@ -265,11 +268,41 @@ static bool command_formation_gap102(uintptr_t camera,command100::Point leader,f
     gap=peers?float(std::hypot(x/peers-leader.x,z/peers-leader.z)):0;
     return std::isfinite(gap)&&followed(possessed,false)&&camera_owned(camera);
 }
+static void command_enqueue100(command100::Input input,command100::Pace pace=command100::Pace::Automatic){
+    command100::Event event{};event.tick=GetTickCount64();event.input=input;event.pace=pace;
+    AcquireSRWLockExclusive(&command_input_lock100);event.frame=command_frame100;
+    command_q_tap102.reset();
+    if(input==command100::Input::Hold&&pace!=command100::Pace::Automatic){
+        event.running102=pace==command100::Pace::Run;
+        command_z_tap102.reset();
+    }else if(input==command100::Input::Hold){
+        event.running102=command_z_tap102.consume(event.tick,GetDoubleClickTime(),event.frame.lease)&&
+            event.frame.actor==command_z_anchor102.actor&&event.frame.unit==command_z_anchor102.unit;
+        if(event.running102){auto current_tick=event.frame.tick;event.frame=command_z_anchor102;event.frame.tick=current_tick;}
+        else {command_z_anchor102=event.frame;command_z_tap102.arm(event.tick,event.frame.lease);}
+    }else command_z_tap102.reset();
+    if(command_write100-command_read100>=32){command_read100=command_write100;command_q_tap102.reset();command_z_tap102.reset();InterlockedExchange(&command_input_overflow100,1);InterlockedExchange(&command_placing100,0);}
+    else command_events100[command_write100++%32]=event;
+    ReleaseSRWLockExclusive(&command_input_lock100);
+}
+static void command_window_wheel101(commander76::UnitOrder order){
+    constexpr command100::Input commands[]={command100::Input::Follow,command100::Input::Stop,
+        command100::Input::Hold,command100::Input::Fire};
+    if(order.sector<0||order.sector>=4||!keyboard_fps84()||charge_input_locked146())return;
+    command_native_cancel100();
+    command_enqueue100(commands[order.sector],order.sector==2?
+        (order.run?command100::Pace::Run:command100::Pace::Walk):command100::Pace::Automatic);
+}
+static bool command_window_fire62(command100::Input input){
+    if(!keyboard_fps84()||charge_input_locked146())return false;
+    command_enqueue100(input);
+    return true;
+}
 static bool command_window100(HWND window,UINT message,WPARAM key,LPARAM flags){
     if(message==COMMAND_CANCEL_MESSAGE100){if(unsigned(key)==command_native_sequence100)command_native_cancel100();return true;}
     if(command_native_root100&&!command_placing100)command_native_cancel100();
     if(message==WM_KILLFOCUS||(message==WM_ACTIVATEAPP&&!key)){
-        command_native_cancel100();command_input_reset100();command_key_held100=0;return false;
+        command_native_cancel100();command_input_reset100();command_cancel_fire62();command_key_held100=0;return false;
     }
     if(command_native_mouse100(window,message,key,flags))return true;
     if(message!=WM_KEYDOWN&&message!=WM_KEYUP&&message!=WM_SYSKEYDOWN&&message!=WM_SYSKEYUP)return false;
@@ -278,8 +311,21 @@ static bool command_window100(HWND window,UINT message,WPARAM key,LPARAM flags){
     bool owned=enabled&&state&&state->mode==POSSESSED&&!state->stop&&!state->release;
     bool drain=(command_key_held100&bit)!=0;
     if(!pressed)command_key_held100&=~bit;
-    if(!owned)return drain;
+    if(!owned){if(key=='R'&&!pressed)command_cancel_fire62();return drain;}
     if(pressed){if((flags&(1L<<30))||drain)return true;command_key_held100|=bit;}
+    if(key=='R'){
+        if(pressed){
+            command_fire_press_tick62=GetTickCount64();
+            command_fire_press_lease62=state->lease_generation;
+        }else{
+            if(drain&&command_fire_press_tick62&&command_fire_press_lease62==state->lease_generation){
+                const bool held=GetTickCount64()-command_fire_press_tick62>=350;
+                command_enqueue100(held?command100::Input::Skirmish:command100::Input::Fire);
+            }
+            command_cancel_fire62();
+        }
+        return true;
+    }
     if(key=='Q'){
         if(pressed){AcquireSRWLockExclusive(&command_input_lock100);command_z_tap102.reset();ReleaseSRWLockExclusive(&command_input_lock100);}
         if(pressed){if(!command_native_begin100(window))command_feedback_set100(command100::Feedback::Unavailable);}
@@ -287,22 +333,8 @@ static bool command_window100(HWND window,UINT message,WPARAM key,LPARAM flags){
         return true;
     }
     if(!pressed)return true;
-    if(key=='E'||key=='Z'||key=='C')command_native_cancel100();
-    command100::Event event{};event.tick=GetTickCount64();
-    event.input=key=='E'?command100::Input::Stop:
-        key=='Z'?command100::Input::Hold:key=='C'?command100::Input::Follow:command100::Input::Fire;
-    AcquireSRWLockExclusive(&command_input_lock100);event.frame=command_frame100;
-    command_q_tap102.reset();
-    if(key=='Z'){
-        event.running102=command_z_tap102.consume(event.tick,GetDoubleClickTime(),event.frame.lease)&&
-            event.frame.actor==command_z_anchor102.actor&&event.frame.unit==command_z_anchor102.unit;
-        if(event.running102){
-            auto current_tick=event.frame.tick;event.frame=command_z_anchor102;event.frame.tick=current_tick;
-        }else {command_z_anchor102=event.frame;command_z_tap102.arm(event.tick,event.frame.lease);}
-    }else command_z_tap102.reset();
-    if(command_write100-command_read100>=32){command_read100=command_write100;command_q_tap102.reset();command_z_tap102.reset();InterlockedExchange(&command_input_overflow100,1);InterlockedExchange(&command_placing100,0);}
-    else command_events100[command_write100++%32]=event;
-    ReleaseSRWLockExclusive(&command_input_lock100);
+    command_native_cancel100();
+    command_enqueue100(key=='E'?command100::Input::Stop:key=='Z'?command100::Input::Hold:command100::Input::Follow);
     return true;
 }
 static void command_mapping_publish100(command100::Status sample){
@@ -356,6 +388,7 @@ static void process_orders(uintptr_t camera){
         observe_formation(camera);
         melee60::Request commitment{};bool busy=charge_input_locked146()||melee_request(commitment)||wall_subject97(possessed)||native_airborne_subject99(possessed);
         if(busy&&command_native_root100)command_native_cancel100();
+        commander_tick_orders101(!busy);
         if(InterlockedExchange(&command_input_overflow100,0)){command_feedback_set100(command100::Feedback::Unavailable,64);}
         command100::Event event{};
         while(command_pop100(event)){
@@ -365,6 +398,7 @@ static void process_orders(uintptr_t camera){
             if(event.input==command100::Input::Stop){
                 if(issue_native_order(ORDER_HOLD,frame.position.x,frame.position.z)){
                     command_mode100=command100::MoveMode::Stop;InterlockedExchange(&state->follow,0);command_follow100.reset();InterlockedExchange(&command_placing100,0);InterlockedExchange(&command_recenter100,1);command_feedback_set100(command100::Feedback::Stopped);
+                    commander_ack_order102(1);
                 }else command_feedback_set100(command100::Feedback::Unavailable,state->order_error);
             }else if(event.input==command100::Input::Hold){
                 MovePoint100 point{};
@@ -376,17 +410,27 @@ static void process_orders(uintptr_t camera){
                     InterlockedExchange(&command_placing100,0);InterlockedExchange(&command_recenter100,1);
                     if(event.running102)InterlockedIncrement(&command_hold_runs102);else InterlockedIncrement(&command_hold_walks102);
                     command_mode100=command100::MoveMode::Hold;InterlockedExchange(&state->follow,0);command_follow100.reset();command_feedback_set100(command100::Feedback::Holding);
+                    commander_ack_order102(2,event.running102);
                 }else command_feedback_set100(command100::Feedback::Unavailable,command_error100);
             }else if(event.input==command100::Input::Follow){
                 InterlockedExchange(&command_placing100,0);InterlockedExchange(&command_recenter100,1);
                 InterlockedExchange(&state->follow,1);command_follow100.reset();command_pace102.reset();command_mode100=command100::MoveMode::Follow;
                 state->last_order=ORDER_FOLLOW;command_feedback_set100(command100::Feedback::Following);
+                commander_ack_order102(0);
+            }else if(event.input==command100::Input::Skirmish){
+                const auto active=field<unsigned char>(unit,0xeb2);
+                if(field<unsigned char>(unit,0x179)!=1||active>1){
+                    command_feedback_set100(command100::Feedback::Unavailable);
+                }else if(command_serialize100(nullptr,0,0,!active,false,UnitState100::Skirmish)){
+                    command_feedback_set100(active?command100::Feedback::SkirmishOff:command100::Feedback::SkirmishOn);
+                }else command_feedback_set100(command100::Feedback::Unavailable,command_error100);
             }else if(event.input==command100::Input::Fire){
                 if(!bow_record(unit)){command_feedback_set100(command100::Feedback::Unavailable);continue;}
                 auto next=command100::next_fire(command100::FireMode(command_fire_mode100));
                 if(command_serialize100(nullptr,0,0,next==command100::FireMode::Hold?1:0)){
                     AcquireSRWLockExclusive(&command_volley_lock100);command_volley100.reset();memset(command_permits100,0,sizeof command_permits100);
                     InterlockedExchange(&command_fire_mode100,LONG(next));ReleaseSRWLockExclusive(&command_volley_lock100);
+                    commander_ack_order102(3);
                     command_feedback_set100(next==command100::FireMode::Hold?command100::Feedback::FireHold:next==command100::FireMode::AtWill?command100::Feedback::FireAtWill:command100::Feedback::FireCommand);
                 }else command_feedback_set100(command100::Feedback::Unavailable,command_error100);
             }
@@ -400,15 +444,17 @@ static void process_orders(uintptr_t camera){
                     // Match the same native walk/run selection as personal
                     // locomotion. Catch-up can request run even while stationary;
                     // the stock order consumer still applies native run permission.
-                    unsigned input=equipment81::movement_input(unsigned(state->input),equipment_crouch81!=0);
+                    const unsigned input=personal_travel_input91(
+                        equipment81::movement_input(unsigned(state->input),equipment_crouch81!=0),
+                        true,state->aiming||state->aim_pose,possession_lease.identity.mount!=0);
                     bool translating=bool(input&FORWARD)!=bool(input&BACKWARD)||(!possession_lease.identity.mount&&(bool(input&LEFT)!=bool(input&RIGHT)));
                     bool leader_running=native_sprint_requested133(input)&&translating&&
                         reinterpret_cast<UnitRunAllowed>(base+0x15cb80)(reinterpret_cast<void*>(unit));
-                    bool running=command_pace102.update(command_gap102,leader_running);
+                    const bool running=command_pace102.update(command_gap102,leader_running);
                     if(command_follow100.changed(frame.position,frame.tick,running)){
                         float heading=command_follow100.heading(frame.position,initial);
                         auto goal=command_follow100.target(frame.position);MovePoint100 destination{};
-                        if(command_actor_point100(goal,destination)&&command_serialize100(&destination,command100::bearing(heading),0,-1,false,false,nullptr,nullptr,running)){
+                        if(command_actor_point100(goal,destination)&&command_serialize100(&destination,command100::bearing(heading),0,-1,false,UnitState100::Fire,nullptr,nullptr,running)){
                             command_follow100.accepted(goal,heading,frame.tick,running);command_follow_run102=running?1:0;InterlockedIncrement(&follow_updates101);
                         }
                     }
