@@ -36,6 +36,7 @@ inline const Art catalog[]={
 {54,L"faster_reload_naval",L"Fast Reload",L"ui/ability_icons/data__faster_reload_naval_icon.png"},
 {55,L"ram_naval",L"Ramming",L"ui/ability_icons/data__ram_naval_icon.png"},
 {56,L"overcharge_engine",L"Overheat Engine",L"ui/ability_icons/data__overcharge_engine_icon.png"},
+{57,L"kneel_fire_ability",L"Crouch Fire",L"ui/ability_icons/data__kneel_fire_ability_icon.png"},
 {58,L"kill_zone",L"Kill Zone",L"ui/ability_icons/data__kill_zone_icon.png"},
 {59,L"ganbatte",L"Ganbatte",L"ui/ability_icons/data__ganbatte_icon.png"},
 {60,L"heroic_assault",L"Heroic Assault.",L"ui/ability_icons/data__heroic_assault_icon.png"},
