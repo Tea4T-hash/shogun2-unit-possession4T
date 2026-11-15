@@ -45,5 +45,55 @@ int main(){SetUnhandledExceptionFilter(fault100);try{
     }
     field<uintptr_t>(a,0)=base+0x15dfec8;require(!native_subject(a,unit,v,false,subject),"Regular soldier accepted foreign config");
     require(tasks157==9&&poses==837,"Native special-role coverage incomplete");
+
+    // The original getter reads the live override through unit+ed4. Supply
+    // the Guard's original rifle and suppression projectile as fixture data.
+    field<uintptr_t>(a,0)=base+0x15dfec8;
+    field<unsigned>(unit,0xf7c)=15;
+    field<float>(unit,0xf78)=10;
+    std::vector<unsigned char> special(0x100),ability(0x80),entry(0x282c);
+    auto set_rifle=[](uintptr_t record,const wchar_t* key){
+        field<unsigned>(record,0)=254;
+        field<unsigned>(record,4)=unsigned(std::wcslen(key));
+        field<unsigned>(record,8)=128;
+        field<uintptr_t>(record,0xc)=reinterpret_cast<uintptr_t>(key);
+        field<unsigned>(record,0x60)=125;
+        field<float>(record,0x6c)=200;
+    };
+    const auto standard=P::ptr(normal),special_record=P::ptr(special),definition=P::ptr(ability),live=P::ptr(entry),manager=unit+0xed4;
+    set_rifle(standard,L"boshin_breech_loading_rifle");
+    set_rifle(special_record,L"boshin_rifle_suppressive");
+    field<uintptr_t>(manager,0)=base+0x15cfeec;
+    field<uintptr_t>(manager,8)=unit;
+    field<unsigned>(manager,0x24)=field<unsigned>(manager,0x28)=1;
+    field<uintptr_t>(manager,0x2c)=live;
+    field<uintptr_t>(live,4)=definition;
+    field<unsigned>(definition,0)=61;
+    field<uintptr_t>(definition,0x28)=special_record;
+    auto override_record=special_record;
+    require(bow_record(unit)==standard,"Ordinary Guard rifle selection");
+    field<uintptr_t>(manager,0x40)=reinterpret_cast<uintptr_t>(&override_record);
+    field<unsigned char>(live,0x18)=1;
+    require(bow_record(unit)==standard&&unit_projectile152(unit)==special_record,
+        "Supported suppression override leaked into the personal rifle or altered formation fire");
+    require(field<uintptr_t>(manager,0x40)==reinterpret_cast<uintptr_t>(&override_record)&&field<float>(unit,0xf78)==10,
+        "Personal rifle resolution wrote native override or ammunition");
+    // Exercise an active override that fails the personal projectile validator.
+    field<float>(special_record,0x6c)=0;
+    require(bow_record(unit)==standard&&!unit_projectile152(unit),
+        "Unusable suppression override disabled the verified personal rifle or rewrote formation selection");
+    field<unsigned>(definition,0)=64;
+    require(!bow_record(unit),"Foreign ability granted a rifle fallback");
+    field<unsigned>(definition,0)=61;
+    field<unsigned char>(live,0x18)=0;
+    require(!bow_record(unit),"Inactive suppression ability granted a rifle fallback");
+    field<unsigned char>(live,0x18)=1;
+    field<unsigned>(unit,0xf7c)=0;
+    require(!bow_record(unit),"A unit without an ammunition pool gained a rifle");
+    field<unsigned>(unit,0xf7c)=15;
+    field<uintptr_t>(manager,0x40)=0;
+    require(bow_record(unit)==standard&&field<float>(unit,0xf78)==10,
+        "Disabling suppression did not restore rifle selection or changed native ammunition");
+    std::cout<<"PASS: original Guard rifle/active override selection, scoped suppression fallback, inactive/foreign/zero-pool rejection and return to normal. Fixture projectile metadata.\n";
     std::cout<<"PASS: nine native special soldier roles through acquisition/current camera choice, 837 posture cases, original391b50 actual projectile/no-shoot/fallback; strict root/life/unit/serial/config/non-soldier guards. Native scene and animation providers remain offline boundaries.\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
