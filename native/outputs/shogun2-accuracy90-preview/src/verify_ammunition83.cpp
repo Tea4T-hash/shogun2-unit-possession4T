@@ -12,12 +12,12 @@ static SRWLOCK ammunition_publish_lock83=SRWLOCK_INIT;
 static bool eligible[256]{};
 static bool equipment_unit_ability81(unsigned id,bool){return id<256&&eligible[id];}
 #include "ammunition_publish83.h"
-struct Record {unsigned id,length,unused;uintptr_t chars;};
+struct Record {unsigned id,length,capacity;uintptr_t chars;unsigned char rest[0x80]{};};
 int main(){try{
  unsigned char bytes[0x1000]{};unit=reinterpret_cast<uintptr_t>(bytes);field<float>(unit,0xf78)=20;
  state->lease_generation=19;state->actor_id=43;state->unit_id=7;
  wire.magic=0x334d4153;wire.version=83;wire.size=sizeof wire;wire.pid=GetCurrentProcessId();
- Record normal{3,5,0,reinterpret_cast<uintptr_t>(L"arrow")},fire{11,14,0,reinterpret_cast<uintptr_t>(L"flaming_arrows")},whistle{12,16,0,reinterpret_cast<uintptr_t>(L"whistling_arrows")};
+ Record normal{3,5,5,reinterpret_cast<uintptr_t>(L"arrow")},fire{11,14,14,reinterpret_cast<uintptr_t>(L"flaming_arrows")},whistle{12,16,16,reinterpret_cast<uintptr_t>(L"whistling_arrows")};
  equipment81::AmmoOption options[3]{{0,reinterpret_cast<uintptr_t>(&normal),false,true},{24,reinterpret_cast<uintptr_t>(&fire),true,true},{25,reinterpret_cast<uintptr_t>(&whistle),false,false}};
  eligible[24]=true;
  publish_ammunition83(options,3,options[0].record,2,0);
