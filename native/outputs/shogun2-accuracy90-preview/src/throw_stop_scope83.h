@@ -8,7 +8,7 @@
 static bool protect_throw_stop83(uintptr_t actor,uintptr_t caller){
     __try {
         if(caller!=base+0x3e93c8||own_weapon_call||!weapon_owned(actor)||weapon_mounted()||
-           equipment_slot81!=equipment81::Ranged||!weapon_ready_held()||field<uintptr_t>(actor,0x688)||
+           !equipment_ranged_selected81()||!weapon_ready_held()||field<uintptr_t>(actor,0x688)||
            native_recovery103(actor))return false;
         unsigned mode=field<unsigned>(actor,0x1f0);if(mode!=14&&mode!=15)return false;
         auto animation=field<uintptr_t>(actor,0x474);if(!animation)return false;
