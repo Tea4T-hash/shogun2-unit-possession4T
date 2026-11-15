@@ -37,7 +37,9 @@ static void __fastcall fatigue_action_hook(void* object,void*,int* cost){
         auto speed_getter=reinterpret_cast<UnitSpeed>(base+0x18b470);
         float walk=speed_getter(reinterpret_cast<void*>(unit),0),run_speed=speed_getter(reinterpret_cast<void*>(unit),1);
         if(!std::isfinite(walk)||!std::isfinite(run_speed)){++state->fatigue_errors;return;}
-        bool running=native_sprint_requested133(unsigned(state->input))&&run_speed>walk;
+        const unsigned gait_input=personal_travel_input91(unsigned(state->input),
+            state->follow!=0,state->aiming||state->aim_pose,possession_lease.identity.mount!=0);
+        bool running=native_sprint_requested133(gait_input)&&run_speed>walk;
         bool weapon_active=state->weapon_phase||state->aim_pose||state->aiming||field<float>(actor,0x390)>0;
         int native_cost=*cost;
         // Native actors choose one action. Personal control can combine running
