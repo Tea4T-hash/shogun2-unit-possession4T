@@ -56,5 +56,7 @@ int main(){try{
     parents[1]=0;parents[0]=4;float untouched[96];memcpy(untouched,visible,sizeof visible);require(!visibility100::hide(visible,native,8,parents,4,3,1,2,weapons)&&!memcmp(visible,untouched,sizeof visible),"Invalid hierarchy partially mutated");
     command100::Status sample{};sample.magic=magic;sample.version=100;sample.size=sizeof sample;sample.pid=1;sample.lease=2;sample.actor=3;sample.unit=4;sample.tick=100;
     require(valid(sample,1,2,3,4,100)&&!valid(sample,2,2,3,4,100)&&!valid(sample,1,3,3,4,100),"Numeric command ownership gate differs");sample.fire_mode=3;require(!valid(sample,1,2,3,4,100),"Unknown command enum reached HUD");
+    sample.fire_mode=0;sample.feedback=unsigned(Feedback::SkirmishOff)+1;
+    require(!valid(sample,1,2,3,4,100),"Unknown command acknowledgement reached HUD");
     std::cout<<"PASS: native bearing, 1000 shot epochs, 3000 colliding identities, held-key drain, follow cadence, 1000 idempotent visibility frames and numeric HUD guards\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
