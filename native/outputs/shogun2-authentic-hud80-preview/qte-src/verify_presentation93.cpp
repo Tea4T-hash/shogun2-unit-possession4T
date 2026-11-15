@@ -34,6 +34,18 @@ int main(){try{using namespace qte;unsigned cases=0;
   check(!transport::presentation(feedback,101.4,displayed),"Interruption stayed visible indefinitely");
   auto total=s.cancellation_stats92().total;s.removed(World::witness,1);s.release();check(s.cancellation_stats92().total==total,"Interruption counted twice");++cases;
  }
+ {SessionFixture f;f.world.setup(true,0);Session s(f.world.reader(),f.world.selection(),f.calls(),World::engine,{0,5,true},true,false,false,false,true);
+  f.session=&s;auto owner=f.world.owner();s.prepare(World::witness,1,owner,{1,0,100,.1,1},true);
+  auto p=s.publication(1,100);Snapshot shown;check(transport::presentation(p,100.01,shown),"Fixture prompt unavailable");
+  Click click;check(transport::click(p,100.01,true,false,true,click)&&s.enqueue(click),"Fixture click refused");
+  s.update(World::witness,1,owner,{1,1,100.1,.1,1},true);
+  check(s.publication(1,100.1).prompt.result!=Result::Pending,"Fixture click was not judged");
+  s.removed(World::witness,1);
+  const auto canceled=s.interruption93();
+  check(canceled.active&&canceled.serial==shown.serial&&canceled.result==Result::Canceled,
+        "Native removal after the click lost interruption feedback");
+  s.removed(World::witness,1);check(s.cancellation_stats92().total==1,"Duplicate removal repeated interruption");++cases;
+ }
  PreciseWait93 wait;LARGE_INTEGER hz,start,end;QueryPerformanceFrequency(&hz);QueryPerformanceCounter(&start);double values[200]{};
  for(unsigned i=0;i<200;++i){LARGE_INTEGER before,after;QueryPerformanceCounter(&before);wait.seconds(.001);QueryPerformanceCounter(&after);values[i]=double(after.QuadPart-before.QuadPart)/hz.QuadPart*1000.;}
  QueryPerformanceCounter(&end);std::sort(values,values+200);
